@@ -1,0 +1,565 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{%block title%}
+صفحه خانه - سالن زیبایی
+{%endblock title%}
+
+
+{% block content %}
+<div class="container mt-5">
+  <!-- بنر اصلی -->
+  <div class="banner-container">
+      <img src="{% static 'images/Hall_space.png' %}" alt="فضای سالن" class="banner-image">
+
+      <!-- متن روی عکس -->
+      <div class="banner-text">
+          <h1>خدمات تخصصی سالن زیبایی نورا</h1>
+          <p>تجربه‌ای لوکس و حرفه‌ای برای زیباتر شدن</p>
+          <a href="{% url 'reserve' %}" class="btn-gold header-btn">رزرو نوبت</a>
+          <a href="{% url 'services_app:service' %}" class="btn-gold header-btn">مشاهده خدمات</a>
+      </div>
+  </div>
+
+
+
+    <!-- 4 خدمات پرطرفدار -->
+  <div class="container mt-5">
+    <h2 class="text-center mb-4">پرطرفدارترین خدمات ما</h2>
+
+    <div class="row g-4">
+      {% for service in popular_services %}
+        <div class="col-md-3">
+          <div class="service-card">
+
+            <img src="{{ service.image_url }}" 
+                alt="{{ service.title }}" 
+                class="card-img-top">
+
+            <div class="card-body">
+              <br>
+              <h5>{{ service.title }}</h5>
+              <p>{{ service.description }}</p>
+              <br>
+
+              <a href="{% url 'reserve' %}?category={{ service.category.slug }}"
+                class="btn btn-gold header-btn">
+                رزرو نوبت
+              </a>
+
+              <br>
+            </div>
+
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+
+
+    <!-- معرفی سالن -->
+  <div class="container mt-5 mb-5">
+    <div class="row align-items-center g-5">
+      <!-- متن (سمت چپ در دسکتاپ) -->
+      <div class="col-md-6">
+         <h2 class="mb-4" style="color: #D4AF37;">سالن زیبایی نورا</h2>
+
+      <p class="lead lead-intro">
+        سالن زیبایی نورا با بیش از ۱۰ سال سابقه، آماده ارائه خدمات تخصصی و لوکس برای زیباتر شدن شماست.
+      </p>
+
+      <p class="intro-text">
+        با استفاده از جدیدترین تجهیزات و محصولات ایمن، تجربه‌ای بی‌نظیر و آرامش‌بخش را برای شما فراهم می‌کنیم.
+        همه متخصصان ما با گواهی‌های معتبر و سابقه درخشان فعالیت می‌کنند.
+      </p>
+        <a href="{% url 'reserve' %}" class="btn btn-gold mt-3 header-btn">رزرو نوبت</a>
+        <a href="{% url 'about' %}" class="btn btn-gold mt-3 header-btn">جزئیات بیشتر</a>
+      </div>
+
+      <!-- عکس (سمت راست در دسکتاپ) -->
+      <div class="col-md-6">
+        <div class="salon-image-wrapper">
+          <img src="{% static 'images/Hall_space2.jpg' %}" alt="فضای سالن زیبایی نورا" class="salon-image">
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+    <!-- قبل و بعد گالری-->
+  <div class="container mt-5 mb-5">
+    <h2 class="text-center mb-4" style="color: #D4AF37;">نتایج کارهای ما</h2>
+    <div class="before-after-wrapper">
+      <div class="before-after-cards">
+        <!-- کارت ۱ -->
+        <div class="before-after-card">
+          <div class="image-grid">
+            <img src="{% static 'images/fishial_before.jpeg' %}" alt="قبل - فیشیال" class="img-before">
+            <img src="{% static 'images/fishial_after.jpeg' %}" alt="بعد - فیشیال" class="img-after">
+          </div>
+          <div class="card-body">
+            <h5><span class="gold-accent">✦</span> فیشیال</h5>
+            <p>بالاترین کیفیت، زیباترین نتیجه 💫</p>
+          </div>
+        </div>
+
+        <!-- کارت ۲ -->
+        <div class="before-after-card">
+          <div class="image-grid">
+            <img src="{% static 'images/makeup_before.jpg' %}" alt="قبل - میکاپ" class="img-before">
+            <img src="{% static 'images/makeup_after.jpg' %}" alt="بعد - میکاپ" class="img-after">
+          </div>
+          <div class="card-body">
+            <h5><span class="gold-accent">✦</span> میکاپ</h5>
+            <p>درخششی که از چشمات سر می‌زنه ✨</p>
+          </div>
+        </div>
+
+        <!-- کارت ۳ -->
+        <div class="before-after-card">
+          <div class="image-grid">
+            <img src="{% static 'images/pedicor_before.jpg' %}" alt="قبل - پدیکور" class="img-before">
+            <img src="{% static 'images/pedicor_after.jpg' %}" alt="بعد - پدیکور" class="img-after">
+          </div>
+          <div class="card-body">
+            <h5><span class="gold-accent">✦</span> پدیکور</h5>
+            <p>پوستی تازه و جوان با ۲ جلسه!</p>
+          </div>
+        </div>
+
+        <!-- اگر می‌خوای بیشتر اضافه کنی، اینجا ادامه بده -->
+        <!-- کارت 4 -->
+        <div class="before-after-card">
+          <div class="image-grid">
+            <img src="{% static 'images/nail_before.jpg' %}" alt="قبل - ناخن" class="img-before">
+            <img src="{% static 'images/nail_after.jpg' %}" alt="بعد - ناخن" class="img-after">
+          </div>
+          <div class="card-body">
+            <h5><span class="gold-accent">✦</span>  ناخن</h5>
+            <p>هنر در نوک انگشتان</p>
+          </div>
+        </div>
+
+        <!-- کارت 5 -->
+        <div class="before-after-card">
+          <div class="image-grid">
+            <img src="{% static 'images/extention_before.jpeg' %}" alt="قبل - مژه" class="img-before">
+            <img src="{% static 'images/extention_after.jpeg' %}" alt="بعد - مژه" class="img-after">
+          </div>
+          <div class="card-body">
+            <h5><span class="gold-accent">✦</span> مژه</h5>
+            <p>چشمانت رو به رویاها باز کن</p>
+          </div>
+        </div>
+
+        <!-- کارت 6 -->
+        <div class="before-after-card">
+          <div class="image-grid">
+            <img src="{% static 'images/haircut_before.jfif' %}" alt="قبل - کوتاهی مو" class="img-before">
+            <img src="{% static 'images/haircut_after.jfif' %}" alt="بعد - کوتاهی مو" class="img-after">
+          </div>
+          <div class="card-body">
+            <h5><span class="gold-accent">✦</span> مو</h5>
+            <p>هر تار، یک بوسه باد</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+          <!-- نظرات مشتریان -->
+  <div class="section-with-space">
+    <h2 class="text-center mb-4" style="color: #D4AF37;">نظرات مشتریان ما</h2>
+
+    <div class="row g-4">
+      {% for review in home_reviews %}
+        <div class="col-md-4">
+          <div class="testimonial-card">
+
+            <div class="stars">
+              {% for i in "12345" %}
+                {% if forloop.counter <= review.rating %}
+                  ★
+                {% else %}
+                  ☆
+                {% endif %}
+              {% endfor %}
+            </div>
+
+            <p>“{{ review.comment|truncatechars:120 }}”</p>
+
+            <div class="client-info">
+              <strong>{{ review.user.get_full_name|default:review.user.username }}</strong>
+              <span>— {{ review.service.title }}</span>
+            </div>
+
+          </div>
+        </div>
+      {% empty %}
+        <p class="text-center text-muted">نظری برای نمایش وجود ندارد.</p>
+      {% endfor %}
+    </div>
+
+    <div class="text-center mt-4">
+      <a href="{% url 'reviews' %}" class="btn btn-gold header-btn">بیشتر بدانید</a>
+    </div>
+  </div>
+
+
+    <!-- پیشنهادهای ویژه -->
+  <div class="container mt-5 mb-5">
+    <h2 class="text-center mb-4" style="color: #D4AF37;">پیشنهادهای ویژه ما</h2>
+    {% if packages %}
+    <!-- اسلایدر پیشنهادهای ویژه -->
+    <div id="offersCarousel" class="carousel slide" data-bs-ride="carousel">
+      <div class="carousel-indicators">
+        {% for package in packages %}
+        <button type="button" data-bs-target="#offersCarousel" data-bs-slide-to="{{ forloop.counter0 }}"
+          {% if forloop.first %}class="active" aria-current="true"{% endif %} aria-label="{{ package.title }}">
+        </button>
+        {% endfor %}
+      </div>
+
+       <!-- آیتم‌های اسلایدر -->
+      <div class="carousel-inner">
+        {% for package in packages %}
+        <div class="carousel-item {% if forloop.first %}active{% endif %}">
+            <div class="offer-card open-package-modal"
+              data-bs-toggle="modal"
+              data-bs-target="#packageModal"
+
+              data-title="{{ package.title }}"
+              data-description="{{ package.description|escapejs }}"
+              data-original="{{ package.original_price|default:'' }}"
+              data-discounted="{{ package.discounted_price }}"
+              data-badge="{{ package.discount_badge|default:'' }}"
+              data-services="{% for s in package.service.all %}{{ s.name }}{% if not forloop.last %}, {% endif %}{% endfor %}"
+              data-image="{{ package.image_url }}"
+              data-reserve-url="{% url 'package_payment_confirm' package.id %}">
+
+              <img src="{{ package.image_url }}" class="d-block w-100 rounded" alt="{{ package.title }}">
+              <div class="offer-overlay">
+                <h3>{{ package.title }}</h3>
+                <p>{{ package.description }}</p> 
+                  <!-- بعد ✅ -->
+                  <p class="offer-price">
+                    {% if package.original_price %}
+                      <del>{{ package.original_price|intcomma }} تومان</del>
+                    {% endif %}
+                    <strong>{{ package.discounted_price|intcomma }} تومان</strong>
+                    {% if package.discount_badge %}
+                      <span class="badge bg-danger">{{ package.discount_badge }}</span>
+                    {% endif %}
+                  </p>
+               <!--<div><a href="{% url 'package_payment_confirm' package.id %}" class="btn btn-gold mt-2">رزرو نوبت</a></div>--> 
+
+                <!-- تایمر فقط برای پکیج‌های موقت -->
+                {% if package.is_limited_time and package.timer_active %}
+                <div class="offer-timer mt-2"
+                    data-package-id="{{ package.id }}"
+                    data-remaining="{{ package.remaining_seconds }}"
+                    data-package-title="{{ package.title }}">
+                    <div class="timer-display text-end"></div>
+                </div>
+                {% endif %}
+
+              </div>
+            </div>
+          
+        </div>
+        {% endfor %}
+      </div>
+
+       <!-- دکمه‌های کنترل اسلایدر -->
+      <button class="carousel-control-prev" type="button" data-bs-target="#offersCarousel" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+      </button>
+      <button class="carousel-control-next" type="button" data-bs-target="#offersCarousel" data-bs-slide="next">
+        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+      </button>
+    </div>
+    {% else %}
+    <p class="text-center">در حال حاضر پیشنهاد ویژه‌ای وجود ندارد.</p>
+    {% endif %}
+  </div>
+
+  <!-- اسکریپت تایمر شخصی -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.offer-timer').forEach(timerEl => {
+            const packageId = timerEl.dataset.packageId;
+            const remainingSeconds = parseInt(timerEl.dataset.remaining);
+            const displayEl = timerEl.querySelector('.timer-display');
+            const packageTitle = timerEl.dataset.packageTitle;
+            
+            // ✅ استفاده از زمان سرور به جای localStorage
+            let remainingTime = remainingSeconds;
+            
+            // تابع بروزرسانی تایمر
+            const updateTimer = () => {
+                if (remainingTime <= 0) {
+                    displayEl.innerHTML = '<span style="color:#D4AF37;">زمان پیشنهاد به پایان رسید!</span>';
+                    return;
+                }
+                
+                // محاسبه روز، ساعت و دقیقه باقی‌مانده
+                const days = Math.floor(remainingTime / (24 * 60 * 60));
+                const hours = Math.floor((remainingTime % (24 * 60 * 60)) / (60 * 60));
+                const minutes = Math.floor((remainingTime % (60 * 60)) / 60);
+                
+                // نمایش تایمر
+                displayEl.innerHTML = `
+                    <div class="d-flex gap-2 justify-content-end">
+                        <div class="timer-box">${String(days).padStart(2, '0')}<small>روز</small></div>
+                        <div class="timer-box">${String(hours).padStart(2, '0')}<small>ساعت</small></div>
+                        <div class="timer-box">${String(minutes).padStart(2, '0')}<small>دقیقه</small></div>
+                    </div>
+                `;
+                
+                remainingTime -= 60; // کاهش یک دقیقه
+            };
+            
+            updateTimer();
+            setInterval(updateTimer, 60000); // هر دقیقه آپدیت
+        });
+    });
+    </script>
+    
+
+    <!-- مقالات بلاگ -->
+  <div class="container mt-5 mb-5">
+    <h2 class="text-center mb-4" style="color: #D4AF37;">نکات طلایی زیبایی</h2>
+    <div class="row justify-content-center">
+      {% for a in latest_articles %}
+        <div class="col-md-6 mb-4">
+          <div  class="blog-card h-100" ondblclick="window.location.href='{% url 'blog_detail' a.id %}'">
+            <img src="{{ a.image.url }}" class="blog-img">
+            <div class="blog-content">
+              <h4>{{ a.title }}</h4>
+              <p>{{ a.content|truncatewords:20 }}</p>
+              <a href="{% url 'blog_detail' a.id %}" class="btn-read">
+                ادامه مطلب →
+              </a>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+  </div>
+
+
+    <!-- تماس و موقعیت -->
+  <!-- تماس و موقعیت - نسخه نهایی با داده‌های پویا از مدل -->
+  <div class="container mt-5 mb-5">
+    <h2 class="text-center mb-4" style="color: #D4AF37;">تماس با ما</h2>
+    <div class="row g-4">
+      <!-- اطلاعات تماس - کاملاً پویا -->
+      <div class="col-md-6">
+        <div class="contact-info">
+          <h4>آدرس</h4>
+          <p>{{ salon_settings.address }}</p>
+
+          <h4>شماره تماس</h4>
+          <p>📞 
+            <a href="tel:+98{{ salon_settings.phone|slice:'1:' }}" 
+              class="contact-link">
+              {{ salon_settings.phone }}
+            </a>
+          </p>
+
+          <h4>اینستاگرام</h4>
+          <p>📸 
+            <a href="https://instagram.com/{{ salon_settings.instagram }}" 
+              target="_blank" 
+              class="contact-link">
+              @{{ salon_settings.instagram }}
+            </a>
+          </p>
+
+          <h4>ساعت کاری</h4>
+          <p>
+            <span dir="ltr">{{ salon_settings.open_time|time:"H:i" }}</span> 
+            تا 
+            <span dir="ltr">{{ salon_settings.close_time|time:"H:i" }}</span>
+          </p>
+
+          <!-- دکمه واتساپ پویا (فقط اگر شماره وجود داشته باشد) -->
+          {% if salon_settings.whatsapp and salon_settings.whatsapp|length > 0 %}
+            <a href="https://wa.me/{{ salon_settings.whatsapp }}?text=سلام،%20برای%20رزرو%20خدمت%20سوال%20دارم" 
+              target="_blank" 
+              class="btn btn-gold mt-3">
+              💬 مشاوره در واتساپ
+            </a>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- نقشه گوگل (بدون تغییر) -->
+      <div class="col-md-6">
+        <div class="google-map">
+          <iframe 
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d1722.3548421801895!2d57.05072353967285!3d30.302325399999997!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3f021907e804b547%3A0xd62677e739287e22!2z2KLYsdin24zYtNqv2KfZhyDZgtuM2obbjCDZhtmC2LHZhyDYp9uM!5e0!3m2!1sen!2s!4v1763302664885!5m2!1sen!2s" 
+            width="100%" 
+            height="300" 
+            style="border:0; border-radius: 12px;" 
+            allowfullscreen="" 
+            loading="lazy">
+          </iframe>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Package Modal -->
+  <div class="modal fade" id="packageModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content">
+
+        <div class="modal-header">
+          <h5 class="modal-title" id="packageModalTitle"></h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+
+        <div class="modal-body" id="packageModalBody">
+          <!-- JS پر می‌کند -->
+        </div>
+
+        <div class="modal-footer">
+          <a href="#" id="packageReserveBtn" class="btn btn-gold">
+            رزرو نوبت
+          </a>
+          <button class="btn btn-secondary" data-bs-dismiss="modal">
+            بستن
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+
+
+</div>
+
+<script>
+
+function numberToPersianWords(num) {
+  const yekan = ["", "یک", "دو", "سه", "چهار", "پنج", "شش", "هفت", "هشت", "نه"];
+  const dahgan = ["", "", "بیست", "سی", "چهل", "پنجاه", "شصت", "هفتاد", "هشتاد", "نود"];
+  const dahTo19 = ["ده", "یازده", "دوازده", "سیزده", "چهارده", "پانزده",
+                   "شانزده", "هفده", "هجده", "نوزده"];
+  const sadgan = ["", "صد", "دویست", "سیصد", "چهارصد",
+                  "پانصد", "ششصد", "هفتصد", "هشتصد", "نهصد"];
+
+  function threeDigitToWord(n) {
+    let str = "";
+    let hundred = Math.floor(n / 100);
+    let rest = n % 100;
+    let ten = Math.floor(rest / 10);
+    let one = rest % 10;
+
+    if (hundred) str += sadgan[hundred] + " و ";
+
+    if (rest >= 10 && rest < 20) {
+      str += dahTo19[rest - 10];
+    } else {
+      if (ten) str += dahgan[ten] + (one ? " و " : "");
+      if (one) str += yekan[one];
+    }
+
+    return str.trim().replace(/ و $/, "");
+  }
+
+  if (num === 0) return "صفر";
+
+  let result = "";
+  let millions = Math.floor(num / 1000000);
+  let thousands = Math.floor((num % 1000000) / 1000);
+  let hundreds = num % 1000;
+
+  if (millions) result += threeDigitToWord(millions) + " میلیون ";
+  if (thousands) result += threeDigitToWord(thousands) + " هزار ";
+  if (hundreds) result += threeDigitToWord(hundreds);
+
+  return result.trim();
+}
+
+
+document.addEventListener('DOMContentLoaded', function () {
+  document.querySelectorAll('.open-package-modal').forEach(card => {
+    card.addEventListener('click', function () {
+
+      const titleEl = document.getElementById('packageModalTitle');
+      const bodyEl = document.getElementById('packageModalBody');
+      const reserveBtn = document.getElementById('packageReserveBtn');
+
+      if (!titleEl || !bodyEl || !reserveBtn) {
+        console.error('المان‌های مودال پیدا نشدند');
+        return;
+      }
+
+      // عنوان و لینک رزرو
+      titleEl.innerText = this.dataset.title || '';
+      reserveBtn.href = this.dataset.reserveUrl || '#';
+
+      // HTML قیمت (نسخه نهایی بدون تکرار let)
+      let priceHtml = `
+        <div class="d-flex align-items-center justify-content-end gap-3">
+          ${this.dataset.original ? `
+            <del class="text-muted fs-6">
+              ${Number(this.dataset.original).toLocaleString()} تومان
+            </del>
+          ` : ''}
+
+          <strong class="fs-5">
+            ${Number(this.dataset.discounted).toLocaleString()} تومان
+          </strong>
+
+          <div class="text-muted mt-2" style="font-size:14px;">
+            (${numberToPersianWords(Number(this.dataset.discounted))} تومان)
+          </div>
+
+
+          ${this.dataset.badge ? `
+            <span class="badge bg-danger fs-6">
+              ${this.dataset.badge}
+            </span>
+          ` : ''}
+        </div>
+      `;
+
+      // بدنه مودال
+      bodyEl.innerHTML = `
+        <div class="package-image-container mb-3">
+          <img src="${this.dataset.image}" 
+               class="w-100 rounded-3"
+               style="max-height: 420px;
+  object-fit: contain;
+  background: #f8f9fa;
+                      border: 2px solid #f8f9fa;
+                      box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
+        </div>
+
+        <p class="mt-2">${this.dataset.description || ''}</p>
+
+        <hr class="my-3">
+
+        <h6 class="fw-bold">شامل خدمات:</h6>
+        <p class="text-muted">
+          ${this.dataset.services && this.dataset.services.trim() ? this.dataset.services : '—'}
+        </p>
+
+        <hr class="my-3">
+
+        ${priceHtml}
+      `;
+    });
+  });
+});
+</script>
+
+
+{% endblock content %}

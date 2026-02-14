@@ -1,0 +1,38 @@
+<form id="reviewForm" method="post" data-appointment="{{ appointment.id }}">
+    {% csrf_token %}
+
+    <!-- امتیاز (ستاره‌ای) -->
+    <div class="mb-3">
+        <label class="form-label">امتیاز شما</label>
+
+        <div id="starRating" class="fs-4">
+            <span class="star" data-value="1">☆</span>
+            <span class="star" data-value="2">☆</span>
+            <span class="star" data-value="3">☆</span>
+            <span class="star" data-value="4">☆</span>
+            <span class="star" data-value="5">☆</span>
+        </div>
+
+        <div id="ratingValue" class="text-muted small mt-1">
+        هنوز امتیازی انتخاب نشده
+        </div>
+
+        <!-- این فیلد جایگزین form.rating میشه -->
+        <input type="hidden" name="rating" id="ratingInput" required>
+    </div>
+
+    <!-- متن نظر -->
+    <div class="mb-3">
+        <label class="form-label">نظر شما</label>
+        <textarea name="comment"
+                  class="form-control"
+                  rows="3"
+                  required></textarea>
+    </div>
+
+    <div id="reviewMsg" class="text-danger small mb-2"></div>
+
+    <button type="submit" class="btn btn-primary w-100">
+        ثبت نظر
+    </button>
+</form>

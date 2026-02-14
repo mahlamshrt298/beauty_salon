@@ -1,0 +1,170 @@
+{% extends "panel/base_panel.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="container mt-4">
+
+    <h2 class="mb-4 fw-bold">➕ افزودن خدمت جدید</h2>
+
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <!-- کارت اطلاعات خدمت -->
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header bg-primary text-white">
+                اطلاعات اصلی خدمت
+            </div>
+            <div class="card-body">
+                {{ form|crispy }}
+            </div>
+        </div>
+
+        <!-- کارت تصاویر -->
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header bg-info text-white">
+                عکس‌های مرتبط
+            </div>
+
+            <div class="card-body">
+
+                <div class="border rounded p-3 bg-light">
+                    <label class="form-label fw-semibold">
+                        انتخاب عکس‌ها
+                    </label>
+
+                    <input type="file"
+                        name="form-0-image"
+                        multiple
+                        class="form-control">
+                </div>
+
+                <small class="text-muted d-block mt-2">
+                    می‌توانید چند تصویر را همزمان انتخاب کنید.
+                </small>
+
+            </div>
+        </div>
+
+        <!-- دکمه‌ها -->
+        <div class="d-flex flex-column flex-md-row gap-2">
+            {% if request.user.profile.role == "owner" %}
+                <button class="btn btn-success px-4" type="submit">
+                    ثبت خدمت
+                </button>
+            {% endif %}
+
+            <a href="{% url 'panel:services_list' %}" class="btn btn-secondary px-4">
+                بازگشت
+            </a>
+        </div>
+
+    </form>
+
+</div>
+
+<script>
+// تابع تبدیل عدد به حروف فارسی
+function numberToPersianWords(num) {
+    const units = ['', 'یک', 'دو', 'سه', 'چهار', 'پنج', 'شش', 'هفت', 'هشت', 'نه'];
+    const tens = ['', 'ده', 'بیست', 'سی', 'چهل', 'پنجاه', 'شصت', 'هفتاد', 'هشتاد', 'نود'];
+    const teens = ['ده', 'یازده', 'دوازده', 'سیزده', 'چهارده', 'پانزده', 'شانزده', 'هفده', 'هجده', 'نوزده'];
+    const hundreds = ['', 'صد', 'دویست', 'سیصد', 'چهارصد', 'پانصد', 'ششصد', 'هفتصد', 'هشتصد', 'نهصد'];
+    const bigs = ['', 'هزار', 'میلیون', 'میلیارد', 'تریلیون'];
+    
+    if (num === 0) return 'صفر';
+    
+    function convertThreeDigits(n) {
+        if (n === 0) return '';
+        
+        let result = '';
+        
+        // صدگان
+        const h = Math.floor(n / 100);
+        if (h > 0) {
+            result += hundreds[h] + ' و ';
+        }
+        
+        // دهگان و یکان
+        const t = n % 100;
+        if (t >= 10 && t < 20) {
+            result += teens[t - 10];
+        } else {
+            const ten = Math.floor(t / 10);
+            const unit = t % 10;
+            if (ten > 0) {
+                result += tens[ten];
+                if (unit > 0) result += ' و ';
+            }
+            if (unit > 0) {
+                result += units[unit];
+            }
+        }
+        
+        return result.replace(/ و $/, '');
+    }
+    
+    let result = '';
+    let i = 0;
+    
+    while (num > 0) {
+        const threeDigits = num % 1000;
+        if (threeDigits > 0) {
+            const part = convertThreeDigits(threeDigits);
+            if (i > 0 && part) {
+                result = part + ' ' + bigs[i] + ' و ' + result;
+            } else {
+                result = part + (i > 0 ? ' ' + bigs[i] : '') + (result ? ' و ' + result : '');
+            }
+        }
+        num = Math.floor(num / 1000);
+        i++;
+    }
+    
+    return result.trim().replace(/ و $/, '');
+}
+
+// ✅ اسکریپت اصلی - اضافه کردن نمایش حروف بعد از فیلد قیمت
+document.addEventListener('DOMContentLoaded', function() {
+    // پیدا کردن فیلد قیمت (با کلاس form-control یا name)
+    const priceInput = document.querySelector('input[name="price"]');
+    
+    if (!priceInput) {
+        console.warn('⚠️ فیلد قیمت پیدا نشد!');
+        return;
+    }
+    
+    // ایجاد المان نمایش حروف
+    const displayElement = document.createElement('small');
+    displayElement.id = 'price_words';
+    displayElement.className = 'text-muted d-block mt-1';
+    displayElement.style.fontSize = '0.85rem';
+    displayElement.style.minHeight = '1.5em'; // فضای ثابت برای جلوگیری از جهش صفحه
+    
+    // قرار دادن بعد از فیلد قیمت
+    priceInput.parentNode.appendChild(displayElement);
+    
+    // تابع به‌روزرسانی نمایش
+    function updateDisplay() {
+        const value = priceInput.value.trim();
+        if (!value || isNaN(value) || value === '0') {
+            displayElement.textContent = '';
+            displayElement.style.display = 'none';
+            return;
+        }
+        
+        const num = parseInt(value);
+        const words = numberToPersianWords(num);
+        displayElement.textContent = `${words} تومان`;
+        displayElement.style.display = 'block';
+    }
+    
+    // اتصال رویدادها
+    priceInput.addEventListener('input', updateDisplay);
+    priceInput.addEventListener('blur', updateDisplay);
+    
+    // اولین بار هم چک کن (برای حالت ویرایش)
+    updateDisplay();
+});
+</script>
+
+{% endblock %}

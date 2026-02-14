@@ -1,0 +1,176 @@
+{% extends "panel/base_panel.html" %}
+{% load jformat %}
+{% block content %}
+<div class="card shadow-sm">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">🎁 مدیریت کد تخفیف‌ها</h5>
+    </div>
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <form method="get" class="col-12 col-md-6">
+                <div class="input-group">
+                    <input type="text" name="search" class="form-control"
+                        placeholder="جستجو کد تخفیف..." value="{{ query }}">
+                    <button class="btn btn-outline-secondary" type="submit">
+                        🔍
+                    </button>
+                </div>
+            </form>
+
+            <a href="{% url 'panel:discount_code_add' %}"
+            class="btn btn-success px-3 py-1 fw-bold">
+                ➕ افزودن کد تخفیف
+            </a>
+        </div>
+
+        <div class="panel-table-wrapper">
+            <table class="table table-bordered table-striped">
+                <thead class="table-dark">
+                    <tr>
+                        <th>کد</th>
+                        <th>درصد تخفیف</th>
+                        <th>تاریخ انقضا</th>
+                        <th>کاربر</th>
+                        <th>وضعیت فعال</th>
+                        <th>وضعیت استفاده</th>
+                        <th>اعلان</th>
+                        <th>عملیات</th>  
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for code in codes %}
+                    <tr>
+                        <td class="text-center">{{ code.code }}</td>
+                        <td class="text-center">{{ code.percent }}%</td>
+                        <td class="text-center">{{ code.expires_at|jformat:"%Y/%m/%d" }}</td>
+                        <td class="text-center">{{ code.user.username }}</td>
+
+                        <!-- وضعیت فعال -->
+                        <td class="text-center">
+                            {% if code.is_active %}
+                                <span class="badge bg-success"> فعال</span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark">غیر فعال</span>
+                            {% endif %}
+                        </td>
+
+                        <!-- وضعیت استفاده -->
+                        <td class="text-center">
+                            {% if code.is_used %}
+                                <span class="badge bg-success">استفاده شده</span>
+                            {% else %}
+                                <span class="badge bg-secondary">نداشته</span>
+                            {% endif %}
+                        </td>
+
+                        <td class="text-center">
+                            {% if code.notification_sent %}
+                                <span class="badge bg-info">اعلان ارسال شد</span>
+                            {% else %}
+                                <span class="badge bg-secondary">اعلان ارسال نشده</span>
+                            {% endif %}
+                        </td>
+                        
+                        <td class="text-center">
+                            <!-- عملیات -->
+                            <div class="d-flex flex-wrap gap-1 justify-content-center flex-column flex-md-row">
+                                
+                                <a href="{% url 'panel:discount_code_edit' code.pk %}" class="btn  btn-primary px-1">ویرایش</a>
+                                <form method="post" style="display:inline;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="delete_id" value="{{ code.pk }}">
+                                    <button type="submit"
+                                            class="btn btn-danger px-1"
+                                            onclick="return confirm('حذف شود؟')">
+                                        حذف
+                                    </button>
+                                </form>
+                                <!-- دکمه فعال/غیرفعال کردن -->
+                                <form method="post" style="display:inline;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="toggle_active" value="{{ code.pk }}">
+                                    <button type="submit"
+                                            class="btn px-1 {% if code.is_active %}btn-warning{% else %}btn-success{% endif %}"
+                                            title="{% if code.is_active %}غیرفعال کردن{% else %}فعال کردن{% endif %}">
+                                        {% if code.is_active %}
+                                            ⛔ غیرفعال کردن
+                                        {% else %}
+                                            ✅ فعال کردن
+                                        {% endif %}
+                                    </button>
+                                </form>
+
+                                <!-- دکمه ارسال مجدد اعلان -->
+                                <form method="post" style="display:inline;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="resend_notify" value="{{ code.pk }}">
+                                    <button type="submit"
+                                            class="btn btn-info px-1"
+                                            title="ارسال دوباره اعلان">
+                                        🔁 ارسال مجدد اعلان
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center">هیچ کد تخفیفی یافت نشد</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- قبل از بسته شدن </div> کارت، این کد را اضافه کنید -->
+    {% if codes.has_other_pages %}
+    <nav aria-label="صفحه‌بندی کدهای تخفیف" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if codes.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" 
+                    href="?page={{ codes.previous_page_number }}{% if query %}&search={{ query }}{% endif %}">
+                        <span aria-hidden="true">&laquo;</span> قبلی
+                    </a>
+                </li>
+            {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">&laquo; قبلی</span>
+                </li>
+            {% endif %}
+
+            {% for num in codes.paginator.page_range %}
+                {% if codes.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }} <span class="sr-only">(فعلی)</span></span>
+                    </li>
+                {% else %}
+                    <li class="page-item">
+                        <a class="page-link" 
+                        href="?page={{ num }}{% if query %}&search={{ query }}{% endif %}">
+                            {{ num }}
+                        </a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+
+            {% if codes.has_next %}
+                <li class="page-item">
+                    <a class="page-link" 
+                    href="?page={{ codes.next_page_number }}{% if query %}&search={{ query }}{% endif %}">
+                        بعدی <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+            {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">بعدی &raquo;</span>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+
+</div>
+{% endblock %}
+

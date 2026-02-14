@@ -1,0 +1,120 @@
+{% extends "panel/base_panel.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">⚙️ تنظیمات کلی سالن</h4>
+                    {% if is_read_only %}
+                        <span class="badge bg-warning text-dark">
+                            <i class="fas fa-eye"></i> فقط مشاهده (منشی)
+                        </span>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="row mb-3">
+                            <div class="col-12 col-md-6">
+                                <label class="form-label">نام سالن</label>
+                                <input type="text" name="salon_name" class="form-control" 
+                                       value="{{ settings.salon_name|default:'سالن زیبایی' }}" {% if is_read_only %}disabled{% endif %}>
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <label class="form-label">شماره تماس</label>
+                                <input type="text" name="phone" class="form-control" 
+                                       value="{{ settings.phone|default:'' }}" {% if is_read_only %}disabled{% endif %}>
+                            </div>
+
+                            <div class="col-12 col-md-6">
+                                <label class="form-label">شماره واتس‌اپ</label>
+                                <input type="text" name="whatsapp" class="form-control" 
+                                    placeholder="مثال: 989123456789"
+                                    value="{{ settings.whatsapp|default:'' }}" {% if is_read_only %}disabled{% endif %}>
+                                <small class="text-muted d-block mt-1">
+                                    ✅ فرمت صحیح: کد کشور + شماره (بدون +) - مثال: 989123456789
+                                </small>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-12 col-md-6">
+                                <label class="form-label">ساعت شروع کار</label>
+                                <input type="time" name="open_time" class="form-control" 
+                                       value="{{ settings.open_time|default:'09:00'|time:'H:i' }}" {% if is_read_only %}disabled{% endif %}>
+                            </div>
+                            <div class="col-12 col-md-6">
+                                <label class="form-label">ساعت پایان کار</label>
+                                <input type="time" name="close_time" class="form-control" 
+                                       value="{{ settings.close_time|default:'18:00'|time:'H:i' }}" {% if is_read_only %}disabled{% endif %}>
+                            </div>
+                        </div>
+
+                        <!-- وقت ناهار سالن -->
+                        <div class="card mb-3">
+                            <div class="card-header bg-warning">
+                                <h5 class="mb-0">⏰ زمان ناهار کل سالن</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" 
+                                           name="has_salon_lunch_break" id="has_salon_lunch_break"
+                                           {% if settings.has_salon_lunch_break %}checked{% endif %}>
+                                    <label class="form-check-label" for="has_salon_lunch_break">
+                                        فعال بودن زمان ناهار سالن
+                                    </label>
+                                </div>
+
+                                <div id="salon_lunch_fields" 
+                                     style="display: {% if settings.has_salon_lunch_break %}block{% else %}none{% endif %};">
+                                    <div class="row">
+                                        <div class="col-12 col-md-6">
+                                            <label class="form-label">شروع ناهار</label>
+                                            <input type="time" name="salon_lunch_start" class="form-control"
+                                                   value="{{ settings.salon_lunch_start|default:'13:00'|time:'H:i' }}" {% if is_read_only %}disabled{% endif %}>
+                                        </div>
+                                        <div class="col-12 col-md-6">
+                                            <label class="form-label">پایان ناهار</label>
+                                            <input type="time" name="salon_lunch_end" class="form-control"
+                                                   value="{{ settings.salon_lunch_end|default:'14:00' |time:'H:i'}}" {% if is_read_only %}disabled{% endif %}>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card-footer bg-light text-center">
+                            {% if is_read_only %}
+                                <div class="alert alert-info mb-0">
+                                    <i class="fas fa-info-circle"></i>
+                                    <strong>نکته:</strong> شما به عنوان منشی، فقط می‌توانید تنظیمات سالن را مشاهده کنید. 
+                                    برای ویرایش تنظیمات، لطفاً با حساب <span class="text-danger">مالک سالن</span> وارد شوید.
+                                </div>
+                            {% else %}
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> ذخیره تنظیمات
+                                </button>
+                                <a href="{% url 'panel:dashboard' %}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-times"></i> انصراف
+                                </a>
+                            {% endif %}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    {% if not is_read_only %}
+    document.getElementById('has_salon_lunch_break').addEventListener('change', function() {
+        document.getElementById('salon_lunch_fields').style.display = this.checked ? 'block' : 'none';
+    });
+    {% endif %}
+</script>
+
+{% endblock %}

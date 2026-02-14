@@ -1,0 +1,559 @@
+{% extends "panel/base_panel.html" %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-10">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        {% if action == 'add' %}
+                            <i class="fas fa-plus"></i> افزودن پکیج جدید
+                        {% else %}
+                            <i class="fas fa-edit"></i> ویرایش پکیج: {{ package.title }}
+                        {% endif %}
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <!-- عنوان پکیج -->
+                        <!-- عنوان پکیج -->
+                        <div class="mb-3">
+                            <label class="form-label">عنوان پکیج <span class="text-danger">*</span></label>
+                            <input type="text" name="title" class="form-control" 
+                                value="{{ package.title|default:'' }}" required>
+                        </div>
+
+                        <!-- گروه‌های انتخاب خدمت -->
+                        <!-- select پنهان برای ذخیره همه خدمات -->
+                        <select name="services[]" id="all-services" class="d-none" multiple>
+                            {% if package and package.service.exists %}
+                                {% for service in package.service.all %}
+                                <option value="{{ service.id }}" selected></option>
+                                {% endfor %}
+                            {% endif %}
+                        </select>
+
+                        <!-- گروه‌های انتخاب خدمت -->
+                        <div id="service-groups-container">
+                            <div class="service-group mb-3">
+                                <div class="row mb-3">
+                                    <div class="col-md-4">
+                                        <label class="form-label">دسته‌بندی</label>
+                                        <select class="form-select service-category" >
+                                            <option value="">لطفاً دسته‌بندی را انتخاب کنید</option>
+                                            {% for category in categories %}
+                                            <option value="{{ category.id }}">{{ category.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">زیردسته</label>
+                                        <select class="form-select service-subcategory"  disabled>
+                                            <option value="">اول دسته‌بندی را انتخاب کنید</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">خدمات</label>
+                                        <select class="form-select service-select" multiple size="3" disabled>
+                                            <option value="">اول زیردسته را انتخاب کنید</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- لیست خدمات انتخاب شده -->
+                        <div id="selected-services-list" class="mb-3">
+                            <label class="form-label">خدمات انتخاب شده:</label>
+                            <div class="d-flex flex-wrap gap-2">
+                                {% if package and package.service.exists %}
+                                    {% for service in package.service.all %}
+                                    <span class="badge bg-info text-dark" data-service-id="{{ service.id }}">
+                                        {{ service.name }} ({{ service.subcategory.category.name }})
+                                        <button type="button" class="btn-remove-service ms-1" data-service-id="{{ service.id }}">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </span>
+                                    {% endfor %}
+                                {% endif %}
+                            </div>
+                        </div>
+
+
+                        <div class="mb-3">
+                            <label class="form-label">توضیحات <span class="text-danger">*</span></label>
+                            <textarea name="description" class="form-control" rows="3" required>{{ package.description|default:'' }}</textarea>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">عکس پکیج <span class="text-danger">*</span></label>
+                                <input type="file" name="image" class="form-control" 
+                                       {% if action == 'add' %}required{% endif %}>
+                                    <div class="mt-2">
+                                        <img src="{{ package.image_url }}" width="150" class="img-thumbnail">
+                                    </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">برچسب تخفیف (مثل: ۲۵٪ تخفیف)</label>
+                                <input type="text" name="discount_badge" id="discount_badge" class="form-control" 
+                                       value="{{ package.discount_badge|default:'' }}">
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <!-- قیمت اصلی -->
+                            <div class="mb-3">
+                                <label class="form-label">قیمت اصلی (تومان)</label>
+                                <input type="number" 
+                                    id="id_original_price" 
+                                    name="original_price" 
+                                    class="form-control" 
+                                    value="{{ package.original_price|default:'' }}"
+                                    placeholder="مثال: 1000000">
+                                <small id="original_price_words" class="text-muted d-block mt-1" style="font-size: 0.85rem;"></small>
+                            </div>
+
+                            <!-- قیمت تخفیف‌خورده -->
+                            <div class="mb-3">
+                                <label class="form-label">قیمت تخفیف‌خورده (تومان) *</label>
+                                <input type="number" 
+                                    id="id_discounted_price" 
+                                    name="discounted_price" 
+                                    class="form-control" 
+                                    value="{{ package.discounted_price|default:'' }}"
+                                    required
+                                    placeholder="مثال: 750000">
+                                <small id="discounted_price_words" class="text-muted d-block mt-1" style="font-size: 0.85rem;"></small>
+                            </div>
+
+                            <!-- ✅ اسکریپت نمایش قیمت به حروف -->
+                            <script>
+                            document.addEventListener('DOMContentLoaded', function() {
+                                displayPriceInWords('id_original_price', 'original_price_words');
+                                displayPriceInWords('id_discounted_price', 'discounted_price_words');
+                            });
+                            </script>
+                        </div>
+
+                        <div class="card mb-3">
+                            <div class="card-header bg-warning">
+                                <h5 class="mb-0">⏰ تنظیمات تخفیف موقت</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" 
+                                        name="is_limited_time" id="is_limited_time"
+                                        {% if package.is_limited_time %}checked{% endif %}>
+                                    <label class="form-check-label" for="is_limited_time">
+                                        این پکیج تخفیف موقت دارد
+                                    </label>
+                                </div>
+
+                                <div id="limited_time_fields" style="display: {% if package.is_limited_time %}block{% else %}none{% endif %};">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <label class="form-label">مدت زمان تخفیف (روز)</label>
+                                            <input type="number" name="duration_days" class="form-control" 
+                                                value="{{ package.duration_days|default:'3' }}">
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <label class="form-label">زمان شروع تخفیف</label>
+
+                                            <div class="input-group">
+                                                <input type="text"
+                                                    id="start_time_jalali"
+                                                    class="form-control"
+                                                    placeholder="1403/02/15"
+                                                    autocomplete="off">
+
+                                                <input type="time"
+                                                    id="start_time_clock"
+                                                    class="form-control"
+                                                    style="max-width: 140px;"
+                                                    value="">
+                                            </div>
+
+                                            <input type="hidden" name="start_time" id="start_time_miladi">
+
+                                            <small class="text-muted">
+                                                تاریخ را از تقویم و ساعت را جداگانه انتخاب کنید
+                                            </small>
+                                        </div>
+
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" 
+                                   name="is_active" id="is_active"
+                                   {% if not package or package.is_active %}checked{% endif %}>
+                            <label class="form-check-label" for="is_active">
+                                فعال باشد
+                            </label>
+                        </div>
+
+                        <!-- هیدن اینپوت برای ارسال همیشه مقدار -->
+                        <input type="hidden" name="show_on_homepage" id="show_on_homepage_hidden" 
+                            value="{% if not package or package.show_on_homepage %}1{% else %}0{% endif %}">
+
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" 
+                                 id="show_on_homepage_checkbox"
+                                {% if not package or package.show_on_homepage %}checked{% endif %}>
+                            <label class="form-check-label" for="show_on_homepage_checkbox">
+                                <i class="fas fa-home me-1"></i> نمایش در سایت 
+                            </label>
+                            <small class="text-muted d-block mt-1">
+                                اگر غیرفعال باشد، این پکیج در هیچ جای سایت (صفحه اصلی و صفحه خدمات) نمایش داده نمی‌شود.
+                            </small>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i>
+                                ذخیره
+                            </button>
+                            <a href="{% url 'panel:package_list' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times"></i>
+                                انصراف
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('is_limited_time').addEventListener('change', function() {
+    document.getElementById('limited_time_fields').style.display = this.checked ? 'block' : 'none';
+});
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const allServicesSelect = document.getElementById('all-services');
+    const selectedServicesList = document.getElementById('selected-services-list').querySelector('.d-flex');
+    const getSubcategoriesUrl = "/service/ajax/get-subcategories/";
+    const getServicesUrl = "/service/ajax/get-services/";
+    
+    // تابع برای افزودن خدمت به لیست
+    function addService(serviceId, serviceName, categoryName) {
+        if (allServicesSelect.querySelector(`option[value="${serviceId}"]`)) {
+            alert('این خدمت قبلاً انتخاب شده است!');
+            return;
+        }
+        
+        // اضافه کردن به select پنهان
+        const option = document.createElement('option');
+        option.value = serviceId;
+        option.selected = true;
+        allServicesSelect.appendChild(option);
+        
+        // اضافه کردن به لیست نمایشی
+        const badge = document.createElement('span');
+        badge.className = 'badge bg-info text-dark';
+        badge.setAttribute('data-service-id', serviceId);
+        badge.innerHTML = `
+            ${serviceName} (${categoryName})
+            <button type="button" class="btn-remove-service ms-1" data-service-id="${serviceId}">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
+        selectedServicesList.appendChild(badge);
+        
+        // event حذف
+        badge.querySelector('.btn-remove-service').addEventListener('click', () => removeService(serviceId));
+    }
+    
+    // تابع برای حذف خدمت
+    function removeService(serviceId) {
+        // حذف از select پنهان
+        const option = allServicesSelect.querySelector(`option[value="${serviceId}"]`);
+        if (option) allServicesSelect.removeChild(option);
+        
+        // حذف از لیست نمایشی
+        const badge = selectedServicesList.querySelector(`[data-service-id="${serviceId}"]`);
+        if (badge) badge.remove();
+    }
+    
+    // تنظیم event listeners برای گروه اصلی (تنها گروه)
+    const categorySelect = document.querySelector('.service-category');
+    const subcategorySelect = document.querySelector('.service-subcategory');
+    const serviceSelect = document.querySelector('.service-select');
+    
+    if (!categorySelect || !subcategorySelect || !serviceSelect) {
+        console.error('المان‌های انتخاب خدمت پیدا نشدند');
+        return;
+    }
+    
+    // تغییر دسته‌بندی
+    categorySelect.addEventListener('change', function() {
+        const categoryId = this.value;
+        
+        if (categoryId) {
+            subcategorySelect.disabled = false;
+            subcategorySelect.innerHTML = '<option value="">در حال بارگذاری...</option>';
+            
+            fetch(`${getSubcategoriesUrl}?category_id=${categoryId}`)
+                .then(response => response.json())
+                .then(data => {
+                    subcategorySelect.innerHTML = '<option value="">لطفاً زیردسته را انتخاب کنید</option>';
+                    data.forEach(item => {
+                        const opt = document.createElement('option');
+                        opt.value = item.id;
+                        opt.textContent = item.name;
+                        subcategorySelect.appendChild(opt);
+                    });
+                })
+                .catch(() => {
+                    subcategorySelect.innerHTML = '<option value="">خطا در بارگذاری</option>';
+                });
+        } else {
+            subcategorySelect.disabled = true;
+            subcategorySelect.innerHTML = '<option value="">اول دسته‌بندی را انتخاب کنید</option>';
+            serviceSelect.disabled = true;
+            serviceSelect.innerHTML = '<option value="">اول زیردسته را انتخاب کنید</option>';
+        }
+    });
+    
+    // تغییر زیردسته
+    subcategorySelect.addEventListener('change', function() {
+        const subcategoryId = this.value;
+        
+        if (subcategoryId) {
+            serviceSelect.disabled = false;
+            serviceSelect.innerHTML = '<option value="">در حال بارگذاری...</option>';
+            
+            fetch(`${getServicesUrl}?subcategory_id=${subcategoryId}`)
+                .then(response => response.json())
+                .then(data => {
+                    serviceSelect.innerHTML = '';
+                    data.forEach(item => {
+                        const opt = document.createElement('option');
+                        opt.value = item.id;
+                        opt.textContent = item.name;
+                        serviceSelect.appendChild(opt);
+                    });
+                })
+                .catch(() => {
+                    serviceSelect.innerHTML = '<option value="">خطا در بارگذاری</option>';
+                });
+        } else {
+            serviceSelect.disabled = true;
+            serviceSelect.innerHTML = '<option value="">اول زیردسته را انتخاب کنید</option>';
+        }
+    });
+    
+    // انتخاب خدمات
+    serviceSelect.addEventListener('change', function() {
+        const categoryName = categorySelect.options[categorySelect.selectedIndex].text;
+        
+        Array.from(this.selectedOptions).forEach(option => {
+            addService(option.value, option.textContent, categoryName);
+        });
+        
+        // پاک کردن انتخاب‌ها پس از افزودن
+        this.selectedIndex = -1;
+    });
+    
+    // event حذف برای خدمات از قبل انتخاب شده
+    document.querySelectorAll('.btn-remove-service').forEach(btn => {
+        btn.addEventListener('click', function() {
+            removeService(this.dataset.serviceId);
+        });
+    });
+});
+
+// همگام‌سازی چک‌باکس با هیدن اینپوت
+const homepageCheckbox = document.getElementById('show_on_homepage_checkbox');
+const homepageHidden = document.getElementById('show_on_homepage_hidden');
+
+if (homepageCheckbox && homepageHidden) {
+    homepageCheckbox.addEventListener('change', function() {
+        homepageHidden.value = this.checked ? '1' : '0';
+    });
+}
+
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const originalPriceInput = document.getElementById('original_price');
+    const discountedPriceInput = document.getElementById('discounted_price');
+    const discountBadgeInput = document.getElementById('discount_badge');
+
+    let badgeManuallyEdited = false;
+
+    // اگر کاربر دستی برچسب رو تغییر داد
+    discountBadgeInput.addEventListener('input', function () {
+        badgeManuallyEdited = true;
+    });
+
+    function updateDiscountBadge() {
+        if (badgeManuallyEdited) return;
+
+        const original = parseFloat(originalPriceInput.value);
+        const discounted = parseFloat(discountedPriceInput.value);
+
+        if (!original || !discounted || discounted >= original) {
+            discountBadgeInput.value = '';
+            return;
+        }
+
+        const discountPercent = Math.round(((original - discounted) / original) * 100);
+        discountBadgeInput.value = `٪${discountPercent} تخفیف`;
+    }
+
+    originalPriceInput.addEventListener('input', updateDiscountBadge);
+    discountedPriceInput.addEventListener('input', updateDiscountBadge);
+});
+</script>
+
+<script>
+$(document).ready(function () {
+    const $dateInput = $('#start_time_jalali');
+    const $timeInput = $('#start_time_clock');
+    const $miladiInput = $('#start_time_miladi');
+
+    // اگر مقدار قبلی داریم (ویرایش)
+    if ($miladiInput.val()) {
+        const m = moment($miladiInput.val(), 'YYYY-MM-DDTHH:mm');
+        if (m.isValid()) {
+            $dateInput.val(m.format('jYYYY/jMM/jDD'));
+            $timeInput.val(m.format('HH:mm'));
+        }
+    }
+
+
+    function syncToMiladi() {
+        if (!$dateInput.val() || !$timeInput.val()) {
+            $miladiInput.val('');
+            return;
+        }
+
+        const fullJalali = $dateInput.val() + ' ' + $timeInput.val();
+        const m = moment(fullJalali, 'jYYYY/jMM/jDD HH:mm', true); // 👈 strict
+
+        if (!m.isValid()) {
+            $miladiInput.val('');
+            return;
+        }
+
+        $miladiInput.val(m.format('YYYY-MM-DDTHH:mm'));
+    }
+
+
+    // تقویم شمسی (فقط تاریخ)
+    $dateInput.persianDatepicker({
+        format: 'YYYY/MM/DD',
+        autoClose: true,
+        calendarType: 'persian',
+        persianDigit: true,
+        onSelect: syncToMiladi
+    });
+
+    // تغییر ساعت
+    $timeInput.on('change', syncToMiladi);
+});
+</script>
+
+<script>
+// تابع تبدیل عدد به حروف فارسی
+function numberToPersianWords(num) {
+    const units = ['', 'یک', 'دو', 'سه', 'چهار', 'پنج', 'شش', 'هفت', 'هشت', 'نه'];
+    const tens = ['', 'ده', 'بیست', 'سی', 'چهل', 'پنجاه', 'شصت', 'هفتاد', 'هشتاد', 'نود'];
+    const teens = ['ده', 'یازده', 'دوازده', 'سیزده', 'چهارده', 'پانزده', 'شانزده', 'هفده', 'هجده', 'نوزده'];
+    const hundreds = ['', 'صد', 'دویست', 'سیصد', 'چهارصد', 'پانصد', 'ششصد', 'هفتصد', 'هشتصد', 'نهصد'];
+    const bigs = ['', 'هزار', 'میلیون', 'میلیارد', 'تریلیون'];
+    
+    if (num === 0) return 'صفر';
+    
+    function convertThreeDigits(n) {
+        if (n === 0) return '';
+        
+        let result = '';
+        
+        // صدگان
+        const h = Math.floor(n / 100);
+        if (h > 0) {
+            result += hundreds[h] + ' و ';
+        }
+        
+        // دهگان و یکان
+        const t = n % 100;
+        if (t >= 10 && t < 20) {
+            result += teens[t - 10];
+        } else {
+            const ten = Math.floor(t / 10);
+            const unit = t % 10;
+            if (ten > 0) {
+                result += tens[ten];
+                if (unit > 0) result += ' و ';
+            }
+            if (unit > 0) {
+                result += units[unit];
+            }
+        }
+        
+        return result.replace(/ و $/, '');
+    }
+    
+    let result = '';
+    let i = 0;
+    
+    while (num > 0) {
+        const threeDigits = num % 1000;
+        if (threeDigits > 0) {
+            const part = convertThreeDigits(threeDigits);
+            if (i > 0 && part) {
+                result = part + ' ' + bigs[i] + ' و ' + result;
+            } else {
+                result = part + (i > 0 ? ' ' + bigs[i] : '') + (result ? ' و ' + result : '');
+            }
+        }
+        num = Math.floor(num / 1000);
+        i++;
+    }
+    
+    return result.trim().replace(/ و $/, '');
+}
+
+// نمایش قیمت به حروف
+function displayPriceInWords(inputId, displayId) {
+    const input = document.getElementById(inputId);
+    const display = document.getElementById(displayId);
+    
+    if (!input || !display) return;
+    
+    function updateDisplay() {
+        const value = input.value.trim();
+        if (!value || isNaN(value) || value === '0') {
+            display.textContent = '';
+            display.style.display = 'none';
+            return;
+        }
+        
+        const num = parseInt(value);
+        const words = numberToPersianWords(num);
+        display.textContent = `${words} تومان`;
+        display.style.display = 'block';
+    }
+    
+    input.addEventListener('input', updateDisplay);
+    input.addEventListener('blur', updateDisplay);
+    
+    // اولین بار هم چک کن
+    updateDisplay();
+}
+</script>
+
+{% endblock %}

@@ -1,0 +1,267 @@
+{% extends "panel/base_panel.html" %}
+{% block content %}
+
+<h2 class="fw-bold mb-1" style="color: #2c3e50;">👩‍💼 پرسنل</h2>
+
+<div class="container mt-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        {% if request.user.profile.role == "owner" %}
+            <a href="{% url 'panel:staff_add' %}" class="btn btn-success">افزودن منشی</a>
+        {% endif %} 
+
+        {%  if request.user.profile.role == "owner" or request.user.profile.role == "receptionist" %}  
+            <a href="{% url 'panel:salon_staff_add' %}" class="btn btn-primary"> افزودن پرسنل سالن</a>
+        {% endif %}
+    </div>
+
+    <div class="d-flex flex-wrap gap-3 align-items-center mb-4 p-3 bg-light rounded shadow-sm">
+        <a href="{% url 'panel:staff_list' %}"
+        class="btn btn-outline-secondary  px-3 py-1 fw-medium">
+            همه
+        </a>
+
+        <a href="{% url 'panel:staff_list' %}?status=active"
+        class="btn btn-outline-success px-3 py-1 fw-medium">
+            فعال
+        </a>
+
+        <a href="{% url 'panel:staff_list' %}?status=inactive"
+        class="btn btn-outline-danger px-3 py-1 fw-medium">
+            غیرفعال
+        </a>
+
+        <a href="{% url 'panel:staff_list' %}?status=leave"
+        class="btn btn-outline-warning px-3 py-1 fw-medium">
+            مرخصی
+        </a>
+    </div>
+
+    <div class="table-scroll">
+        <table class="table table-bordered text-center align-middle">
+            <thead class="table-dark">
+                <tr>
+                    <th>نام کاربری</th>
+                    <th>ایمیل</th>
+                    <th>شماره تماس</th>
+                    <th>وضعیت</th>
+                    {% if request.user.profile.role == "owner" or request.user.profile.role == "receptionist" %}
+                        <th>عملیات</th>
+                    {% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in personnel %}
+
+                <tr>
+                    <!-- نام کاربری + وضعیت -->
+                    <td>
+                        {{ p.username }}
+
+                        <span class="badge bg-info ms-2">
+                            {{ p.role_label }}
+                        </span>
+
+                        {% if not p.is_active %}
+                            <span class="badge bg-secondary ms-2">غیرفعال</span>
+                        {% endif %}
+                    </td>
+
+                    <!-- ایمیل -->
+                    <td>{{ p.email }}</td>
+
+                    <td>{{ p.phone|default:"-" }}</td>
+
+
+                    <td class="text-center">
+
+                        <!-- نمایش وضعیت -->
+                        {% if p.status == "active" %}
+                            <span class="badge bg-success mb-2 d-block">فعال</span>
+                        {% elif p.status == "leave" %}
+                            <span class="badge bg-warning text-dark mb-2 d-block">مرخصی</span>
+                        {% else %}
+                            <span class="badge bg-danger mb-2 d-block">غیرفعال</span>
+                        {% endif %}
+
+                    </td>
+
+                    <!-- عملیات (فقط owner) -->
+                    <td>
+                        <div class="d-flex flex-column flex-md-row justify-content-center align-items-center gap-2">
+
+
+                            {% if can_manage_staff and p.role_label != "مالک" %}
+
+                                <!-- ویرایش -->
+                                {% if p.is_active %}
+                                    {% if p.type == "system" %}
+                                        <a href="{% url 'panel:staff_edit' p.id %}"
+                                        class="btn btn-primary ">
+                                            ویرایش
+                                        </a>
+                                    {% else %}
+                                        <a href="{% url 'panel:salon_staff_edit' p.id %}"
+                                        class="btn btn-primary ">
+                                            ویرایش
+                                        </a>
+                                    {% endif %}
+                                {% else %}
+                                    <button class="btn btn-secondary " disabled>
+                                        ویرایش
+                                    </button>
+                                {% endif %}
+
+                                <!-- تغییر وضعیت -->
+                                <!-- تغییر وضعیت -->
+                                {% if p.type == "system" %}
+                                    <form method="post"
+                                        action="{% url 'panel:staff_change_status' p.id 'active' %}"
+                                        style="display:inline;">
+                                        {% csrf_token %}
+                                        <button type="submit"
+                                                class="btn btn-success"
+                                                onclick="return confirm('فعال شود؟')">
+                                            فعال
+                                        </button>
+                                    </form>
+
+
+                                    <form method="post"
+                                        action="{% url 'panel:staff_change_status' p.id 'leave' %}"
+                                        style="display:inline;">
+                                        {% csrf_token %}
+                                        <button type="submit"
+                                                class="btn btn-warning"
+                                                onclick="return confirm('مرخصی شود؟')"> 
+                                            مرخصی
+                                        </button>
+                                    </form>
+
+                                    {% if request.user.profile.role == "owner" %}
+                                        <form method="post"
+                                            action="{% url 'panel:staff_change_status' p.id 'inactive' %}"
+                                            style="display:inline;">
+                                            {% csrf_token %}
+                                            <button type="submit"
+                                                    class="btn btn-danger "
+                                                    onclick="return confirm('غیرفعال شود؟')"> 
+                                                غیرفعال
+                                            </button>
+                                        </form>
+                                    {% endif %}
+                                {% else %}
+                                    <form method="post"
+                                        action="{% url 'panel:salon_staff_change_status' p.id 'active' %}"
+                                        style="display:inline;">
+                                        {% csrf_token %}
+                                        <button type="submit"
+                                                class="btn btn-success "
+                                                onclick="return confirm('فعال شود؟')"> 
+                                            فعال
+                                        </button>
+                                    </form>
+
+                                    <form method="post"
+                                        action="{% url 'panel:salon_staff_change_status' p.id 'leave' %}"
+                                        style="display:inline;">
+                                        {% csrf_token %}
+                                        <button type="submit"
+                                                class="btn btn-warning "
+                                                onclick="return confirm('مرخصی شود؟')"> 
+                                            مرخصی
+                                        </button>
+                                    </form>
+
+                                    {% if request.user.profile.role == "owner" %}
+                                        <form method="post"
+                                            action="{% url 'panel:salon_staff_change_status' p.id 'inactive' %}"
+                                            style="display:inline;">
+                                            {% csrf_token %}
+                                            <button type="submit"
+                                                    class="btn btn-danger "
+                                                    onclick="return confirm('غیرفعال شود؟')"> 
+                                                غیرفعال
+                                            </button>
+                                        </form>
+                                    {% endif %}
+                                {% endif %}
+
+
+                            {% else %}
+                                <span class="text-muted">—</span>
+                            {% endif %}
+                        </div>
+                    </td>
+
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-muted text-center">
+                        هیچ پرسنلی ثبت نشده است
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+
+        </table>
+    </div>
+
+    <!-- قبل از بسته شدن </div> کانتینر، این کد را اضافه کنید -->
+    {% if personnel.has_other_pages %}
+    <nav aria-label="صفحه‌بندی پرسنل" class="mt-4">
+        <ul class="pagination justify-content-center">
+            <!-- دکمه قبلی -->
+            {% if personnel.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" 
+                    href="?page={{ personnel.previous_page_number }}
+                            {% if status_filter %}&status={{ status_filter }}{% endif %}">
+                        <span aria-hidden="true">&laquo;</span> قبلی
+                    </a>
+                </li>
+            {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">&laquo; قبلی</span>
+                </li>
+            {% endif %}
+
+            <!-- شماره صفحات -->
+            {% for num in personnel.paginator.page_range %}
+                {% if personnel.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }} <span class="sr-only">(فعلی)</span></span>
+                    </li>
+                {% else %}
+                    <li class="page-item">
+                        <a class="page-link" 
+                        href="?page={{ num }}
+                                {% if status_filter %}&status={{ status_filter }}{% endif %}">
+                            {{ num }}
+                        </a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+
+            <!-- دکمه بعدی -->
+            {% if personnel.has_next %}
+                <li class="page-item">
+                    <a class="page-link" 
+                    href="?page={{ personnel.next_page_number }}
+                            {% if status_filter %}&status={{ status_filter }}{% endif %}">
+                        بعدی <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+            {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">بعدی &raquo;</span>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+
+</div>
+
+{% endblock %}

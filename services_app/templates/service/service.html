@@ -1,0 +1,695 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+{% load jalali_tags %} 
+
+{% block title %}
+خدمات - سالن زیبایی نورا
+{% endblock %}
+
+<!--اینجا کلا مشکل داریم،باید کامل بررسی بشه هم انی فایل هم فایل جزئیات-->
+{% block content %}
+<div class="container mt-5">
+
+    <!-- سربرگ -->
+    <div class="text-center mb-4">
+        <h1 class="hero-title">خدمات سالن زیبایی نورا</h1>
+        <p class="lead">از مو تا مژه، هر آنچه برای درخشش نیاز دارید</p>
+    </div>
+
+    <!-- اعتبارسازی -->
+    <div class="text-center mb-5">
+        <p class="text-muted">
+            تمام خدمات توسط متخصصان حرفه‌ای و با بهترین متریال روز دنیا انجام می‌شود
+        </p>
+    </div>
+
+    <!-- بخش اسکرول افقی دسته‌بندی‌ها -->
+    <div class="d-flex gap-2 pb-3 category-scroll">
+        {% for category in categories %}
+            <button class="btn btn-outline-gold category-btn" data-slug="{{ category.slug }}">
+                 {{ category.name }}
+            </button>
+        {% endfor %}
+    </div>
+
+
+    <!--  جعبه نمایش زیردسته‌ها و خدمات -->
+    <div id="subcategory-container" class="mt-4">
+        <!-- زیردسته‌ها و خدمات اینجا با JavaScript نمایش داده می‌شن -->
+    </div>
+
+
+     <!--  برای نمایش جزئیات خدمت -->
+    <!-- Modal -->
+    <div class="modal fade" id="serviceModal" tabindex="-1" aria-labelledby="serviceModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="serviceModalLabel">جزئیات خدمت</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- محتوای جزئیات خدمت اینجا لود می‌شود -->
+                    <div id="modalContent">
+                        <p>لطفاً صبر کنید...</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">بستن</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+        <!-- پیشنهادهای ویژه -->
+    <div class="container mt-5 mb-5">
+        <h2 class="text-center mb-4" style="color: #D4AF37;">پیشنهادهای ویژه ما</h2>
+        {% if packages %}
+        <!-- اسلایدر پیشنهادهای ویژه -->
+        <div id="offersCarousel" class="carousel slide" data-bs-ride="carousel">
+        <div class="carousel-indicators">
+            {% for package in packages %}
+            <button type="button" data-bs-target="#offersCarousel" data-bs-slide-to="{{ forloop.counter0 }}"
+            {% if forloop.first %}class="active" aria-current="true"{% endif %} aria-label="{{ package.title }}">
+            </button>
+            {% endfor %}
+        </div>
+
+        <!-- آیتم‌های اسلایدر -->
+        <div class="carousel-inner">
+            {% for package in packages %}
+            <div class="carousel-item {% if forloop.first %}active{% endif %}">
+            <div class="offer-card open-package-modal"
+                data-bs-toggle="modal"
+                data-bs-target="#packageModal"
+
+                data-title="{{ package.title }}"
+                data-description="{{ package.description|escapejs }}"
+                data-original="{{ package.original_price|default:'' }}"
+                data-discounted="{{ package.discounted_price }}"
+                data-badge="{{ package.discount_badge|default:'' }}"
+                data-services="{% for s in package.service.all %}{{ s.name }}{% if not forloop.last %}, {% endif %}{% endfor %}"
+                data-image="{{ package.image.url }}"
+                data-reserve-url="{% url 'package_payment_confirm' package.id %}">
+
+                <img src="{{ package.image_url }}" class="d-block w-100 rounded" alt="{{ package.title }}">
+                <div class="offer-overlay">
+                <h3>{{ package.title }}</h3>
+                <p>{{ package.description }}</p> 
+                    <!-- بعد ✅ -->
+                    <p class="offer-price">
+                    {% if package.original_price %}
+                        <del>{{ package.original_price|intcomma }} تومان</del>
+                    {% endif %}
+                    <strong>{{ package.discounted_price|intcomma }} تومان</strong>
+                    {% if package.discount_badge %}
+                        <span class="badge bg-danger">{{ package.discount_badge }}</span>
+                    {% endif %}
+                    </p>
+               <!--<div><a href="{% url 'reserve' %}" class="btn btn-gold mt-2">رزرو نوبت</a></div>--> 
+
+                <!-- تایمر فقط برای پکیج‌های موقت -->
+                {% if package.is_limited_time %}
+                <div class="offer-timer mt-2" 
+                    data-package-id="{{ package.id }}" 
+                    data-duration="{{ package.duration_days }}"
+                    data-package-title="{{ package.title }}">
+                    <div class="timer-display text-end"></div>
+                </div>
+                {% endif %}
+
+                </div>
+            </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- دکمه‌های کنترل اسلایدر -->
+        <button class="carousel-control-prev" type="button" data-bs-target="#offersCarousel" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#offersCarousel" data-bs-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+        </button>
+        </div>
+        {% else %}
+        <p class="text-center">در حال حاضر پیشنهاد ویژه‌ای وجود ندارد.</p>
+        {% endif %}
+    </div>
+
+    <!-- اسکریپت تایمر (اگر بخواهید) -->
+    <script>
+   // --- جاوااسکریپت ---
+    // اسکریپت مدیریت نمایش تایمر
+    document.addEventListener('DOMContentLoaded', function () {
+      document.querySelectorAll('.offer-timer').forEach(timerEl => {
+        const packageId = timerEl.dataset.packageId;
+        const durationDays = parseInt(timerEl.dataset.duration);
+        const displayEl = timerEl.querySelector('.timer-display');
+        const packageTitle = timerEl.dataset.packageTitle;
+
+        const STORAGE_KEY = `offer_timer_${packageId}`;
+        let startTime = localStorage.getItem(STORAGE_KEY);
+
+        if (!startTime) {
+          startTime = new Date().getTime();
+          localStorage.setItem(STORAGE_KEY, startTime);
+        } else {
+          startTime = parseInt(startTime);
+        }
+
+        const endTime = startTime + (durationDays * 24 * 60 * 60 * 1000);
+
+        // تابع بروزرسانی تایمر
+        const updateTimer = () => {
+          const now = new Date().getTime();
+          const diff = endTime - now;
+
+          if (diff <= 0) {
+            displayEl.innerHTML = '<span style="color:#D4AF37;">زمان پیشنهاد به پایان رسید!</span>';
+            return;
+          }
+
+           // محاسبه روز، ساعت و دقیقه باقی‌مانده
+          const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+          const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+          const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+            // نمایش تایمر
+          displayEl.innerHTML = `
+            <div class="d-flex gap-2 justify-content-end">
+              <div class="timer-box">${String(days).padStart(2, '0')}<small>روز</small></div>
+              <div class="timer-box">${String(hours).padStart(2, '0')}<small>ساعت</small></div>
+              <div class="timer-box">${String(minutes).padStart(2, '0')}<small>دقیقه</small></div>
+            </div>
+          `;
+        };
+
+        updateTimer();
+        setInterval(updateTimer, 60000); // هر دقیقه آپدیت
+      });
+    });
+    </script>
+    
+    <!-- Package Modal -->
+    <div class="modal fade" id="packageModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+
+        <div class="modal-header">
+            <h5 class="modal-title" id="packageModalTitle"></h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+
+        <div class="modal-body" id="packageModalBody">
+            <!-- JS پر می‌کند -->
+        </div>
+
+        <div class="modal-footer">
+            <a href="#" id="packageReserveBtn" class="btn btn-gold">
+            رزرو نوبت
+            </a>
+            <button class="btn btn-secondary" data-bs-dismiss="modal">
+            بستن
+            </button>
+        </div>
+
+        </div>
+    </div>
+    </div>
+
+
+
+</div>
+
+<script>
+// تابع تبدیل عدد به حروف فارسی
+function numberToWords(num) {
+    const units = ['', 'یک', 'دو', 'سه', 'چهار', 'پنج', 'شش', 'هفت', 'هشت', 'نه'];
+    const tens = ['', 'ده', 'بیست', 'سی', 'چهل', 'پنجاه', 'شصت', 'هفتاد', 'هشتاد', 'نود'];
+    const teens = ['ده', 'یازده', 'دوازده', 'سیزده', 'چهارده', 'پانزده', 'شانزده', 'هفده', 'هجده', 'نوزده'];
+    const hundreds = ['', 'صد', 'دویست', 'سیصد', 'چهارصد', 'پانصد', 'ششصد', 'هفتصد', 'هشتصد', 'نهصد'];
+    const bigs = ['', 'هزار', 'میلیون', 'میلیارد'];
+    
+    if (num === 0) return 'صفر';
+    
+    function convertThreeDigits(n) {
+        if (n === 0) return '';
+        
+        let result = '';
+        
+        // صدگان
+        const h = Math.floor(n / 100);
+        if (h > 0) {
+            result += hundreds[h] + ' و ';
+        }
+        
+        // دهگان و یکان
+        const t = n % 100;
+        if (t >= 10 && t < 20) {
+            result += teens[t - 10];
+        } else {
+            const ten = Math.floor(t / 10);
+            const unit = t % 10;
+            if (ten > 0) {
+                result += tens[ten];
+                if (unit > 0) result += ' و ';
+            }
+            if (unit > 0) {
+                result += units[unit];
+            }
+        }
+        
+        return result.replace(/ و $/, '');
+    }
+    
+    let result = '';
+    let i = 0;
+    
+    while (num > 0) {
+        const threeDigits = num % 1000;
+        if (threeDigits > 0) {
+            const part = convertThreeDigits(threeDigits);
+            if (i > 0 && part) {
+                result = part + ' ' + bigs[i] + ' و ' + result;
+            } else {
+                result = part + (i > 0 ? ' ' + bigs[i] : '') + (result ? ' و ' + result : '');
+            }
+        }
+        num = Math.floor(num / 1000);
+        i++;
+    }
+    
+    return result.trim().replace(/ و $/, '');
+}
+</script>
+
+<script>
+// --- جاوااسکریپت بدون تغییر ---
+// اسکریپت مدیریت نمایش خدمات و Modal
+// این اسکریپت خدمات را بر اساس دسته‌بندی فیلتر کرده و جزئیات را در Modal نمایش می‌دهد
+// --- جاوااسکریپت ---
+// اسکریپت مدیریت نمایش زیردسته‌ها و خدمات
+// این اسکریپت زیردسته‌ها و خدمات را بر اساس دسته‌بندی فیلتر کرده و جزئیات را در Modal نمایش می‌دهد
+// --- جاوااسکریپت ---
+// اسکریپت مدیریت نمایش زیردسته‌ها و خدمات
+// این اسکریپت زیردسته‌ها و خدمات را بر اساس دسته‌بندی فیلتر کرده و جزئیات را در Modal نمایش می‌دهد
+
+const categoriesData = {
+    {% for category in categories %}
+    "{{ category.slug }}": {
+        name: "{{ category.name }}",
+        subcategories: [
+            {% for subcategory in category.subcategories.all %}
+            {
+                id: {{ subcategory.id }},
+                name: "{{ subcategory.name|escapejs }}",
+                description: "{{ subcategory.description|truncatewords:10|escapejs }}",
+                slug: "{{ subcategory.slug }}",
+                services: [
+                    {% for service in subcategory.services.all %}
+                    {
+                        id: {{ service.id }},
+                        name: "{{ service.name|escapejs }}",
+                        slug: "{{ service.slug }}",
+                        duration: "{{ service.duration_minutes|escapejs }}",
+                        description: "{{ service.description|truncatewords:10|escapejs }}",
+                        price: "{{ service.price|intcomma }}",
+
+                        imageUrl: "{% if service.image %}{{ service.image.url }}{% else %}{% static 'images/default-service.jpg' %}{% endif %}",
+                        // 👇 اضافه کردن عکس‌های مرتبط
+                        relatedImages: [
+                            {% for image in service.get_related_images %}
+                                "{{ image.image.url }}"{% if not forloop.last %},{% endif %}
+                            {% empty %}
+                            {% endfor %}
+                        ],
+                        // 👇 اضافه کردن نظرات کاربران
+                        reviews: [
+                            {% for review in service.approved_reviews %}
+                                {
+                                    user: "{{ review.user.get_full_name|default:review.user.username|escapejs }}",
+                                    rating: {{ review.rating }},
+                                    comment: "{{ review.comment|escapejs }}",
+                                    created_at: "{{  review.created_at|to_jalali:'%d %B %Y' }}"
+
+                                }
+                                {% if not forloop.last %},{% endif %}
+                            {% empty %}
+                            {% endfor %}
+                        ]
+                    }{% if not forloop.last %},{% endif %}
+                    {% endfor %}
+                ]
+            }{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ]
+    }{% if not forloop.last %},{% endif %}
+    {% endfor %}
+};
+
+let currentCategory = Object.keys(categoriesData)[0] || null;
+if (currentCategory) {
+    showCategory(currentCategory);
+}
+
+document.querySelectorAll('.category-btn').forEach(btn => {
+    btn.addEventListener('click', function () {
+        const slug = this.dataset.slug;
+        showCategory(slug);
+    });
+});
+
+function showCategory(slug) {
+    const category = categoriesData[slug];
+    if (!category) return;
+
+    let html = `
+        <h3 class="mb-4">${category.name}</h3>
+        <div class="row">
+    `;
+
+    if (category.subcategories.length === 0) {
+        html += `
+            <div class="col-12">
+                <p class="text-center">هیچ زیردسته‌ای در این دسته وجود ندارد.</p>
+            </div>
+        `;
+    } else {
+        category.subcategories.forEach(subcategory => {
+            html += `
+                <div class="col-md-6 mb-3">
+                    <div class="subcategory-card">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h4>${subcategory.name}</h4>
+                            <button class="btn btn-sm btn-outline-primary toggle-services" data-open="false">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+
+                        <div class="services-list d-none">
+                            ${renderServices(subcategory.services)}
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    html += `</div>`;
+
+    document.getElementById('subcategory-container').innerHTML = html;
+
+    // toggle باز و بسته شدن خدمات
+    document.querySelectorAll('.toggle-services').forEach(btn => {
+        btn.addEventListener('click', function () {
+
+            const card = this.closest('.subcategory-card');
+            const list = card.querySelector('.services-list');
+            const isOpen = this.dataset.open === "true";
+
+            // 🔴 بستن بقیه زیردسته‌ها
+            document.querySelectorAll('.subcategory-card').forEach(otherCard => {
+                if (otherCard !== card) {
+                    const otherList = otherCard.querySelector('.services-list');
+                    const otherBtn = otherCard.querySelector('.toggle-services');
+
+                    if (otherList && !otherList.classList.contains('d-none')) {
+                        otherList.classList.add('d-none');
+                        otherBtn.querySelector('i').className = "fas fa-plus";
+                        otherBtn.dataset.open = "false";
+                    }
+                }
+            });
+
+            // باز/بسته کردن فعلی
+            if (isOpen) {
+                list.classList.add('d-none');
+                this.querySelector('i').className = "fas fa-plus";
+                this.dataset.open = "false";
+            } else {
+                list.classList.remove('d-none');
+                this.querySelector('i').className = "fas fa-minus";
+                this.dataset.open = "true";
+            }
+        });
+    });
+
+}
+
+function renderServices(services) {
+    if (services.length === 0) {
+        return `<p class="text-muted">هیچ خدمتی در این زیردسته وجود ندارد.</p>`;
+    }
+    let html = `<div class="row g-3">`;
+    services.forEach(service => {
+        html += `
+        <div class="col-12">
+            <div class="service-item d-flex align-items-center gap-3 p-3">
+                <img src="${service.imageUrl}" 
+     alt="${service.name}" 
+     class="service-img"
+     style="width:300px;
+            height:180px;
+            object-fit:contain;
+            background:#f8f9fa;
+            padding:8px;
+            border-radius:12px;">
+
+                <div class="service-info flex-grow-1 d-flex flex-column">
+                    <h5 class="text-center w-100">${service.name}</h5>
+                    <p class="text-muted mb-2">زمان: ${service.duration} دقیقه | قیمت: ${service.price} تومان</p>
+                    <div class="mt-auto text-center">
+                        <a href="#" class="btn-read" data-service-slug="${service.slug}" data-bs-toggle="modal" data-bs-target="#serviceModal">
+                            جزئیات →
+                        </a>
+                        <a href="/booking/reserve/?service=${service.slug}" class="btn btn-gold">
+                            رزرو نوبت
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        `;
+    });
+    html += `</div>`;
+    return html;
+}
+
+// هنگام باز شدن Modal
+// هنگام باز شدن Modal
+document.getElementById('serviceModal').addEventListener('show.bs.modal', function(event) {
+    const button = event.relatedTarget;
+    const serviceSlug = button.getAttribute('data-service-slug');
+
+    let serviceData = null;
+    for (const catslug in categoriesData) {
+        const category = categoriesData[catslug];
+        for (const subcategory of category.subcategories) {
+            const found = subcategory.services.find(s => s.slug == serviceSlug);
+            if (found) {
+                serviceData = found;
+                break;
+            }
+        }
+        if (serviceData) break;
+    }
+
+    if (!serviceData) {
+        console.error("Service not found:", serviceSlug);
+        return;
+    }
+
+    const modalContent = document.getElementById('modalContent');
+
+    // ✅ تبدیل قیمت به حروف
+    const priceNum = parseInt(serviceData.price.toString().replace(/,/g, ''));
+    const priceWords = numberToWords(priceNum);
+
+    let html = `
+        <div class="row mb-4">
+            <div class="col-12">
+                <img src="${serviceData.imageUrl}" alt="${serviceData.name}"
+                     class="w-100"
+                     style="max-height: 300px; object-fit: contain; border-radius: 12px;">
+            </div>
+        </div>
+
+        <h4>${serviceData.name}</h4>
+        
+
+        <div class="service-description mb-4">
+            ${serviceData.description}
+        </div>
+
+        <div class="card p-4 mb-4">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <p class="mb-1"><strong>قیمت:</strong> ${serviceData.price} تومان</p>
+                    <p class="mb-1 text-muted" style="font-size: 0.85rem;">
+                        (${priceWords} تومان)
+                    </p>
+                    <p class="mb-1"><strong>زمان:</strong> ${serviceData.duration} دقیقه</p>
+                </div>
+                <a href="/booking/reserve/?service=${serviceData.slug}" class="btn btn-gold">
+                    <i class="fas fa-calendar-check"></i> رزرو نوبت
+                </a>
+            </div>
+        </div>
+    `;
+
+    // عکس‌های مرتبط
+    if (serviceData.relatedImages && serviceData.relatedImages.length > 0) {
+        html += `
+            <h5 class="mt-4 mb-3">عکس‌های مرتبط</h5>
+            <div class="row g-3">
+        `;
+        serviceData.relatedImages.forEach(imgUrl => {
+            html += `
+                <div class="col-6 col-md-4">
+                    <img src="${imgUrl}" class="w-100 rounded"
+                        style="height:150px;
+       width:100%;
+       object-fit:contain;
+       background:#f8f9fa;
+       padding:6px;
+       border-radius:10px;"
+>
+                </div>
+            `;
+        });
+        html += `</div>`;
+    }
+
+    // نظرات
+    if (serviceData.reviews && serviceData.reviews.length > 0) {
+        html += `
+            <h5 class="mt-4 mb-3">نظرات کاربران</h5>
+        `;
+        serviceData.reviews.forEach(review => {
+            let stars = '';
+            for (let i = 1; i <= 5; i++) {
+                stars += i <= review.rating 
+                    ? '<i class="fas fa-star text-warning small"></i>' 
+                    : '<i class="far fa-star text-muted small"></i>';
+            }
+            
+            html += `
+                <div class="card mb-3 p-3">
+                    <div class="d-flex justify-content-between">
+                        <strong>${review.user}</strong>
+                        <span class="text-muted">${review.created_at}</span>
+                    </div>
+                    <div class="mb-2 small">
+                      ${stars}
+
+                    </div>
+
+                    <p class="mt-2">${review.comment || 'بدون نظر'}</p>
+                </div>
+            `;
+        });
+    } else {
+        html += `
+            <div class="alert alert-info mt-4">
+                هنوز نظری ثبت نشده است.
+            </div>
+        `;
+    }
+
+    modalContent.innerHTML = html;
+});
+
+</script>
+
+<script>
+// اضافه کردن تابع تبدیل به حروف
+function getWordsPrice(price) {
+    const num = parseInt(price.toString().replace(/,/g, ''));
+    if (isNaN(num)) return '';
+    return numberToWords(num) + ' تومان';
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+  document.querySelectorAll('.open-package-modal').forEach(card => {
+    card.addEventListener('click', function () {
+
+      const titleEl = document.getElementById('packageModalTitle');
+      const bodyEl = document.getElementById('packageModalBody');
+      const reserveBtn = document.getElementById('packageReserveBtn');
+
+      if (!titleEl || !bodyEl || !reserveBtn) {
+        console.error('المان‌های مودال پیدا نشدند');
+        return;
+      }
+
+      // عنوان و لینک رزرو
+      titleEl.innerText = this.dataset.title || '';
+      reserveBtn.href = this.dataset.reserveUrl || '#';
+
+// ✅ محاسبه قیمت به حروف
+      const discountedPriceWords = getWordsPrice(this.dataset.discounted);
+      const originalPriceWords = this.dataset.original ? getWordsPrice(this.dataset.original) : ''
+
+      // HTML قیمت (نسخه نهایی بدون تکرار let)
+      let priceHtml = `
+        <div class="d-flex align-items-center justify-content-end gap-3">
+          ${this.dataset.original ? `
+            <del class="text-muted fs-6">
+              ${Number(this.dataset.original).toLocaleString()} تومان
+            </del>
+          ` : ''}
+
+          <strong class="fs-5">
+            ${Number(this.dataset.discounted).toLocaleString()} تومان
+          </strong>
+
+          ${this.dataset.badge ? `
+            <span class="badge bg-danger fs-6">
+              ${this.dataset.badge}
+            </span>
+          ` : ''}
+        </div>
+
+        <!-- ✅ اضافه کردن قیمت به حروف -->
+        <div class="text-end mt-2 text-muted" style="font-size: 0.85rem;">
+          ${discountedPriceWords}
+          ${originalPriceWords ? `(${originalPriceWords})` : ''}
+        </div>
+        
+      `;
+
+      // بدنه مودال
+      bodyEl.innerHTML = `
+        <div class="package-image-container mb-3">
+          <img src="${this.dataset.image}" 
+               class="w-100 rounded-3"
+               style="max-height: 420px;
+  object-fit: contain;
+  background: #f8f9fa;
+                      border: 2px solid #f8f9fa;
+                      box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
+        </div>
+
+        <p class="mt-2">${this.dataset.description || ''}</p>
+
+        <hr class="my-3">
+
+        <h6 class="fw-bold">شامل خدمات:</h6>
+        <p class="text-muted">
+          ${this.dataset.services && this.dataset.services.trim() ? this.dataset.services : '—'}
+        </p>
+
+        <hr class="my-3">
+
+        ${priceHtml}
+      `;
+    });
+  });
+});
+</script>
+
+
+{% endblock %}

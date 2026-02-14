@@ -1,0 +1,401 @@
+{% extends "panel/base_panel.html" %}
+{% load static %}
+
+{% block title %}افزودن پرسنل سالن{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+
+  <!-- کنترل دسترسی: فقط مالک می‌تواند پرسنل اضافه کند -->
+  {% if request.user.profile.role == "receptionist" %}
+    <div class="alert alert-danger">
+      <i class="bi bi-exclamation-triangle"></i>
+      شما مجاز به افزودن پرسنل سالن نیستید. این عمل فقط برای مالک سالن مجاز است.
+    </div>
+    
+    <div class="text-center mt-4">
+      <a href="{% url 'panel:staff_list' %}" class="btn btn-secondary">
+        ↩ بازگشت به لیست پرسنل
+      </a>
+    </div>
+  
+  {% else %}
+    <!-- حالت عادی برای مالک -->
+    <h3 class="mb-4">➕ افزودن پرسنل سالن</h3>
+
+    <form method="post" enctype="multipart/form-data" class="card p-4 shadow-sm">
+      {% csrf_token %}
+
+      <!-- نام و نام خانوادگی -->
+      <div class="mb-3">
+        <label class="form-label">نام و نام خانوادگی</label>
+        <input
+          type="text"
+          name="full_name"
+          class="form-control"
+          placeholder="مثلاً: سارا محمدی"
+          required
+        >
+      </div>
+
+      <!-- تخصص -->
+      <div class="mb-3">
+        <label class="form-label">تخصص / نقش</label>
+        <input
+          type="text"
+          name="role"
+          class="form-control"
+          placeholder="مثلاً: ناخن‌کار، آرایشگر"
+          required
+        >
+      </div>
+
+      <!-- شماره تماس -->
+      <div class="mb-3">
+        <label class="form-label">شماره تماس</label>
+        <input
+          type="text"
+          name="phone"
+          class="form-control"
+          placeholder="09xxxxxxxxx"
+          pattern="^09\d{9}$"
+          maxlength="11"
+          required
+        >
+        <small class="text-muted">
+          شماره باید ۱۱ رقم و با 09 شروع شود
+        </small>
+      </div>
+
+      <!-- عکس پرسنل -->
+      <div class="mb-3">
+        <label class="form-label">عکس پرسنل (اختیاری)</label>
+        <input
+          type="file"
+          name="photo"
+          class="form-control"
+          accept="image/*"
+        >
+      </div>
+
+      <!-- روزهای کاری -->
+      <div class="mb-3">
+        <label class="form-label">روزهای کاری</label>
+        <div class="d-flex flex-wrap gap-3">
+          {% for day in week_days %}
+            <div class="form-check">
+              <input
+                class="form-check-input"
+                type="checkbox"
+                name="work_days"
+                value="{{ day }}"
+              >
+              <label class="form-check-label">{{ day }}</label>
+            </div>
+          {% endfor %}
+        </div>
+        <small class="text-muted">
+          روزهایی که پرسنل در سالن حضور دارد
+        </small>
+      </div>
+
+      <!-- ساعت کاری -->
+      <div class="row">
+        <div class="col-12 col-md-6 mb-3">
+          <label class="form-label">ساعت شروع کار</label>
+          <input
+            type="time"
+            name="work_start_time"
+            class="form-control"
+            value="09:00"
+            required
+          >
+        </div>
+
+        <div class="col-12 col-md-6 mb-3">
+          <label class="form-label">ساعت پایان کار</label>
+          <input
+            type="time"
+            name="work_end_time"
+            class="form-control"
+            value="18:00"
+            required
+          >
+        </div>
+      </div>
+
+      <!-- خدمات قابل ارائه -->
+      <!-- خدمات قابل ارائه - سیستم سه سطحی -->
+      <div class="mb-4">
+        <label class="form-label fw-bold">خدمات قابل ارائه</label>
+        
+        <!-- مرحله ۱: انتخاب دسته -->
+        <div class="mb-3">
+          <label class="form-label">انتخاب دسته:</label>
+          <select id="category-select" class="form-select">
+            <option value="">انتخاب کنید...</option>
+            {% for category in categories %}
+              <option value="{{ category.id }}">{{ category.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        
+        <!-- مرحله ۲: انتخاب زیردسته -->
+        <div class="mb-3">
+          <label class="form-label">انتخاب زیردسته:</label>
+          <select id="subcategory-select" class="form-select" disabled>
+            <option value="">ابتدا دسته را انتخاب کنید</option>
+          </select>
+        </div>
+        
+        <!-- مرحله ۳: انتخاب خدمت -->
+        <div class="mb-3">
+          <label class="form-label">انتخاب خدمت:</label>
+          <select id="service-select" class="form-select" disabled>
+            <option value="">ابتدا زیردسته را انتخاب کنید</option>
+          </select>
+        </div>
+        
+        <!-- دکمه افزودن خدمت به لیست -->
+        <div class="mb-3">
+          <button type="button" id="add-service-btn" class="btn btn-primary" disabled>
+            <i class="bi bi-plus-circle"></i> افزودن خدمت
+          </button>
+        </div>
+        
+        <!-- لیست خدمات انتخاب شده -->
+        <div class="mt-3">
+          <h6>خدمات انتخاب شده:</h6>
+          <div id="selected-services-list" class="border rounded p-3 bg-light">
+            <p class="text-muted mb-0" id="no-services-message">هیچ خدمتی انتخاب نشده است</p>
+            <div id="services-container"></div>
+          </div>
+          <input type="hidden" name="services" id="services-input" value="">
+        </div>
+        
+        <small class="text-muted">
+          ابتدا دسته، سپس زیردسته و در نهایت خدمت را انتخاب کنید، سپس روی "افزودن خدمت" کلیک کنید
+        </small>
+      </div>
+
+      <style>
+      .service-badge {
+        display: inline-block;
+        background: #e3f2fd;
+        border: 1px solid #2196f3;
+        border-radius: 20px;
+        padding: 5px 15px;
+        margin: 5px;
+        position: relative;
+      }
+      .service-badge .remove-btn {
+        background: none;
+        border: none;
+        color: #f44336;
+        cursor: pointer;
+        margin-right: 8px;
+        font-weight: bold;
+        padding: 0;
+      }
+      </style>
+
+      <script>
+      // داده‌های سرویس‌ها از سرور
+      const categoriesData = {
+        {% for category in categories %}
+        "{{ category.id }}": {
+          name: "{{ category.name }}",
+          subcategories: {
+            {% for sub in category.subcategories.all %}
+            "{{ sub.id }}": {
+              name: "{{ sub.name }}",
+              services: [
+                {% for service in sub.services.all %}
+                {% if service.is_active %}
+                {id: "{{ service.id }}", name: "{{ service.name }}"},
+                {% endif %}
+                {% endfor %}
+              ]
+            },
+            {% endfor %}
+          }
+        },
+        {% endfor %}
+      };
+
+      let selectedServices = [];
+
+      // تغییر دسته
+      document.getElementById('category-select').addEventListener('change', function() {
+        const categoryId = this.value;
+        const subcategorySelect = document.getElementById('subcategory-select');
+        const serviceSelect = document.getElementById('service-select');
+        const addServiceBtn = document.getElementById('add-service-btn');
+        
+        // ریست کردن فیلدهای بعدی
+        subcategorySelect.innerHTML = '<option value="">انتخاب کنید...</option>';
+        serviceSelect.innerHTML = '<option value="">ابتدا زیردسته را انتخاب کنید</option>';
+        serviceSelect.disabled = true;
+        addServiceBtn.disabled = true;
+        
+        if (categoryId) {
+          const category = categoriesData[categoryId];
+          if (category && Object.keys(category.subcategories).length > 0) {
+            for (const [subId, subData] of Object.entries(category.subcategories)) {
+              const option = document.createElement('option');
+              option.value = subId;
+              option.textContent = subData.name;
+              subcategorySelect.appendChild(option);
+            }
+            subcategorySelect.disabled = false;
+          } else {
+            subcategorySelect.disabled = true;
+            subcategorySelect.innerHTML = '<option value="">زیردسته‌ای وجود ندارد</option>';
+          }
+        } else {
+          subcategorySelect.disabled = true;
+        }
+      });
+
+      // تغییر زیردسته
+      document.getElementById('subcategory-select').addEventListener('change', function() {
+        const subcategoryId = this.value;
+        const categoryId = document.getElementById('category-select').value;
+        const serviceSelect = document.getElementById('service-select');
+        const addServiceBtn = document.getElementById('add-service-btn');
+        
+        serviceSelect.innerHTML = '<option value="">انتخاب کنید...</option>';
+        addServiceBtn.disabled = true;
+        
+        if (subcategoryId && categoryId) {
+          const services = categoriesData[categoryId].subcategories[subcategoryId].services;
+          if (services && services.length > 0) {
+            services.forEach(service => {
+              const option = document.createElement('option');
+              option.value = service.id;
+              option.textContent = service.name;
+              serviceSelect.appendChild(option);
+            });
+            serviceSelect.disabled = false;
+          } else {
+            serviceSelect.disabled = true;
+            serviceSelect.innerHTML = '<option value="">خدمتی وجود ندارد</option>';
+          }
+        } else {
+          serviceSelect.disabled = true;
+        }
+      });
+
+      // تغییر خدمت
+      document.getElementById('service-select').addEventListener('change', function() {
+        const addServiceBtn = document.getElementById('add-service-btn');
+        addServiceBtn.disabled = !this.value;
+      });
+
+      // افزودن خدمت به لیست
+      document.getElementById('add-service-btn').addEventListener('click', function() {
+        const categoryId = document.getElementById('category-select').value;
+        const subcategoryId = document.getElementById('subcategory-select').value;
+        const serviceId = document.getElementById('service-select').value;
+        
+        if (!categoryId || !subcategoryId || !serviceId) return;
+        
+        const categoryName = categoriesData[categoryId].name;
+        const subcategoryName = categoriesData[categoryId].subcategories[subcategoryId].name;
+        const serviceName = categoriesData[categoryId].subcategories[subcategoryId].services
+          .find(s => s.id === serviceId).name;
+        
+        // بررسی تکراری نبودن
+        if (selectedServices.includes(serviceId)) {
+          alert('این خدمت قبلاً اضافه شده است!');
+          return;
+        }
+        
+        // اضافه کردن به لیست
+        selectedServices.push(serviceId);
+        
+        // نمایش در لیست
+        const servicesContainer = document.getElementById('services-container');
+        const noServicesMsg = document.getElementById('no-services-message');
+        
+        if (noServicesMsg) {
+          noServicesMsg.remove();
+        }
+        
+        const badge = document.createElement('div');
+        badge.className = 'service-badge';
+        badge.innerHTML = `
+          <button type="button" class="remove-btn" data-service-id="${serviceId}">×</button>
+          ${serviceName}
+          <small class="text-muted">(${subcategoryName})</small>
+        `;
+        
+        servicesContainer.appendChild(badge);
+        
+        // آپدیت فیلد مخفی
+        document.getElementById('services-input').value = selectedServices.join(',');
+        
+        // ریست انتخاب‌ها
+        document.getElementById('service-select').value = '';
+        document.getElementById('add-service-btn').disabled = true;
+      });
+
+      // حذف خدمت از لیست
+      document.getElementById('services-container').addEventListener('click', function(e) {
+        if (e.target.classList.contains('remove-btn')) {
+          const serviceId = e.target.getAttribute('data-service-id');
+          
+          // حذف از آرایه
+          selectedServices = selectedServices.filter(id => id !== serviceId);
+          
+          // حذف از نمایش
+          e.target.parentElement.remove();
+          
+          // آپدیت فیلد مخفی
+          document.getElementById('services-input').value = selectedServices.join(',');
+          
+          // نمایش پیام "هیچ خدمتی انتخاب نشده"
+          if (selectedServices.length === 0) {
+            const servicesContainer = document.getElementById('services-container');
+            const noMsg = document.createElement('p');
+            noMsg.id = 'no-services-message';
+            noMsg.className = 'text-muted mb-0';
+            noMsg.textContent = 'هیچ خدمتی انتخاب نشده است';
+            servicesContainer.parentNode.insertBefore(noMsg, servicesContainer);
+          }
+        }
+      });
+      </script>
+
+      <!-- نمایش در صفحه درباره ما -->
+      <div class="form-check mb-4">
+        <input
+          class="form-check-input"
+          type="checkbox"
+          name="show_in_about_page"
+          id="show_in_about_page"
+        >
+        <label class="form-check-label" for="show_in_about_page">
+          نمایش در صفحه درباره ما
+        </label>
+        <small class="text-muted d-block mt-1">
+          اگر انتخاب شود، این پرسنل در صفحه "درباره ما" نمایش داده می‌شود
+        </small>
+      </div>
+
+      <!-- دکمه‌ها -->
+      <div class="d-flex flex-column flex-md-row gap-2 mt-4">
+        <button type="submit" class="btn btn-success">
+          💾 ذخیره
+        </button>
+
+        <a href="{% url 'panel:staff_list' %}" class="btn btn-secondary">
+          ↩ بازگشت
+        </a>
+      </div>
+
+    </form>
+  {% endif %}
+
+</div>
+{% endblock %}

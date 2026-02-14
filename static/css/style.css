@@ -1,0 +1,2503 @@
+/* ===== استایل‌های اصلی و پایه ===== */
+
+/* لینک‌های مشکی برای موارد خاص */
+.black-link {
+    color: #000000 !important;
+}
+.black-link:hover {
+    color: #000000 !important;
+}
+
+/* دکمه طلایی لوکس — نسخه واکنش‌گرا */
+.btn-gold {
+    background-color: #D4AF37 !important;
+    color: white !important;
+    border: none !important;
+    padding: 5px 8px !important;
+    border-radius: 6px !important;
+    font-weight: 600 !important;
+    font-size: 16px !important; 
+    text-decoration: none !important;
+    display: inline-block !important;
+    text-align: center !important;
+    transition: all 0.3s ease !important; /* انیمیشن نرم برای hover */
+    box-shadow: 0 2px 6px rgba(212, 175, 55, 0.2) !important;
+    cursor: pointer !important;
+    min-width: auto !important;
+}
+
+.btn-gold:hover {
+    background-color: #B8860B !important;
+    color: white !important;
+    text-decoration: none !important;  
+    box-shadow: 0 4px 10px rgba(184, 134, 11, 0.3) !important;
+    transform: translateY(-2px) !important;
+}
+
+/* نسخه موبایل: کوچک‌تر و با padding مناسب */
+@media (max-width: 768px) {
+    .btn-gold {
+        padding: 10px 20px !important;
+        font-size: 15px !important;
+        min-width: 120px !important;
+    }
+}
+
+/* اگر دکمه داخل فرم/لینک باشه، از outline جلوگیری می‌کنه */
+.btn-gold:focus,
+.btn-gold:active {
+    outline: none !important;
+    box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.4) !important;
+}
+
+/* دکمه فرعی (مثلاً برای "ورود") - اختیاری */
+.btn-gray {
+    background-color: #555555 !important;
+    color: white !important;
+    border: none !important;
+    padding: 8px 20px !important;
+    border-radius: 4px !important;
+    font-weight: bold !important;
+    text-decoration: none !important;
+    display: inline-block !important;
+}
+
+.btn-gray:hover {
+    background-color: #333333 !important;
+    color: white !important;
+}
+
+.banner-container {
+    position: relative;
+    width: 100%;
+    max-width: 1200px; /* اگر می‌خوای عرض ثابت باشه */
+    margin: 0 auto; /* وسط صفحه */
+    overflow: hidden;
+}
+
+.banner-image {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
+.banner-text {
+    position: absolute;
+    top: 50%;
+    left: 5%; /* فاصله از چپ - می‌تونی تنظیم کنی */
+    transform: translateY(-50%);
+    color: #333333; /* رنگ متن - روی پس‌زمینه روشن مناسبه */
+    text-align: center;
+    max-width: 400px;
+    padding: 20px;
+    border-radius: 8px;
+}
+
+.banner-text h1 {
+    font-size: 2.5rem;
+    margin: 0 0 10px 0;
+    color: black;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5); /* سایه برای خوانایی بیشتر */
+}
+
+.banner-text p {
+    font-size: 1.1rem;
+    margin: 0 0 20px 0;
+    line-height: 1.6;
+}
+
+
+/*برای اینکه اسلایدشو در وسط صفحه باشه و حاشیه داشته باشه:*/
+/* ===== Carousel Styles ===== */
+.carousel-container {
+    max-width: 80%;
+    margin: 2rem auto;
+}
+
+.carousel {
+    height: 400px !important;
+    border-radius: 12px;
+    /*overflow: hidden;*/
+    overflow: visible !important;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+}
+
+.carousel-inner,
+.carousel-item {
+    height: 100% !important;
+}
+
+.carousel-item img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    object-position: center !important;
+}
+
+
+/* ===== کارت‌های سه‌بعدی ===== */
+.service-card {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 15px;
+    background-color: #f9f9f9;
+    margin-bottom: 15px; /* فاصله بین کارت‌ها */
+}
+
+.service-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+}
+
+.service-card img {
+    width: 100%;
+    aspect-ratio: 4/3;
+    object-fit: contain;
+    background-color: #f8f9fa;
+}
+
+.card-body {
+    padding: 20px;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.card-body h5 {
+    font-size: 1.2rem;
+    color: #333333;
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+.card-body p {
+    font-size: 0.9rem;
+    color: #666666;
+    line-height: 1.5;
+    margin-bottom: 20px;
+    flex-grow: 1;
+    text-align: center; 
+}
+
+.btn-gold {
+    align-self: center;
+}
+
+/* ریسپانسیو: روی موبایل 2×2 */
+@media (max-width: 768px) {
+    .service-card {
+        height: auto;
+    }
+
+    .service-card img {
+        height: 150px;
+    }
+}
+
+
+
+/* ===== معرفی سالن ===== */
+.salon-image {
+    width: 100%;
+    border-radius: 12px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+    object-fit: cover;
+    height: 400px;
+    object-position: center;
+}
+
+.salon-image-wrapper {
+    overflow: hidden;
+    border-radius: 12px;
+}
+
+/* ریسپانسیو: فاصله بیشتر در موبایل */
+@media (max-width: 768px) {
+    .salon-image {
+        height: 300px;
+    }
+}
+
+
+
+/* ===== قبل و بعد — نسخه لوکس ===== */
+.before-after-wrapper {
+    overflow-x: auto;
+    padding: 10px 0;
+    -webkit-overflow-scrolling: touch;
+}
+
+.before-after-cards {
+    display: flex;
+    gap: 24px;
+    padding: 0 10px;
+}
+
+.before-after-card {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    overflow: hidden;
+    flex: 0 0 320px; /* هر کارت 320px عرض داشته باشه */
+    animation: fadeInUp 0.6s ease-out forwards;
+    border: 1px solid rgba(212, 175, 55, 0.2); /* حاشیه طلایی ملایم */
+}
+
+.before-after-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15);
+}
+
+.image-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+    height: 200px;
+}
+
+.image-grid img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    background-color: #f8f9fa;
+    transition: opacity 0.3s ease;
+}
+
+.image-grid img:hover {
+    opacity: 0.9;
+}
+
+.card-body {
+    padding: 20px;
+}
+
+.card-body h5 {
+    font-size: 1.25rem;
+    color: #333;
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+.gold-accent {
+    color: #D4AF37;
+    margin-right: 8px;
+}
+
+.card-body p {
+    font-size: 0.95rem;
+    color: #555;
+    line-height: 1.6;
+    margin-bottom: 0;
+}
+
+/* انیمیشن ورود */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* موبایل: اسکرول افقی فعال */
+@media (max-width: 768px) {
+    .before-after-wrapper {
+        padding: 0;
+    }
+
+    .before-after-cards {
+        padding: 0 16px;
+    }
+
+    .before-after-card {
+        flex: 0 0 280px;
+    }
+
+    .image-grid {
+        height: 180px;
+    }
+}
+
+/* تبلت و بالاتر: گرید نرمال */
+@media (min-width: 992px) {
+    .before-after-wrapper {
+        overflow-x: visible;
+        padding: 0;
+    }
+
+    .before-after-cards {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 24px;
+        padding: 0;
+    }
+
+    .before-after-card {
+        flex: none;
+        animation: none;
+    }
+
+    /* ✅ اصلاح: انیمیشن برای همه 6 کارت با تأخیرهای منطقی */
+  .before-after-card:nth-child(1) { animation: fadeInUp 0.6s 0.1s ease-out both; }
+  .before-after-card:nth-child(2) { animation: fadeInUp 0.6s 0.2s ease-out both; }
+  .before-after-card:nth-child(3) { animation: fadeInUp 0.6s 0.3s ease-out both; }
+  .before-after-card:nth-child(4) { animation: fadeInUp 0.6s 0.1s ease-out both; } /* سطر دوم هم شروع سریع */
+  .before-after-card:nth-child(5) { animation: fadeInUp 0.6s 0.2s ease-out both; }
+  .before-after-card:nth-child(6) { animation: fadeInUp 0.6s 0.3s ease-out both; }
+}
+
+
+/* ===== نظرات مشتریان ===== */
+.testimonial-card {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    padding: 24px;
+    transition: all 0.3s ease;
+    border-top: 3px solid #D4AF37; /* خط طلایی بالای کارت */
+}
+
+.testimonial-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+}
+
+.stars {
+    color: #D4AF37;
+    font-size: 1.2rem;
+    margin-bottom: 14px;
+    letter-spacing: 2px;
+}
+
+.testimonial-card p {
+    font-style: italic;
+    color: #444;
+    line-height: 1.6;
+    margin-bottom: 16px;
+    font-size: 0.95rem;
+}
+
+.client-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.client-info strong {
+    color: #333;
+    font-weight: 600;
+}
+
+.client-info span {
+    color: #777;
+    font-size: 0.85rem;
+}
+@media (max-width: 768px) {
+  .content-right {
+    padding-right: 15px !important;
+    padding-left: 15px !important;
+    text-align: right;
+  }
+}
+
+.section-with-space::before {
+  content: '';
+  position: absolute;
+  top: 20%;
+  left: 5%;
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, rgba(212,175,55,0.05) 0%, transparent 70%);
+  z-index: -1;
+}
+
+
+/* ===== تایمر شخصی ===== */
+.timer-box {
+  background: white;
+  color: #D4AF37;
+  padding: 6px 10px;
+  border-radius: 8px;
+  min-width: 50px;
+  font-size: 1rem;
+  font-weight: bold;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  text-align: center;
+}
+
+.timer-box small {
+  display: block;
+  font-size: 0.65rem;
+  color: #666;
+  margin-top: 2px;
+}
+
+/* ===== کارت پیشنهاد ===== */
+.offer-card {
+  position: relative;
+  height: 420px;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+}
+
+.offer-card img {
+  height: 100%;
+  width: 100%;
+  object-fit: contain;
+  background-color: #f8f9fa;
+}
+
+.offer-overlay {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  left: 0;
+  background: linear-gradient(to top, rgba(255,255,255,0.95), rgba(255,255,255,0.7));
+  padding: 16px;
+  text-align: right;
+  border-radius: 16px 16px 0 0;
+}
+
+.offer-overlay h3 {
+  color: #333;
+  font-size: 1.3rem;
+  margin-bottom: 8px;
+}
+
+.discount-tag {
+  display: inline-block;
+  background-color: #D4AF37;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: bold;
+  margin: 8px 0;
+}
+
+.offer-price {
+  font-size: 1.1rem;
+  margin: 10px 0;
+  color: #333;
+}
+
+.offer-price del {
+  color: #999;
+  margin-left: 8px;
+}
+
+/* ریسپانسیو */
+@media (max-width: 768px) {
+  .offer-card {
+    height: 360px;
+  }
+}
+
+
+/* ===== کارت بلاگ ===== */
+.blog-card {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    transition: all 0.3s ease;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.blog-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+}
+
+.blog-img {
+    width: 100%;
+    height: 180px;
+    object-fit: contain;
+    background-color: #f8f9fa;
+}
+
+.blog-content {
+    padding: 20px;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.blog-content h4 {
+    color: #333;
+    font-size: 1.2rem;
+    margin-bottom: 10px;
+    line-height: 1.4;
+}
+
+.blog-content p {
+    color: #555;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin-bottom: 15px;
+    flex-grow: 1;
+}
+
+.btn-read {
+    color: #D4AF37;
+    font-weight: 600;
+    text-decoration: none;
+    align-self: flex-start;
+    transition: color 0.2s;
+}
+
+.btn-read:hover {
+    color: #B8860B;
+    text-decoration: underline;
+}
+
+/* ریسپانسیو */
+@media (max-width: 768px) {
+    .blog-img {
+        height: 160px;
+    }
+}
+
+/*مال تماس و موقعیت*/
+.contact-info h4 {
+    margin-top: 20px;
+    color: #333;
+    font-size: 1.2rem;
+}
+
+.contact-link {
+    color: #D4AF37;
+    text-decoration: none;
+}
+
+.contact-link:hover {
+    text-decoration: underline;
+}
+
+.google-map iframe {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+
+/*مال فوتر هست*/
+.footer-top-line {
+    height: 2px;
+    background: linear-gradient(to right, transparent, #D4AF37, transparent);
+}
+.footer-link {
+    color: #ddd;
+    text-decoration: none;
+}
+.footer-link:hover {
+    color: #D4AF37;
+}
+
+.social-icon {
+    color: #ddd;
+    text-decoration: none;
+    display: inline-block;
+    margin-bottom: 8px;
+}
+.social-icon:hover {
+    color: #D4AF37;
+}
+
+
+/* ===== ناوبری ===== */
+.nav-link {
+    color: #000000 !important; /* متن لینک‌ها همیشه مشکی */
+    font-size: 1.1rem !important;
+}
+
+.navbar-nav .nav-link {
+    font-size: 1.1rem !important;
+}
+
+.nav-link.active {
+    font-weight: bold !important;
+    color: #000000 !important; /* صفحهٔ فعال هم مشکی (نه طلایی) */
+    border-bottom: 2px solid #000000 !important; /* خط زیر مشکی */
+}
+
+.nav-link:hover {
+    color: #333333 !important; /* روی هاور کمی روشن‌تر */
+}
+
+/* === دکمه‌های هدر با استایل یکسان (طلایی لوکس) === */
+.header-btn {
+  display: inline-block;
+  padding: 8px 16px !important;
+  background-color: #D4AF37 !important;
+  color: white !important;
+  text-decoration: none !important;
+  border-radius: 6px !important;
+  font-weight: 600 !important;
+  font-size: 15px !important;
+  text-align: center;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 6px rgba(212, 175, 55, 0.2);
+  border: none !important;
+  cursor: pointer;
+}
+
+.header-btn:hover {
+  background-color: #B8860B !important;
+  color: white !important;
+  text-decoration: none !important;
+  box-shadow: 0 4px 10px rgba(184, 134, 11, 0.3) !important;
+  transform: translateY(-2px);
+}
+
+/* === نمایش نام کاربر با رنگ تیره === */
+.username-display {
+  color: #212529 !important; /* مشکی نزدیک به سیاه */
+  font-weight: bold;
+  padding: 8px 12px;
+  background-color: #f8f9fa;
+  border-radius: 6px;
+  display: inline-block;
+  vertical-align: middle;
+  border: 1px solid #e9ecef;
+}
+
+
+/* === دکمه خروج: همان استایل، ولی رنگ قرمز === */
+.header-btn-danger {
+  background-color: #dc3545 !important; /* قرمز بوت‌استرپ */
+}
+
+.header-btn-danger:hover {
+  background-color: #c82333 !important; /* قرمز تیره‌تر هنگام hover */
+  box-shadow: 0 4px 10px rgba(220, 53, 69, 0.3) !important;
+}
+
+
+
+/* === دکمه ثبت نام: سبز === */
+.header-btn-signup {
+  background-color: #28a745 !important; /* سبز */
+}
+
+.header-btn-signup:hover {
+  background-color: #218838 !important;
+  box-shadow: 0 4px 10px rgba(40, 167, 69, 0.3) !important;
+}
+
+/* === دکمه ورود: آبی === */
+.header-btn-login {
+  background-color: #007bff !important; /* آبی */
+}
+
+.header-btn-login:hover {
+  background-color: #0056b3 !important;
+  box-shadow: 0 4px 10px rgba(0, 123, 255, 0.3) !important;
+}
+
+/* === بهبود متن معرفی سالن === */
+.intro-text {
+    color: #333333 !important;
+    font-size: 1.1rem !important; /* کمی بزرگتر از قبل */
+    line-height: 1.8 !important; /* فاصله خطوط بیشتر = خوانایی بهتر */
+    font-weight: 500 !important; /* نیمه بولد - نه کاملاً bold */
+    text-align: justify !important; /* برای متن‌های بلند، تراز کامل */
+}
+
+.intro-text strong,
+.intro-text b {
+    font-weight: 700 !important; /* کلمات مهم را بولد کن */
+    color: #D4AF37 !important; /* رنگ طلایی برای تأکید */
+}
+
+/* اگر می‌خواهید فقط متن اول (lead) بزرگتر باشد */
+.lead-intro {
+    font-size: 1.25rem !important;
+    font-weight: 600 !important;
+    color: #212529 !important;
+    line-height: 1.6 !important;
+}
+
+
+/* === متن توضیحات داخل کارت‌های خدمات === */
+.service-card .card-body p {
+    font-size: 1rem !important;
+    line-height: 1.7 !important;
+    color: #212529 !important;
+    font-weight: 500 !important;
+    margin-bottom: 20px !important;
+    text-align: center !important;
+}
+
+
+
+/* === استایل لینک‌های شبکه‌های اجتماعی === */
+.social-icon-link {
+    color: #ddd;
+    text-decoration: none;
+    display: inline-block;
+    margin-bottom: 10px;
+    font-size: 1.1rem;
+    transition: color 0.2s ease;
+}
+
+.social-icon-link:hover {
+    color: #D4AF37; /* طلایی هنگام هاور */
+    transform: scale(1.1); /* کوچکی بزرگ‌تر شدن */
+}
+
+.social-icon-link i {
+    margin-left: 8px;
+    vertical-align: middle;
+}
+
+
+/* === بخش درباره ما === */
+.hero-about {
+  margin-top: 2rem;
+}
+
+.hero-title {
+  font-size: 2.2rem;
+  color: #212529;
+  font-weight: 700;
+  line-height: 1.4;
+  margin-bottom: 1.2rem;
+}
+
+.gold-divider {
+  width: 80px;
+  height: 4px;
+  background: linear-gradient(to right, transparent, #D4AF37, transparent);
+  margin: 0 auto;
+  border-radius: 2px;
+}
+
+.about-text {
+  font-size: 1.1rem;
+  line-height: 1.8;
+  color: #333333;
+  text-align: justify;
+  margin-bottom: 1.2rem;
+}
+
+.about-team-image {
+  max-width: 100%;
+  height: auto;
+  border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+  margin: 0 auto;
+  display: block;
+}
+
+@media (max-width: 768px) {
+  .hero-title {
+    font-size: 1.8rem;
+  }
+
+  .about-text {
+    font-size: 1rem;
+  }
+}
+
+
+
+/* === کارت‌های تیم === */
+.team-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  transition: all 0.3s ease;
+  overflow: hidden;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+}
+
+.team-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+}
+
+.team-img {
+  border-radius: 50%;
+  height: 180px;
+  width: 180px;
+  object-fit: cover;
+  margin: 20px auto 10px;
+}
+
+.team-info {
+  padding: 20px;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.team-info h5 {
+  font-size: 1.2rem;
+  color: #333333;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.team-specialty {
+  color: #D4AF37;
+  font-weight: 600;
+  margin-bottom: 8px;
+  font-size: 0.95rem;
+}
+
+.team-desc {
+  color: #666666;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin-bottom: 0;
+  flex-grow: 1;
+}
+
+
+
+/* === اسلایدر فضای سالن === */
+/* === تنظیم موقعیت اسلایدر برای دکمه‌های کنترل === */
+#salonGallery {
+  position: relative; /* ← مهم: برای اینکه دکمه‌ها نسبت به این بلوک موقعیت گیرند */
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+  background-color: #f8f9fa; /* اختیاری - برای ظاهر بهتر */
+}
+
+.carousel-indicators button {
+  background-color: #D4AF37 !important;
+  width: 12px !important;
+  height: 12px !important;
+  border-radius: 50% !important;
+  opacity: 0.7 !important;
+}
+
+.carousel-indicators .active {
+  background-color: #B8860B !important;
+  opacity: 1 !important;
+}
+
+
+/* === دکمه‌های کنترل اسلایدر — در مرکز سمت چپ و راست عکس === */
+#salonGallery .carousel-control-prev,
+#salonGallery .carousel-control-next {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0,0,0,0.3);
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  z-index: 5;
+}
+
+#salonGallery .carousel-control-prev {
+  left: 20px !important;
+}
+
+#salonGallery .carousel-control-next {
+  right: 20px !important;
+}
+
+.carousel-control-prev:hover,
+.carousel-control-next:hover {
+  background: rgba(0,0,0,0.5);
+}
+
+.carousel-control-prev-icon,
+.carousel-control-next-icon {
+  filter: invert(1);
+}
+
+/* === اصلاح دقیق موقعیت دکمه‌ها === */
+#salonGallery .carousel-control-prev {
+  left: calc(20px + 5%) !important; /* ← اضافه کردن درصد برای تنظیم */
+}
+
+#salonGallery .carousel-control-next {
+  right: calc(20px + 94%) !important; /* ← اضافه کردن درصد برای تنظیم */
+}
+
+
+/* === اصلاح اسلایدر برای نمایش کامل عکس === */
+.carousel-item img {
+    object-fit: contain !important;
+    object-position: center !important;
+    background-color: #f8f9fa !important;
+}
+
+.carousel-item {
+    overflow: visible !important; /* ← اینجا مشکل را حل می‌کند */
+}
+
+/* === کارت‌های گواهی‌نامه === */
+.certificate-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.07);
+  overflow: hidden;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: row;
+  height: 160px;
+}
+
+.certificate-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+}
+
+.certificate-img {
+  width: 160px;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  border-right: 1px solid #eee;
+}
+
+.certificate-info {
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex-grow: 1;
+}
+
+.certificate-info h5 {
+  font-size: 1.1rem;
+  color: #212529;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+.certificate-info p {
+  font-size: 0.9rem;
+  color: #666666;
+  margin-bottom: 0;
+  line-height: 1.5;
+}
+
+/* ریسپانسیو: در موبایل تصویر بالا باشد */
+@media (max-width: 768px) {
+  .certificate-card {
+    flex-direction: column;
+    height: auto;
+  }
+
+  .certificate-img {
+    width: 100%;
+    height: 180px;
+    border-right: none;
+    border-bottom: 1px solid #eee;
+  }
+}
+
+/* === دکمه‌های دسته‌بندی بلاگ === */
+.btn-outline-gold {
+  color: #D4AF37;
+  border-color: #D4AF37;
+  padding: 8px 16px;  
+  border-radius: 30px;
+  transition: all 0.3s ease;
+}
+
+.btn-outline-gold:hover,
+.btn-outline-gold.active {
+  background-color: #D4AF37;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(212, 175, 55, 0.3);
+}
+
+
+/* === فرم جست‌وجو بلاگ === */
+.form-control:focus {
+  border-color: #D4AF37 !important;
+  box-shadow: 0 0 0 0.25rem rgba(212, 175, 55, 0.25) !important;
+}
+
+/* === دکمه‌های دسته‌بندی === */
+.btn-outline-gold {
+  color: #D4AF37;
+  border-color: #D4AF37;
+  padding: 8px 16px;  
+  border-radius: 30px;
+  transition: all 0.3s ease;
+}
+
+.btn-outline-gold:hover,
+.btn-outline-gold.active {
+  background-color: #D4AF37;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(212, 175, 55, 0.3);
+}
+
+
+
+/* === استایل پیشنهاد جست‌وجو === */
+#suggestions {
+  border: 1px solid #ddd;
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  background: white;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+#suggestions .list-group-item {
+  padding: 10px 15px;
+  border: none;
+  border-bottom: 1px solid #eee;
+  color: #333;
+  text-align: right; /* برای فارسی */
+}
+
+#suggestions .list-group-item:hover {
+  background-color: #f8f9fa;
+  color: #D4AF37;
+}
+
+/* === فیکس برای راست‌چین === */
+#search-input {
+  text-align: right;
+}
+
+
+
+/* === رنگ طلایی برای لینک‌های مهم === */
+.text-gold {
+    color: #D4AF37 !important;
+    font-weight: 600;
+}
+
+.text-gold:hover {
+    color: #B8860B !important;
+    text-decoration: underline;
+}
+
+
+/* === نظرات مشتریان === */
+.hero-title {
+    font-size: 2.2rem;
+    color: #212529;
+    font-weight: 700;
+    line-height: 1.4;
+    margin-bottom: 0.5rem;
+}
+
+.rating-box {
+    background: #f8f9fa;
+    padding: 15px 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.05);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.rating-value {
+    font-size: 2rem;
+    color: #D4AF37;
+    font-weight: bold;
+}
+
+.rating-out-of {
+    font-size: 1.2rem;
+    color: #666;
+}
+
+.review-count {
+    font-size: 1.1rem;
+    color: #555;
+}
+
+/* === کارت نظرات === */
+.testimonial-card {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    transition: all 0.3s ease;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.testimonial-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+}
+
+.stars {
+    color: #D4AF37;
+    font-size: 1.2rem;
+}
+
+.testimonial-content {
+    padding: 20px;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.testimonial-content p {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: #444;
+    margin-bottom: 15px;
+    flex-grow: 1;
+}
+
+.client-info {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.client-info strong {
+    color: #333;
+    font-weight: 600;
+}
+
+.client-info span {
+    color: #777;
+    font-size: 0.85rem;
+}
+
+
+/* === ستاره‌های تعاملی === */
+.star-selectable:hover {
+    transform: scale(1.1);
+    transition: transform 0.2s;
+}
+
+
+
+
+/* === صفحه خدمات === */
+.hero-title {
+    font-size: 2.2rem;
+    color: #212529;
+    font-weight: 700;
+    line-height: 1.4;
+}
+
+.service-card {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    transition: all 0.3s ease;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.service-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+}
+
+.service-img {
+    width: 100%;
+    height: 200px;
+    object-fit: contain;
+    background-color: #f8f9fa;
+    border-radius: 12px;
+}
+
+.service-content {
+    padding: 20px;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.service-content h4 {
+    color: #333333;
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+.service-content p {
+    font-size: 0.9rem;
+    color: #666666;
+    line-height: 1.5;
+    margin-bottom: 20px;
+    flex-grow: 1;
+}
+
+.btn-read {
+    color: #D4AF37;
+    font-weight: 600;
+    text-decoration: none;
+    align-self: flex-start;
+    transition: color 0.2s;
+}
+
+.btn-read:hover {
+    color: #B8860B;
+    text-decoration: underline;
+}
+
+
+/* === برچسب سرویس در نظرات === */
+.service-info .badge {
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 6px;
+}
+
+
+/* ===== اسکرول افقی دسته‌ها ===== */
+.d-flex.gap-2.overflow-x-auto.pb-3 {
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* برای هر بخش دسته، اسکرول افقی فعال کن */
+.mt-5 {
+    scroll-snap-align: start;
+}
+
+
+
+.category-scroll {
+    margin-top: 20px;
+    overflow-x: auto;
+    white-space: nowrap;
+    scroll-behavior: smooth;
+    padding-bottom: 8px;
+    padding-top: 6px; 
+}
+
+.category-scroll::-webkit-scrollbar {
+    height: 6px;
+}
+
+.category-scroll::-webkit-scrollbar-thumb {
+    background-color: #D4AF37;
+    border-radius: 3px;
+}
+
+.service-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    overflow: hidden;
+    height: 100%;
+}
+
+
+.service-content {
+    padding: 16px;
+}
+
+.btn-read {
+    color: #D4AF37;
+    text-decoration: none;
+}
+
+.subcategory-card {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 15px;
+    background-color: #f9f9f9;
+    transition: all 0.2s ease;
+}
+
+.service-item {
+    border: 1px solid #eee;
+    border-radius: 8px;
+    padding: 15px;
+    background-color: white;
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+.service-info {
+    flex: 1;
+}
+
+.toggle-services i {
+    transition: transform 0.3s;
+}
+
+.toggle-services i.fa-minus {
+    transform: rotate(45deg);
+}
+
+/* --- تغییر فونت منوی افقی دسته‌بندی‌ها --- */
+.category-scroll .btn {
+    font-size: 1.2rem; /* اندازه فونت رو بزرگ‌تر کن (مثلاً 1.2rem یا 18px) */
+    padding: 0.75rem 1.5rem; /* پدینگ رو هم کمی بزرگ‌تر کن تا خواناتر بشه */
+    font-weight: 600; /* فونت رو ضخیم‌تر کن */
+}
+
+/* اگر می‌خوای در حالت ریسپانسیو هم کار کنه */
+@media (max-width: 768px) {
+    .category-scroll .btn {
+        font-size: 1rem; /* در موبایل کمی کوچک‌تر */
+        padding: 0.5rem 1rem;
+    }
+}
+
+
+/* --- استایل تایمر پکیج‌ها --- */
+.offer-timer .timer-display {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-weight: bold;
+    color: #D4AF37; /* رنگ طلایی */
+    text-align: center;
+}
+
+.offer-timer .timer-box {
+    background-color: #fff;
+    border: 2px solid #D4AF37;
+    border-radius: 8px;
+    padding: 5px 10px;
+    display: inline-block;
+    font-size: 16px;
+    font-weight: bold;
+    color: #D4AF37;
+}
+
+.offer-timer .timer-box small {
+    font-size: 12px;
+    display: block;
+    margin-top: 2px;
+    color: #D4AF37;
+}
+
+
+
+/* فایل style.css */
+
+/* نوار پیشرفت سفارشی */
+.custom-progress-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 12px 0;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    position: relative;
+    overflow: hidden;
+}
+
+.step {
+    position: relative;
+    text-align: center;
+    flex: 1;
+    padding: 10px 5px;
+    background-color: #e9ecef;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+    color: #495057;
+    font-weight: 500;
+    cursor: pointer;
+    min-width: 80px;
+    z-index: 1;
+}
+
+.step.active {
+    background-color: #007bff;
+    color: white;
+    font-weight: bold;
+    transform: scale(1.05);
+    z-index: 2;
+}
+
+.step .step-number {
+    font-size: 1.4rem;
+    font-weight: bold;
+    margin-bottom: 5px;
+    display: block;
+    line-height: 1;
+}
+
+.step .step-title {
+    font-size: 0.9rem;
+    font-weight: 500;
+    display: block;
+    word-wrap: break-word;
+    line-height: 1.2;
+    padding: 0 5px;
+}
+
+/* اضافه کردن خطوط جداکننده (اختیاری) */
+.step:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: -5px;
+    width: 10px;
+    height: 10px;
+    background-color: #adb5bd;
+    border-radius: 50%;
+    transform: translateY(-50%);
+    z-index: 0;
+}
+
+.selectable-time {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    text-align: center;
+    cursor: pointer;
+    margin: 5px 0;
+    transition: 0.2s;
+}
+.selectable-time:hover {
+    background: #e0e0e0;
+}
+.selectable-time.selected {
+    background: #007bff;
+    color: #fff;
+    font-weight: bold;
+}
+
+
+.alert .btn-close {
+    float: left !important;
+    margin-left: 10px;
+    margin-right: 0 !important;
+}
+
+.category-btn {
+    border-width: 2px;
+}
+
+.category-btn.active {
+    background-color: #d4af37;
+    color: #fff;
+    border-color: #000;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+
+
+.offer-link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+
+.offer-link:hover {
+  color: inherit;
+}
+
+
+.dropdown-menu {
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    font-size: 14px;
+}
+.dropdown-item {
+    padding: 10px 16px;
+}
+.dropdown-item:hover {
+    background-color: #f8f5f0;
+}
+
+.header-btn.header-btn-admin {
+    background-color: #0d6efd !important;
+    color: #fff !important;
+    border: 1px solid #0d6efd !important;
+}
+
+.header-btn.header-btn-admin:hover {
+    background-color: #0b5ed7 !important;
+    color: #fff !important;
+}
+
+.calendar-box {
+    background: #ffffff;
+    padding: 24px;
+    border-radius: 18px;
+    width: 380px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+    border: 1px solid #eef1f4;
+}
+
+.cal-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 18px;
+    font-weight: 700;
+    font-size: 15px;
+    color: #333;
+}
+
+.cal-nav a {
+    color: #0d6efd;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.cal-nav a:hover {
+    text-decoration: underline;
+}
+
+.weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 16px;
+    margin-bottom: 14px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #666;
+    text-align: center;
+}
+
+.days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 16px;
+}
+
+.day {
+    height: 44px;
+    display: flex;
+    text-align: center;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    background: #f4f6f8;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.day:hover {
+    background: #dbeafe;
+    color: #0d6efd;
+}
+
+.day.selected {
+    background: #0b5ed7 !important;
+    color: #fff !important;;
+    box-shadow: 0 4px 10px rgba(13,110,253,0.4);
+}
+
+.day.disabled,
+
+.day.empty {
+    background: transparent;
+    cursor: default;
+}
+
+/* ⛔ روزهای پر */
+.day.taken {
+    background: #ffcccc;
+    color: #a00;
+    cursor: not-allowed;
+}
+
+/* ⛔ روزهای گذشته */
+.day.past {
+    background: #444;
+    color: #aaa;
+    cursor: not-allowed;
+}
+
+
+/* ✅ روزهای آزاد */
+.day.selectable-day {
+    background: #e7f1ff;
+    color: #0d6efd;
+    transition: 0.2s;
+}
+
+.day.selectable-day:hover {
+    background: #0d6efd;
+    color: white;
+}
+
+.card-header {
+    border-bottom: 0;      /* مرز آبی رو تمیز می‌کنه */
+}
+
+.legend {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border-radius: 4px;
+    margin-left: 6px;
+}
+.legend.past { background: #444; }
+.legend.taken { background: #ffcccc; }
+.legend.free { background: #e7f1ff; }
+
+
+/* آواتار کاربر در هدر */
+.header-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #d4af37;
+}
+
+.header-user {
+    background: transparent;
+    color: #fff;
+    padding: 4px 8px;
+}
+
+.header-user:hover {
+    background-color: rgba(255,255,255,0.15);
+}
+
+.header-username {
+    display: inline;
+    font-size: 14px;
+    color: #333;
+    white-space: nowrap;
+}
+@media (max-width: 768px) {
+    .header-username {
+        display: none;
+    }
+}
+
+/*css حرفه ای برای ستاره ها */
+.star {
+  cursor: pointer;
+  font-size: 1.8rem;
+  color: #ccc;
+  transition: all 0.2s ease;
+}
+
+.star:hover {
+  transform: scale(1.2);
+}
+
+.star.active {
+  color: #f5c518;  /* طلایی واقعی */
+  text-shadow: 0 0 3px rgba(245,197,24,0.7);
+}
+
+#ratingValue {
+  font-size: 0.9rem;
+  color: #777;
+  margin-top: 6px;
+}
+/* پاپ‌آپ خروج از فرآیند رزرو - متناسب با طراحی سایت */
+#exit-confirmation-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(3px);
+    justify-content: center;
+    align-items: center;
+    z-index: 99999;
+    animation: fadeIn 0.3s ease-out;
+}
+
+#exit-confirmation-modal .modal-content {
+    background: #fff;
+    padding: 30px;
+    border-radius: 20px;
+    text-align: center;
+    width: 420px;
+    max-width: 90%;
+    position: relative;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+    border: 2px solid #D4AF37;
+    animation: slideIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* آیکون هشدار */
+.modal-warning-icon {
+    font-size: 48px;
+    color: #e74c3c;
+    margin-bottom: 15px;
+    display: block;
+}
+
+/* عنوان */
+.modal-title {
+    margin: 0 0 15px;
+    font-weight: bold;
+    color: #2d3748;
+    font-size: 1.3rem;
+    font-family: 'Vazir', sans-serif;
+}
+
+/* متن توضیح */
+.modal-text {
+    margin: 0 0 25px;
+    color: #4a5568;
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+/* دکمه‌ها */
+.modal-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+/* دکمه "ادامه بده" (سبز - اصلی) */
+.btn-stay {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    border: none;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 30px;
+    font-size: 15px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 6px 15px rgba(40, 167, 69, 0.35);
+    min-width: 140px;
+    font-family: 'Vazir', sans-serif;
+}
+
+.btn-stay:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 22px rgba(40, 167, 69, 0.45);
+    background: linear-gradient(135deg, #20c997, #28a745);
+}
+
+/* دکمه "بله، خارج شوم" (قرمز - خطر) */
+.btn-exit {
+    background: linear-gradient(135deg, #dc3545, #e83e8c);
+    border: none;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 30px;
+    font-size: 15px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 6px 15px rgba(220, 53, 69, 0.35);
+    min-width: 140px;
+    font-family: 'Vazir', sans-serif;
+}
+
+.btn-exit:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 22px rgba(220, 53, 69, 0.45);
+    background: linear-gradient(135deg, #e83e8c, #dc3545);
+}
+
+/* دکمه بستن */
+#close-exit-modal {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: transparent;
+    border: none;
+    font-size: 24px;
+    font-weight: bold;
+    cursor: pointer;
+    color: #aaa;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+#close-exit-modal:hover {
+    background: #f8f9fa;
+    color: #dc3545;
+}
+
+/* انیمیشن‌ها */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* برای موبایل */
+@media (max-width: 576px) {
+    #exit-confirmation-modal .modal-content {
+        width: 95%;
+        padding: 20px;
+    }
+    
+    .modal-buttons {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .btn-stay, .btn-exit {
+        width: 100%;
+        min-width: auto;
+    }
+}
+/* استایل برای ستون شماره تماس */
+.phone-column {
+    width: 200px !important; /* عرض ثابت منطقی */
+    min-width: 180px; /* حداقل عرض */
+    max-width: 220px; /* حداکثر عرض */
+    overflow: visible !important;
+    white-space: normal !important;
+    text-align: center !important; /* تراز وسط */
+}
+
+/* برای آیتم‌های داخل ستون تلفن */
+.phone-item {
+    display: block;
+    margin-bottom: 5px;
+    text-align: center; /* تغییر اصلی: center به جای right */
+    direction: ltr; /* برای نمایش صحیح اعداد */
+}
+
+.phone-item a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center; /* اضافه کردن این خط */
+    gap: 5px;
+    padding: 2px 5px;
+    border-radius: 4px;
+    transition: background 0.2s;
+    text-align: center;
+    margin: 0 auto; /* مرکز کردن لینک */
+}
+
+.phone-number {
+    font-family: 'Courier New', monospace;
+    font-size: 0.9em;
+    direction: ltr;
+    display: inline-block;
+}
+
+
+/* روزهای تعطیل در تقویم */
+.day.holiday {
+    background: #ff9e9e !important;
+    color: #c00 !important;
+    cursor: not-allowed !important;
+    position: relative;
+}
+.day.holiday::after {
+    
+    display: none !important;
+}
+
+/* فضای کافی برای ستون‌ها */
+.table th, .table td {
+    padding: 12px 15px !important;
+}
+
+/* برای دکمه‌ها */
+.btn-sm {
+    padding: 5px 8px !important;
+    font-size: 0.8rem !important;
+}
+
+/* رفع مشکل دکمه‌های اقدامات در صفحه تعطیلات */
+.table td.text-center.d-flex {
+    white-space: nowrap !important;
+    min-width: 150px !important; /* فضای کافی برای دکمه‌ها */
+    padding: 8px 10px !important;
+}
+
+/* کاهش سایز دکمه‌ها برای جایگذاری بهتر */
+.btn-sm {
+    padding: 4px 7px !important;
+    font-size: 0.75rem !important;
+    width: 32px !important;
+    height: 32px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+/* آیکون‌ها در دکمه‌های کوچک */
+.btn-sm i {
+    font-size: 0.9rem !important;
+    margin: 0 !important;
+}
+
+/* ========== استایل‌های عمومی ========== */
+.table-responsive {
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.table {
+    margin-bottom: 0;
+}
+
+/* ✅ این را جایگزین کنید */
+.table th {
+    background-color: #343a40 !important; /* مشکی */
+    color: white !important;
+    font-weight: 600;
+    border: none;
+    padding: 16px 12px !important;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.table td {
+    padding: 14px 12px !important;
+    vertical-align: middle;
+    border-bottom: 1px solid #eee;
+}
+
+/* ✅ این را جایگزین کنید */
+.table tbody tr:hover {
+    background-color: #f8f9fa !important;
+    transition: background-color 0.2s;
+}
+
+/* ========== استایل‌های صفحه تعطیلات ========== */
+/* ستون عنوان - کاهش فضای خالی */
+td:has(> .holiday-title) {
+    min-width: 180px !important;
+    max-width: 250px !important;
+    word-wrap: break-word;
+}
+
+.holiday-title {
+    font-weight: 500;
+    color: #333;
+    line-height: 1.4;
+}
+
+/* ستون تاریخ - نمایش درست تاریخ شمسی */
+td .jalali-date {
+    font-family: 'Vazirmatn', monospace;
+    font-weight: 700;
+    color: #2c3e50;
+    direction: ltr;
+    display: inline-block;
+}
+
+/* استایل برای تاریخ‌های نامعتبر */
+td .invalid-date {
+    color: #dc3545 !important;
+    text-decoration: line-through;
+}
+
+
+/* ============================= */
+/* پروفایل - استایل دکمه‌ها */
+/* ============================= */
+
+/* دکمه‌های ستون سمت راست */
+.profile-side-btn {
+    font-size: 15px;
+    padding: 10px 0;
+    font-weight: 500;
+    border-radius: 10px;
+    transition: all 0.2s ease;
+}
+
+.profile-side-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+}
+
+
+/* دکمه‌های فیلتر وضعیت */
+.profile-filter-group .btn {
+    padding: 8px 16px;
+    font-size: 14px;
+    border-radius: 20px !important;
+    transition: 0.2s;
+}
+
+.profile-filter-group .btn:hover {
+    transform: translateY(-2px);
+}
+
+
+/* دکمه‌های داخل کارت نوبت */
+.appointment-actions {
+    padding: 12px;
+}
+
+.appointment-actions .btn {
+    font-size: 14px;
+    padding: 6px 14px;
+    border-radius: 8px;
+    min-width: 110px;
+}
+
+.appointment-actions .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 12px rgba(0,0,0,0.15);
+}
+
+/* ===== بهینه‌سازی متن برای موبایل ===== */
+@media (max-width: 768px) {
+    body {
+        font-size: 15px;
+        line-height: 1.8;
+    }
+
+    p {
+        line-height: 1.9 !important;
+    }
+
+    h1, h2, h3 {
+        line-height: 1.4;
+    }
+}
+
+
+/* ===== دکمه‌های مناسب لمس در موبایل ===== */
+@media (max-width: 768px) {
+    .btn,
+    .btn-sm,
+    .btn-read,
+    .header-btn {
+        min-height: 44px; /* استاندارد UX موبایل */
+        padding: 10px 16px !important;
+        font-size: 15px !important;
+    }
+}
+
+/* ===== کارت‌ها در موبایل ===== */
+@media (max-width: 768px) {
+    .service-card,
+    .blog-card,
+    .testimonial-card {
+        border-radius: 12px;
+        margin-bottom: 16px;
+    }
+
+    .service-img,
+    .blog-img {
+        height: 160px;
+    }
+}
+
+/* ===== اسکرول افقی نرم در موبایل ===== */
+@media (max-width: 768px) {
+    .before-after-cards,
+    .category-scroll {
+        scroll-snap-type: x mandatory;
+    }
+
+    .before-after-card,
+    .category-scroll .btn {
+        scroll-snap-align: center;
+    }
+}
+
+/* ===== بهینه‌سازی هدر موبایل ===== */
+@media (max-width: 768px) {
+    .navbar {
+        padding: 10px 12px;
+    }
+
+    .header-btn {
+        font-size: 14px !important;
+        padding: 8px 12px !important;
+    }
+}
+
+/* ===== فرم‌ها برای موبایل ===== */
+@media (max-width: 768px) {
+    input,
+    select,
+    textarea {
+        min-height: 46px;
+        font-size: 15px;
+    }
+}
+
+/*افزایش فاصله عمودی*/
+.card form .mb-3 {
+    margin-bottom: 1.4rem;
+}
+
+
+@media (max-width: 576px) {
+    .btn-lg {
+        padding: 0.6rem 1rem;
+        font-size: 0.9rem;
+    }
+}
+
+
+@media (max-width: 768px) {
+
+  .appointment-actions {
+    width: 100%;
+  }
+
+  .appointment-actions .btn {
+    width: 100%;
+  }
+
+  .profile-filter-group .btn {
+    flex: 1 1 45%;
+  }
+
+  .blog-card {
+    margin-bottom: 1rem;
+  }
+
+.category-scroll {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+  }
+
+  .category-scroll .btn {
+    white-space: nowrap;
+    font-size: 0.85rem;
+    padding: 6px 12px;
+  }
+
+  .service-item h5 {
+    font-size: 0.95rem;
+  }
+
+  .service-item p {
+    font-size: 0.8rem;
+  }
+
+.calendar {
+    font-size: 0.8rem;
+  }
+
+  .day {
+    padding: 6px;
+    font-size: 0.8rem;
+  }
+
+  .times-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+
+  .time-item {
+    padding: 6px;
+    font-size: 0.8rem;
+  }
+
+  .summary-box p {
+    font-size: 0.85rem;
+  }
+
+  .form-check-label {
+    font-size: 0.9rem;
+  }
+
+  .btn {
+    font-size: 0.9rem;
+    padding: 8px 12px;
+  }
+
+   .hero-title {
+    font-size: 1.4rem;
+  }
+
+  .about-text {
+    font-size: 0.9rem;
+  }
+
+}
+
+
+/* ===========================
+REVIEWS PAGE MOBILE FIX
+=========================== */
+@media (max-width: 768px) {
+
+    .hero-title {
+        font-size: 1.4rem;
+        text-align: center;
+    }
+
+    .testimonial-card {
+        padding: 15px;
+    }
+
+    .testimonial-content p {
+        font-size: 0.9rem;
+    }
+
+    .rating-box {
+        font-size: 1.2rem;
+    }
+
+    .review-count {
+        font-size: 0.9rem;
+    }
+
+    /* فرم ثبت نظر */
+    form.bg-white {
+        padding: 15px !important;
+    }
+
+    form .btn {
+        width: 100%;
+    }
+
+    /* ستاره‌ها کوچکتر */
+    .star-selectable {
+        font-size: 1.2rem !important;
+    }
+
+    /* دکمه رزرو پایین صفحه */
+    .lead {
+        font-size: 0.95rem;
+    }
+
+    .btn-gold {
+        padding: 8px 14px;
+        font-size: 0.85rem;
+    }
+}
+
+
+/* ===========================
+SERVICES PAGE MOBILE FIX
+=========================== */
+@media (max-width: 768px) {
+
+    /* اسکرول دسته‌بندی‌ها بهتر */
+    .category-scroll {
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+
+    .category-btn {
+        flex: 0 0 auto;
+        font-size: 0.8rem;
+        padding: 6px 12px;
+    }
+
+    /* کارت زیردسته */
+    .subcategory-card {
+        padding: 15px;
+    }
+
+    /* کارت خدمات */
+    .service-item {
+        padding: 10px;
+    }
+
+    .service-img {
+        height: 150px;
+        object-fit: cover;
+    }
+
+    .service-info h5 {
+        font-size: 1rem;
+    }
+
+    .service-info p {
+        font-size: 0.85rem;
+    }
+
+    .service-info .btn {
+        font-size: 0.75rem;
+        padding: 6px 10px;
+    }
+
+    /* مودال */
+    .modal-dialog {
+        margin: 10px;
+    }
+
+    .modal-body {
+        padding: 15px;
+    }
+
+    /* پکیج اسلایدر */
+    .offer-overlay h3 {
+        font-size: 1rem;
+    }
+
+    .offer-overlay p {
+        font-size: 0.8rem;
+    }
+
+    .offer-price {
+        font-size: 0.9rem;
+    }
+}
+
+
+/*صفحه بندی نظرات مشتریان*/
+.pagination .page-link {
+    color: #c9a227; /* طلایی */
+    border-radius: 8px;
+    margin: 0 4px;
+    transition: all 0.3s ease;
+}
+
+.pagination .page-link:hover {
+    background-color: #c9a227;
+    color: #fff;
+}
+
+.pagination .page-item.active .page-link {
+    background-color: #c9a227;
+    border-color: #c9a227;
+    color: #fff;
+}
+
+/* ========== فیلتر بازه زمانی (از تاریخ تا تاریخ) ========== */
+.date-range-filter {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+}
+
+.date-range-filter .date-input {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    font-size: 15px;
+    direction: ltr;
+    transition: border-color 0.3s;
+}
+
+.date-range-filter .date-input:focus {
+    border-color: #D4AF37;
+    box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.2);
+    outline: none;
+}
+
+.date-range-filter .separator {
+    display: none; /* در دسکتاپ مخفی */
+    text-align: center;
+    font-weight: 600;
+    color: #6c757d;
+    font-size: 1.1rem;
+    margin: 4px 0;
+}
+
+/* ریسپانسیو: نمایش "تا" در موبایل */
+@media (max-width: 768px) {
+    .date-range-filter {
+        flex-direction: column;
+    }
+    
+    .date-range-filter .separator {
+        display: block;
+    }
+    
+    .date-range-filter .date-input {
+        font-size: 14px;
+        padding: 10px;
+    }
+}
+
+/* نسخه دسکتاپ: نمایش در یک خط */
+@media (min-width: 769px) {
+    .date-range-filter {
+        flex-direction: row;
+        align-items: flex-end;
+        gap: 10px;
+    }
+    
+    .date-range-filter .date-input {
+        flex: 1;
+        min-width: 120px;
+    }
+    
+    .date-range-filter .separator {
+        display: block;
+        margin: 0 8px;
+        line-height: 42px; /* هم‌تراز با ارتفاع فیلد */
+    }
+    
+    .date-range-filter small {
+        position: absolute;
+        bottom: -22px;
+        left: 0;
+        font-size: 0.85rem;
+    }
+}
+
+.table-responsive {
+    overflow-x: auto;
+}
+
+/* ✅ کلاس سفارشی برای دکمه‌های کوچک‌تر اما خوانا */
+.btn-xs {
+    padding: 0.3rem 0.6rem !important;
+    font-size: 0.85rem !important;
+    line-height: 1.2 !important;
+    min-width: 80px !important;
+}
+
+/* ✅ استایل عکس خدمات در لیست */
+.service-image-wrapper {
+    width: 60px;
+    height: 60px;
+    flex-shrink: 0;
+}
+
+.service-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 2px solid #e9ecef;
+    background: #f8f9fa;
+}
+
+.service-image-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    border: 2px dashed #dee2e6;
+    background: #f8f9fa;
+    color: #6c757d;
+}
+
+.service-info {
+    min-width: 0; /* برای جلوگیری از overflow */
+}
+
+.service-info strong {
+    color: #2c3e50;
+    font-weight: 600;
+}

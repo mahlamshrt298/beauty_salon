@@ -1,0 +1,99 @@
+{% extends "panel/base_panel.html" %}
+{% block content %}
+
+<h2 class="fw-bold mb-1" style="color: #2c3e50;">📝 مقالات</h2>
+</br>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    
+    <div>
+        <a href="{% url 'panel:article_category_list' %}"
+           class="btn btn-outline-secondary me-2">
+            🗂 دسته‌بندی‌ها
+        </a>
+
+        <a href="{% url 'panel:article_add' %}"
+           class="btn btn-primary">
+            ➕ افزودن مقاله
+        </a>
+    </div>
+</div>
+
+<div class="table-scroll">
+    <table class="table">
+        <tr>
+            <th>عنوان</th>
+            <th>دسته‌بندی</th>
+            <th>نویسنده</th>
+            <th>عملیات</th>
+        </tr>
+
+        {% for a in articles %}
+        <tr>
+            <td class="text-center">{{ a.title }}</td>
+            <td class="text-center">{{ a.category.name }}</td>
+            <td class="text-center">{{ a.author }}</td>
+            <td class="text-center">
+                <a href="{% url 'panel:article_edit' a.id %}">✏️</a>
+                <form method="post"
+                    action="{% url 'panel:article_delete' a.id %}"
+                    style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit"
+                            class="btn btn-link p-0 text-danger"
+                            onclick="return confirm('حذف شود؟')">
+                        🗑
+                    </button>
+                </form>
+
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+
+    {% if articles.has_other_pages %}
+    <nav aria-label="صفحه‌بندی مقالات" class="mt-4">
+        <ul class="pagination justify-content-center">
+            <!-- دکمه قبلی -->
+            {% if articles.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ articles.previous_page_number }}">
+                        <span aria-hidden="true">&laquo;</span> قبلی
+                    </a>
+                </li>
+            {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">&laquo; قبلی</span>
+                </li>
+            {% endif %}
+
+            <!-- شماره صفحات -->
+            {% for num in articles.paginator.page_range %}
+                {% if articles.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }} <span class="sr-only">(فعلی)</span></span>
+                    </li>
+                {% else %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+
+            <!-- دکمه بعدی -->
+            {% if articles.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ articles.next_page_number }}">
+                        بعدی <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+            {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">بعدی &raquo;</span>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+
+{% endblock %}

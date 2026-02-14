@@ -1,0 +1,196 @@
+{% extends "panel/base_panel.html" %}
+{% load humanize %}  
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4">
+        <div>
+            <h2 class="fw-bold mb-1" style="color: #2c3e50;">🎁 پکیج‌های ویژه</h2>
+            <p class="text-muted mb-0">لیست پکیج‌های تخفیف‌دار و پیشنهادهای ویژه</p>
+        </div>
+        <a href="{% url 'panel:package_add' %}" class="btn btn-primary d-flex align-items-center gap-2">
+            <i class="fas fa-plus"></i>
+            <span>افزودن پکیج جدید</span>
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-scroll">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th class="text-center" width="80">عکس</th>
+                            <th class="text-center">عنوان</th>
+                            <th class="text-center">خدمت</th>
+                            <th class="text-center">قیمت</th>
+                            <th class="text-center">تخفیف</th>
+                            <th class="text-center">نمایش در سایت</th>
+                            <th class="text-center">وضعیت</th>
+                            <th class="text-center">زمان باقی‌مانده</th>
+                            <th class="text-center">عملیات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for package in packages %}
+                        <tr>
+                            <td class="text-center">
+                                {% if package.image %}
+                                    <img src="{{ package.image_url }}" width="60" height="60" class="rounded" alt="{{ package.title }}">
+                                {% else %}
+                                    <i class="fas fa-image text-muted fa-2x"></i>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                <strong>{{ package.title }}</strong><br>
+                                <small class="text-muted">{{ package.description|truncatechars:30 }}</small>
+                            </td>
+                            <td class="text-center">
+                                {% if package.service.exists %}
+                                    {% for s in package.service.all|slice:":3" %}
+                                        <span class="badge bg-info text-dark">{{ s.name }}</span><br>
+                                    {% endfor %}
+                                    {% if package.service.count > 3 %}
+                                        <small class="text-muted">+{{ package.service.count|add:"-3" }} خدمت دیگر</small>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                {% if package.original_price %}
+                                    <del class="text-muted">{{ package.original_price|intcomma }}</del><br>
+                                {% endif %}
+                                <strong>{{ package.discounted_price|intcomma }} تومان</strong>
+                            </td>
+                            <td class="text-center">
+                                {% if package.discount_badge %}
+                                    <span class="badge bg-danger">{{ package.discount_badge }}</span>
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+
+                            <td class="text-center">
+                                {% if package.show_on_homepage %}
+                                    <span class="badge bg-success">بله</span>
+                                {% else %}
+                                    <span class="badge bg-danger">خیر</span>
+                                {% endif %}
+                            </td>
+
+                            <td class="text-center">
+                                {% if package.is_active %}
+                                    <span class="badge bg-success">فعال</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">غیرفعال</span>
+                                {% endif %}
+                            </td>
+
+                            <!-- در بدنه جدول -->
+                            <td class="text-center">
+                                {% if package.is_limited_time and package.start_time %}
+                                    {% if package.time_remaining %}
+                                        <span class="badge bg-warning">{{ package.time_remaining }}</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">منقضی شده</span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="text-muted">—</span>
+                                {% endif %}
+                            </td>
+
+                            <td class="text-center">
+                                <div class="d-flex justify-content-center gap-2">
+                                    <a href="{% url 'panel:package_edit' package.id %}" class="btn btn-sm btn-warning me-2">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <form method="post"
+                                        action="{% url 'panel:package_delete' package.id %}"
+                                        style="display:inline;">
+                                        {% csrf_token %}
+                                        <button type="submit"
+                                                class="btn btn-sm btn-danger"
+                                                onclick="return confirm('آیا از حذف این پکیج مطمئن هستید؟')">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+
+                                
+                                    <form method="post"
+                                        action="{% url 'panel:package_resend' package.id %}"
+                                        style="display:inline;">
+                                        {% csrf_token %}
+                                        <button type="submit"
+                                                class="btn btn-sm btn-info"
+                                                onclick="return confirm('اعلان مجدد برای همه کاربران ارسال شود؟')">
+                                            <i class="fas fa-bell"></i>
+                                        </button>
+                                    </form>
+
+
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center py-5">
+                                <div class="text-muted">
+                                    <i class="fas fa-box-open fa-3x mb-3"></i>
+                                    <h5>هیچ پکیجی وجود ندارد</h5>
+                                    <p class="mb-0">برای افزودن پکیج جدید روی دکمه "افزودن پکیج جدید" کلیک کنید</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- قبل از بسته شدن </div> کانتینر، این کد را اضافه کنید -->
+    {% if packages.has_other_pages %}
+    <nav aria-label="صفحه‌بندی پکیج‌ها" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if packages.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ packages.previous_page_number }}">
+                        <span aria-hidden="true">&laquo;</span> قبلی
+                    </a>
+                </li>
+            {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">&laquo; قبلی</span>
+                </li>
+            {% endif %}
+
+            {% for num in packages.paginator.page_range %}
+                {% if packages.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }} <span class="sr-only">(فعلی)</span></span>
+                    </li>
+                {% else %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+
+            {% if packages.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ packages.next_page_number }}">
+                        بعدی <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+            {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">بعدی &raquo;</span>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+
+</div>
+{% endblock %}

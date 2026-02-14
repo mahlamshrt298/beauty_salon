@@ -1,0 +1,140 @@
+{% extends "panel/base_panel.html" %}
+{% block content %}
+<h2 class="fw-bold mb-1" style="color: #2c3e50;">📊 داشبورد</h2>
+</br>
+<form method="get" class="row mb-4">
+
+    <div class="col-md-3">
+        <select name="year" class="form-select">
+            <option value="2025">سال</option>
+            {% for y in years %}
+                <option value="{{ y }}"
+                    {% if selected_year == y %}selected{% endif %}>
+                    {{ y }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="col-md-3">
+        <select name="month" class="form-select">
+            <option value="">ماه</option>
+            {% for m in months %}
+                <option value="{{ m }}"
+                    {% if selected_month == m %}selected{% endif %}>
+                    {{ m }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="col-md-2">
+        <button class="btn btn-primary w-100">
+            اعمال فیلتر
+        </button>
+    </div>
+
+</form>
+
+<div class="container mt-4">
+
+    <div class="row g-4">
+        <div class="col-12 col-md-4">
+
+            <div class="card text-center shadow">
+                <div class="card-body">
+                    <h4>{{ total_appointments }}</h4>
+                    <p>
+                        {% if selected_month %}
+                            آمار ماه {{ selected_month }} / {{ selected_year }}
+                        {% else %}
+                            کل نوبت‌ها
+                        {% endif %}
+                    </p>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card text-center shadow">
+                <div class="card-body">
+                    <h4>{{ pending_bookings }}</h4>
+                    <p>نوبت‌های در انتظار تایید</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card text-center shadow">
+                <div class="card-body">
+                    <h4>{{ total_services }}</h4>
+                    <p>تعداد خدمات</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card text-center shadow">
+                <div class="card-body">
+                    <h4>{{ cancelled }}</h4>
+                    <p>نوبت‌های لغو شده</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- نمودار -->
+    <canvas id="bookingChart" class="mt-4"></canvas>
+
+</div>
+
+<!--<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>--> 
+<script>
+const ctx = document.getElementById('bookingChart');
+
+new Chart(ctx, {
+  type: 'bar',
+  data: {
+    labels: ['تأیید شده', 'در انتظار', 'لغو شده','انجام شده'],
+    datasets: [{
+      label: 'تعداد نوبت‌ها',
+      data: [{{ confirmed }}, {{ pending }}, {{ cancelled }},{{ completed }}],
+    }]
+  },
+  options: {
+    plugins: {
+      legend: {
+        labels: {
+          font: {
+            size: 16, // افزایش فونت لجند
+            weight: 'bold'
+          }
+        }
+      }
+    },
+    scales: {
+      x: {
+        ticks: {
+          font: {
+            size: 16, // افزایش فونت برچسب‌های محور x
+            weight: 'bold' // فونت برچسب‌های محور x
+          }
+        }
+      },
+      y: {
+        ticks: {
+          font: {
+            size: 16, // افزایش فونت برچسب‌های محور x
+            weight: 'bold' // فونت برچسب‌های محور y
+          }
+        }
+      }
+    }
+  }
+
+});
+</script>
+
+{% endblock %}

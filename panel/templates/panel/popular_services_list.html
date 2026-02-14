@@ -1,0 +1,38 @@
+{% extends "panel/base_panel.html" %}
+{% block content %}
+<h2 class="fw-bold mb-1" style="color: #2c3e50;">⭐ خدمات پرطرفدار</h2>
+<div class="container mt-4">
+
+    <!-- هدر صفحه -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        
+
+        <a href="{% url 'panel:popular_service_add' %}" class="btn btn-primary">
+            ➕ افزودن سرویس
+        </a>
+    </div>
+
+    <div class="table-scroll">
+        <table class="table">
+        <tr>
+            <th>عنوان</th>
+            <th>فعال</th>
+            <th>عملیات</th>
+        </tr>
+
+        {% for s in services %}
+        <tr>
+            <td class="text-center">{{ s.title }}</td>
+            <td class="text-center">{{ s.is_active|yesno:"✔,✖" }}</td>
+            <td class="text-center">
+            <a href="{% url 'panel:popular_service_edit' s.id %}">✏️</a>
+            <a href="{% url 'panel:popular_service_delete' s.id %}"
+                onclick="return confirm('حذف شود؟')">🗑</a>
+            </td>
+        </tr>
+        {% endfor %}
+        </table>
+    </div>
+
+</div>
+{% endblock %}

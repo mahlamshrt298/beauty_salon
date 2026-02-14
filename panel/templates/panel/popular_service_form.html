@@ -1,0 +1,109 @@
+{% extends "panel/base_panel.html" %}
+{% block content %}
+
+<div class="container mt-4" style="max-width: 700px;">
+
+    <h4 class="mb-4">افزودن / ویرایش خدمت پرطرفدار</h4>
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <!-- عنوان -->
+        <div class="mb-3">
+            <label class="form-label">عنوان خدمت</label>
+            <input
+                name="title"
+                class="form-control"
+                placeholder="مثلاً: پکیج پاییزی مو + مزو"
+                value="{{ service.title|default:'' }}"
+                required
+            >
+            <div class="form-text">
+                عنوانی که در صفحه اصلی نمایش داده می‌شود
+            </div>
+        </div>
+
+        <!-- توضیحات -->
+        <div class="mb-3">
+            <label class="form-label">توضیحات کوتاه</label>
+            <textarea
+                name="description"
+                class="form-control"
+                rows="3"
+                placeholder="توضیح کوتاه درباره این پکیج یا خدمت"
+            >{{ service.description|default:'' }}</textarea>
+            <div class="form-text">
+                توضیح مختصر برای نمایش روی کارت پیشنهاد
+            </div>
+        </div>
+
+        <!-- تصویر -->
+        <div class="mb-3">
+            <label class="form-label">تصویر خدمت</label>
+            <input type="file" name="image" class="form-control">
+            <div class="form-text">
+                تصویر مناسب اسلایدر (ترجیحاً افقی و با کیفیت)
+            </div>
+        </div>
+
+        <!-- دسته‌بندی -->
+        <div class="mb-3">
+            <label class="form-label"> دسته‌بندی</label>
+            <select name="category" class="form-select" required>
+                <option value="">انتخاب دسته‌بندی</option>
+                {% for cat in categories %}
+                    <option value="{{ cat.id }}"
+                        {% if service.category and service.category.id == cat.id %}selected{% endif %}>
+                        {{ cat.name }}
+                    </option>
+                {% endfor %}
+            </select>
+            <div class="form-text">
+                برای ارتباط با دسته خدمات (اختیاری)
+            </div>
+        </div>
+
+        <!-- ترتیب -->
+        <div class="mb-3">
+            <label class="form-label">ترتیب نمایش</label>
+            <input
+                name="order"
+                type="number"
+                class="form-control"
+                value="{{ service.order|default:0 }}"
+            >
+            <div class="form-text">
+                عدد کمتر → نمایش زودتر در اسلایدر
+            </div>
+        </div>
+
+        <!-- فعال / غیرفعال -->
+        <div class="form-check mb-4">
+            <input
+                class="form-check-input"
+                type="checkbox"
+                name="is_active"
+                id="is_active"
+                {% if service.is_active %}checked{% endif %}
+            >
+            <label class="form-check-label" for="is_active">
+                فعال باشد
+            </label>
+            <div class="form-text">
+                فقط موارد فعال در سایت نمایش داده می‌شوند
+            </div>
+        </div>
+
+        <!-- دکمه‌ها -->
+        <div class="d-flex flex-column flex-md-row gap-2">
+            <button class="btn btn-success px-4">ذخیره</button>
+            <a href="{% url 'panel:popular_services_list' %}" class="btn btn-outline-secondary">
+                بازگشت
+            </a>
+        </div>
+
+    </form>
+
+</div>
+
+{% endblock %}

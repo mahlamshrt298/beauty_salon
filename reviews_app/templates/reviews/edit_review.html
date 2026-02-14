@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}
+ویرایش نظر
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4" style="max-width: 600px;">
+
+    <h4 class="mb-4">✏️ ویرایش نظر</h4>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <!-- امتیاز -->
+        <div class="mb-3">
+            <label class="form-label">امتیاز</label>
+            <select name="rating" class="form-select" required>
+                {% for i in "12345" %}
+                    <option value="{{ i }}"
+                        {% if review.rating|stringformat:"s" == i %}selected{% endif %}
+                    >
+                        {{ i }} ⭐
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- متن نظر -->
+        <div class="mb-3">
+            <label class="form-label">متن نظر</label>
+            <textarea
+                name="comment"
+                class="form-control"
+                rows="4"
+                required
+            >{{ review.comment }}</textarea>
+        </div>
+
+        <!-- دکمه‌ها -->
+        <div class="d-flex flex-column flex-md-row gap-2">
+            <button type="submit" class="btn btn-primary">
+                💾 ذخیره تغییرات
+            </button>
+
+            <a href="{% url 'accounts:profile' %}" class="btn btn-secondary">
+                انصراف
+            </a>
+        </div>
+
+    </form>
+
+    <div class="alert alert-warning mt-4">
+        ⚠️ با ویرایش نظر، وضعیت آن دوباره <b>در انتظار تأیید</b> قرار می‌گیرد.
+    </div>
+
+</div>
+{% endblock %}

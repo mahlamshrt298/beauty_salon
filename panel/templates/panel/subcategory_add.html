@@ -1,0 +1,29 @@
+{% extends "panel/base_panel.html" %}
+{% block content %}
+
+<div class="container mt-4">
+    <h5 class="mb-3">افزودن زیردسته جدید</h5>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <div class="mb-3">
+            <label class="form-label">دسته اصلی</label>
+            <select name="category" class="form-select" required>
+                {% for cat in categories %}
+                    <option value="{{ cat.id }}">{{ cat.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">نام زیردسته</label>
+            <input type="text" name="name" class="form-control" required>
+        </div>
+
+        <button class="btn btn-success">ثبت</button>
+        <a href="{% url 'panel:services_list' %}" class="btn btn-secondary">بازگشت</a>
+    </form>
+</div>
+
+{% endblock %}

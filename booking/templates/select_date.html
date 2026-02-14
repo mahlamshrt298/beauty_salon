@@ -1,0 +1,313 @@
+<!-- booking/templates/select_date.html -->
+
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+انتخاب تاریخ و ساعت - سالن زیبایی نورا
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+
+
+    
+    <!-- متن راهنمایی -->
+    <div class="text-center mb-4" style="font-size: 1.1rem; color: #6c757d;">
+    شما در حال رزرو در دسته: "{{service.subcategory}}" و خدمت "{{service.name}}" هستید.   
+    </div>
+
+    <!-- متن راهنمایی -->
+    <div class="text-center mb-4" style="font-size: 1.1rem; color: #6c757d;">
+        لطفاً تاریخ و ساعت مناسب را برای خدمت "{{ service.name }}" انتخاب کنید.
+    </div>
+
+    <!-- نوار پیشرفت -->
+    <div class="custom-progress-bar mb-4">
+        {% for step in steps %}
+            <div class="step {% if step.active %}active{% endif %}" style="width: {{ step_width }}%;">
+                <div class="step-number">{{ step.number }}</div>
+                <div class="step-title">{{ step.title }}</div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <script src="{% static 'js/jquery-3.6.0.min.js' %}"></script>
+
+    <!-- کادر انتخاب تاریخ و ساعت -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-primary text-white">
+            <h3 class="mb-0">مرحله ۲: انتخاب تاریخ و ساعت</h3>
+        </div>
+        <div class="card-body">
+            <form method="POST" id="date-time-form">
+                {% csrf_token %}
+                <input type="hidden" name="service_id" value="{{ service.id }}">
+                <!-- بدون hidden input نیاز نیست -->
+              <!--
+                <div class="mb-3">
+                    <label for="appointment_date">تاریخ نوبت:</label>
+                    <input type="date" name="appointment_date" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label for="start_time">ساعت شروع:</label>
+                    <input type="time" name="start_time" class="form-control" required>
+                </div>
+            -->  
+                <input type="hidden" name="appointment_date" id="appointment_date_input">
+                <input type="hidden" name="start_time" id="start_time_input">
+                <div class="row">
+                    <div class="d-flex gap-3 mb-3">
+                        <span><span class="legend past"></span> گذشته</span>
+                        <span><span class="legend taken"></span> پر</span>
+                        <span><span class="legend free"></span> آزاد</span>
+                    </div>
+
+                    <!-- تقویم (ستون چپ) -->
+                    <div class="col-md-6">
+                        <h5 class="mb-3">{{ current_month_name }} {{ current_year }}</h5>
+                        <div class="calendar">
+
+                            <div class="cal-nav">
+                                <a href="{% url 'select_date_with_month' service.id prev_year prev_month %}" data-no-exit> ▶ماه قبل</a>
+                                <span>{{ current_year  }} / {{ current_month }}</span>
+                                <a href="{% url 'select_date_with_month' service.id next_year next_month %}" data-no-exit>ماه بعد◀ </a>
+                            </div>
+                            <div class="weekdays">
+                                <div>شنبه</div>
+                                <div>یکشنبه</div>
+                                <div>دوشنبه</div>
+                                <div>سه‌شنبه</div>
+                                <div>چهارشنبه</div>
+                                <div>پنجشنبه</div>
+                                <div>جمعه</div>
+                            </div>
+
+                            <div class="days">
+                                {% for i in empty_days %}
+                                    <div class="day empty"></div>
+                                {% endfor %}
+
+                                {% for d in days_list %}
+                                    {% if d in past_days %}
+                                        <div class="day past">{{ d }}</div>
+
+                                    {% elif d in taken_days or d in holiday_days %}
+                                        <div class="day taken holiday">{{ d }}</div>
+
+                                    {% else %}
+                                        <div class="day selectable-day"
+                                            data-day="{{ d }}"
+                                            data-month="{{ current_month }}"
+                                            data-year="{{ current_year }}">
+                                            {{ d }}
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <!-- ساعت‌ها (ستون راست) -->
+                    <div class="col-md-6">
+                        <h5 class="mb-3">ساعت‌های در دسترس:</h5>
+                        <div id="times-container" class="times-container">
+                            <p class="text-muted">لطفاً یک روز را انتخاب کنید.</p>
+                        </div>
+                    </div>
+
+                  
+                </div>
+   
+                <!-- انتخاب پرسنل -->
+                <div id="staff-container" class="mt-4">
+                    <!-- پرسنل با AJAX اینجا نمایش داده می‌شوند -->
+                </div>
+
+
+                <!-- در داخل card-body، بعد از فرم -->
+                        <div class="d-flex justify-content-between mt-3">
+                            <a href="{% url 'reserve' %}" 
+                            class="btn btn-secondary booking-exit-link" data-no-exit>
+                                 بازگشت 
+                            </a>
+                            <button type="submit" id="next-btn" name="confirm_staff" value="1" class="btn btn-primary mt-3" data-no-exit>ادامه</button>
+                            
+                        </div>
+                </form>
+            
+        </div>
+    </div>
+
+</div>
+
+<!--<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>--> 
+
+<script>
+$(document).on("click", ".selectable-day", function() {
+
+    let day = $(this).data("day");
+    let month = $(this).data("month");
+    let year = $(this).data("year");
+
+    $(".day").removeClass("selected");
+    $(this).addClass("selected");
+
+    $("#appointment_date_input").val(year + "-" + month + "-" + day);
+
+    $.ajax({
+        url: "{% url 'get_available_times' %}",
+        data: {
+            day: day,
+            month: month,
+            year: year
+        },
+        success: function(response) {
+
+            let html = "";
+         // ✅ بررسی تعطیلی
+            if (response.is_holiday) {
+                html = `<div class="alert alert-danger text-center">
+                    <i class="fas fa-ban"></i> 
+                    این روز تعطیل است به مناسبت: <strong>${response.holiday_title}</strong>
+                    <br>
+                    <small>لطفاً روز دیگری را انتخاب کنید</small>
+                </div>`;
+            } else if (response.times.length === 0) {
+                html = "<p>هیچ ساعتی موجود نیست</p>";
+            } else {
+                html = "<div class='times-grid'>";
+                response.times.forEach(function(t) {
+                    html += `<div class="time-item selectable-time" data-time="${t}">${t}</div>`;
+
+                });
+                html += "</div>";
+            }
+
+            $("#times-container").html(html);
+        }
+    });
+});
+</script>
+
+{% endblock content %}
+
+<!-- اسکریپت برای ذخیره در session -->
+{% block scripts %}
+<!--<script src="https://cdn.jsdelivr.net/npm/jalaali-js/dist/jalaali.js"></script>--> 
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const today = new Date();
+    const currentYear = {{ current_year }};
+    const currentMonth = {{ current_month }};
+
+
+});
+$(document).on("click", ".selectable-time", function() {
+    $(".selectable-time").removeClass("selected");
+    $(this).addClass("selected");
+
+    const time = $(this).data("time");
+    $("#start_time_input").val(time);
+
+    $("#next-btn").prop("disabled", false).addClass("btn-glow");
+
+    // 👇 گرفتن پرسنل آزاد
+    $.ajax({
+        url: "{% url 'get_available_staff' %}",
+        data: {
+            date: $("#appointment_date_input").val(),
+            time: time,
+            service_id: "{{ service.id }}"
+        },
+        success: function (response) {
+            let html = "<h5>انتخاب پرسنل (اختیاری)</h5>";
+
+            html += `
+                <label>
+                    <input type="radio" name="staff" value="">
+                    فرقی ندارد (اولین پرسنل آزاد)
+                </label><hr>
+            `;
+
+            response.staffs.forEach(function (s) {
+                html += `
+                    <label>
+                        <input type="radio" name="staff" value="${s.id}">
+                        ${s.name}
+                    </label><br>
+                `;
+            });
+
+            $("#staff-container").html(html);
+        }
+    });
+
+});
+
+</script>
+
+
+<script src="{% static 'js/booking-flow.js' %}"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const phoneInput = document.getElementById("phone");
+    const notesInput = document.getElementById("notes");
+
+    if (!phoneInput || !notesInput) return;
+
+    const form = phoneInput.closest("form");
+    if (!form) return;
+
+    phoneInput.addEventListener("keydown", function (e) {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            notesInput.focus();
+        }
+    });
+
+    notesInput.addEventListener("keydown", function (e) {
+        if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            form.submit();
+        }
+    });
+});
+</script>
+
+
+<script>
+document.addEventListener("keydown", function (e) {
+    if (e.key !== "Enter") return;
+
+    // اگر ساعت انتخاب نشده، کاری نکن
+    const startTime = document.getElementById("start_time_input").value;
+    if (!startTime) return;
+
+    // جلوگیری از رفتار پیش‌فرض
+    e.preventDefault();
+
+    // submit فرم
+    document.getElementById("date-time-form").submit();
+});
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    // فقط لینک‌هایی که data-no-exit دارند
+    document.querySelectorAll('a[data-no-exit]').forEach(link => {
+        link.addEventListener('click', function () {
+            // قبل از خروج، هشدار را غیرفعال کن
+            window.onbeforeunload = null;
+        });
+    });
+
+});
+</script>
+
+
+{% endblock scripts %}

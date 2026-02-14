@@ -1,0 +1,218 @@
+{% extends "panel/base_panel.html" %}
+{% load jformat %}
+
+{% block content %}
+
+
+<div class="container mt-4">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-2 mb-4">
+        <h3>📅 نوبت‌های فردا ({{ tomorrow_jalali }})</h3>
+        </br>
+        {% if appointments.object_list %}
+            <a href="{% url 'panel:booking_list' %}" class="btn btn-outline-secondary ">
+                <i class="fas fa-list"></i> لیست کل نوبت‌ها
+            </a>
+        {% endif %}
+    </div>
+
+    {% if appointments.object_list %}
+        <div class="table-scroll">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>نام مشتری</th>
+                        <th>خدمت</th>
+                        <th>ساعت</th>
+                        <th>شماره تماس</th>
+                        <th>پرسنل</th>
+                        <th>وضعیت</th>
+                        <th>یادداشت</th>
+                        <th class="text-center">اقدامات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for appt in appointments %}
+                    <!-- ✅ رنگ‌بندی هوشمند بر اساس وضعیت -->
+                    <tr class="{% if appt.status == 'pending' %}table-warning{% elif appt.status == 'confirmed' %}table-success{% endif %}">
+                        <td class="text-center"><strong>{{ appt.user.get_full_name|default:appt.user.username }}</strong></td>
+                        <td>{{ appt.service.name }}</td>
+                        <td><span class="badge bg-info">{{ appt.start_time|time:"H:i" }}</span></td>
+                        <!-- در بدنه جدول، جایگزینی ستون شماره تماس -->
+                        <td>
+                            {% if appt.display_phones %}
+                                {% for phone in appt.display_phones %}
+                                    <div>
+                                        <a href="tel:{{ phone }}"
+                                        class="text-decoration-none {% if forloop.counter == 1 %}text-success{% else %}text-primary{% endif %}">
+                                            <i class="fas fa-phone"></i> {{ phone }}
+                                            {% if forloop.counter > 1 %}
+                                                <small class="text-muted">(رزرو)</small>
+                                            {% endif %}
+                                        </a>
+                                    </div>
+                                {% endfor %}
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+
+                        <td>{{ appt.staff.full_name|default:"—" }}</td>
+                        <td>
+                            {% if appt.status == 'pending' %}
+                                <span class="badge bg-warning text-dark">در انتظار</span>
+                            {% elif appt.status == 'confirmed' %}
+                                <span class="badge bg-success">تایید شده</span>
+                            {% endif %}
+                        </td>
+                        
+                        <td class="note-cell text-center" data-note="{{ appt.notes|escape }}">
+                            {% if appt.notes_preview %}    
+                                {{ appt.notes_preview }}
+                            {% else %}
+                                -----
+                            {% endif%}
+                        </td>
+
+                        <!-- ✅ ستون جدید: اقدامات (با دکمه تأیید سریع) -->
+                        <td class="text-center">
+                            {% if appt.status == 'pending' %}
+                                <!-- دکمه تأیید سریع -->
+                                <form method="post" action="{% url 'panel:booking_approve' appt.id %}?next={{ request.path }}" style="display:inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-success rounded btn-xs"
+                                            title="تأیید نوبت"
+                                            onclick="return confirm('آیا نوبت {{ appt.user.username }} تأیید شود؟')">
+                                        <i class="fas fa-check"></i> تأیید
+                                    </button>
+                                </form>
+                                
+                                <!-- دکمه لغو -->
+                                <a href="{% url 'panel:booking_cancel' appt.id %}?next={{ request.path }}" 
+                                class="btn  btn-danger ms-1 rounded btn-xs "
+                                title="لغو نوبت"
+                                onclick="return confirm('آیا می‌خواهید این نوبت را لغو کنید؟')">
+                                    <i class="fas fa-ban"></i> لغو
+                                </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="alert alert-info mt-3">
+            <i class="fas fa-info-circle"></i> 
+            <strong>نکته:</strong> 
+            <ul class="mb-0 mt-2" style="font-size:0.9rem;">
+                <li><span class="badge bg-warning text-dark">در انتظار</span> با رنگ زرد در بالای لیست نمایش داده می‌شوند</li>
+                <li><span class="badge bg-success">تایید شده</span> با رنگ سبز در پایین لیست نمایش داده می‌شوند</li>
+                <li>برای تأیید سریع نوبت‌های در انتظار، از دکمه <strong>تأیید</strong> استفاده کنید</li>
+                <li>برای تماس با مشتریان، روی شماره تماس کلیک کنید</li>
+            </ul>
+        </div>
+
+    {% else %}
+        <div class="alert alert-success text-center py-4">
+            <i class="fas fa-check-circle fa-3x mb-3"></i>
+            <h5>🎉 فردا هیچ نوبتی وجود ندارد!</h5>
+            <p class="mb-0 mt-2">می‌توانید لیست کل نوبت‌ها را بررسی کنید یا نوبت جدید اضافه کنید.</p>
+            <a href="{% url 'panel:booking_list' %}" class="btn btn-outline-success mt-3">
+                <i class="fas fa-list"></i> لیست کل نوبت‌ها
+            </a>
+        </div>
+    {% endif %}
+
+    <!-- قبل از بسته شدن </div> کانتینر، این کد را اضافه کنید -->
+    {% if appointments.has_other_pages %}
+    <nav aria-label="صفحه‌بندی نوبت‌های فردا" class="mt-4">
+        <ul class="pagination justify-content-center">
+            <!-- دکمه قبلی -->
+            {% if appointments.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ appointments.previous_page_number }}">
+                        <span aria-hidden="true">&laquo;</span> قبلی
+                    </a>
+                </li>
+            {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">&laquo; قبلی</span>
+                </li>
+            {% endif %}
+
+            <!-- شماره صفحات -->
+            {% for num in appointments.paginator.page_range %}
+                {% if appointments.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }} <span class="sr-only">(فعلی)</span></span>
+                    </li>
+                {% else %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+
+            <!-- دکمه بعدی -->
+            {% if appointments.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ appointments.next_page_number }}">
+                        بعدی <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+            {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">بعدی &raquo;</span>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+
+<!-- Modal -->
+<div class="modal fade" id="noteModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered" style="max-width: 40vw; max-height: 80vh;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">یادداشت کامل</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="noteModalBody" 
+        style="white-space: pre-wrap; line-height: 1.6; 
+            max-height: 70vh; overflow-y: auto; padding: 1.5rem;">
+        ...
+      </div>
+    </div>
+  </div>
+</div>
+
+
+</div>
+
+<!-- ✅ اسکریپت اصلاح‌شده و کاملاً صحیح برای نمایش یادداشت با دابل‌کلیک -->
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // انتخاب تمام سلول‌های یادداشت و افزودن رویداد دابل‌کلیک
+    document.querySelectorAll('.note-cell').forEach(function(cell) {
+        cell.addEventListener('dblclick', function() {
+            const note = this.getAttribute('data-note');
+            
+            // بررسی کامل: خالی، فاصله، یا مقدار "None"
+            if (!note || note.trim() === '' || note === 'None' || note === '-----') {
+                return;
+            }
+            
+            // نمایش یادداشت در مودال
+            const modalBody = document.getElementById('noteModalBody');
+            modalBody.textContent = note;
+            
+            // نمایش مودال با روش صحیح بوت‌استرپ 5
+            const modal = new bootstrap.Modal(document.getElementById('noteModal'));
+            modal.show();
+        });
+    });
+});
+</script>
+
+
+{% endblock %}

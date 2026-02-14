@@ -1,0 +1,20 @@
+{% extends "panel/base_panel.html" %}
+{% block content %}
+
+<div class="container mt-4">
+    <h5 class="mb-3">افزودن دسته جدید</h5>
+
+    <form method="post" class="col-md-8 col-12">
+        {% csrf_token %}
+
+        <div class="mb-3">
+            <label class="form-label">نام دسته</label>
+            <input type="text" name="name" class="form-control" required>
+        </div>
+
+        <button class="btn btn-success">ثبت</button>
+        <a href="{% url 'panel:services_list' %}" class="btn btn-secondary">بازگشت</a>
+    </form>
+</div>
+
+{% endblock %}

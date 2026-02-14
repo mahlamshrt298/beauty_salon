@@ -1,0 +1,191 @@
+{% extends "panel/base_panel.html" %}
+{% load humanize %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+    <h3 class="mb-4">💳 پرداخت‌ها</h3>
+
+    <!-- فیلترها -->
+    <form method="get" class="row g-2 mb-3">
+
+        <div class="col-12  col-md-3">
+            <select name="method" class="form-select">
+                <option value="">همه روش‌ها</option>
+                <option value="cash" {% if selected_method == "cash" %}selected{% endif %}>نقدی</option>
+                <option value="card" {% if selected_method == "card" %}selected{% endif %}>کارت‌خوان</option>
+                <option value="online" {% if selected_method == "online" %}selected{% endif %}>آنلاین</option>
+            </select>
+        </div>
+
+        <div class="col-12  col-md-3">
+            <select name="status" class="form-select">
+                <option value="">همه وضعیت‌ها</option>
+                <option value="success" {% if selected_status == "success" %}selected{% endif %}>موفق</option>
+                <option value="pending" {% if selected_status == "pending" %}selected{% endif %}>در انتظار</option>
+                <option value="failed" {% if selected_status == "failed" %}selected{% endif %}>ناموفق</option>
+            </select>
+        </div>
+
+        <div class="col-12 col-md-2">
+            <button type="submit" class="btn btn-primary">فیلتر</button>
+        </div>
+
+    </form>
+
+    <!-- جدول پرداخت‌ها -->
+    <div class="card">
+        <div class="card-body table-responsive">
+            <div class="table-scroll">
+                <table class="table table-bordered table-hover align-middle text-center">
+                    <thead class="table-light">
+                        <tr>
+                            <th>کاربر</th>
+                            <th>شماره تماس</th>
+                            <th>خدمت</th>
+                            <th>پکیج</th>
+                            <th>مبلغ</th>
+                            <th>روش پرداخت</th>
+                            <th>وضعیت</th>
+                            <th>زمان پرداخت</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+
+                        {% for payment in payments %}
+                        <tr>
+                            <td>{{ payment.appointment.user.username }}</td>
+                            
+                            <td class="text-start">
+
+                                {% with ap_phone=payment.appointment.phone pr_phone=payment.appointment.user.profile.phone %}
+
+                                    {% if ap_phone and pr_phone %}
+                                        {% if ap_phone == pr_phone %}
+                                            {{ ap_phone }}
+                                        {% else %}
+                                            <div>📞 رزرو: {{ ap_phone }}</div>
+                                            <div>👤 پروفایل: {{ pr_phone }}</div>
+                                        {% endif %}
+
+                                    {% elif ap_phone %}
+                                        {{ ap_phone }}
+
+                                    {% elif pr_phone %}
+                                        {{ pr_phone }}
+
+                                    {% else %}
+                                        -
+                                    {% endif %}
+
+                                {% endwith %}
+
+                            </td>
+
+                            <td>{{ payment.appointment.service.name }}</td>
+
+                            <td>
+                                {% if payment.appointment.package_booking %}
+                                    {{ payment.appointment.package_booking.package.title }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+
+                            <td>{{ payment.amount|intcomma }} تومان</td>
+
+                            <td>
+                                {% if payment.payment_method == "cash" %}
+                                    نقدی
+                                {% elif payment.payment_method == "card" %}
+                                    کارت‌خوان
+                                {% elif payment.payment_method == "online" %}
+                                    آنلاین
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if payment.status == "success" %}
+                                    <span class="badge bg-success">موفق</span>
+                                {% elif payment.status == "pending" %}
+                                    <span class="badge bg-warning text-dark">در انتظار</span>
+                                {% else %}
+                                    <span class="badge bg-danger">ناموفق</span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                            {{ payment.paid_at_jalali }}
+                            </td>
+
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8">پرداختی ثبت نشده است.</td>
+                        </tr>
+                        {% endfor %}
+
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- قبل از بسته شدن </div> کانتینر، این کد را اضافه کنید -->
+    {% if payments.has_other_pages %}
+    <nav aria-label="صفحه‌بندی پرداخت‌ها" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if payments.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" 
+                    href="?page={{ payments.previous_page_number }}
+                            {% if selected_method %}&method={{ selected_method }}{% endif %}
+                            {% if selected_status %}&status={{ selected_status }}{% endif %}">
+                        <span aria-hidden="true">&laquo;</span> قبلی
+                    </a>
+                </li>
+            {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">&laquo; قبلی</span>
+                </li>
+            {% endif %}
+
+            {% for num in payments.paginator.page_range %}
+                {% if payments.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }} <span class="sr-only">(فعلی)</span></span>
+                    </li>
+                {% else %}
+                    <li class="page-item">
+                        <a class="page-link" 
+                        href="?page={{ num }}
+                                {% if selected_method %}&method={{ selected_method }}{% endif %}
+                                {% if selected_status %}&status={{ selected_status }}{% endif %}">
+                            {{ num }}
+                        </a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+
+            {% if payments.has_next %}
+                <li class="page-item">
+                    <a class="page-link" 
+                    href="?page={{ payments.next_page_number }}
+                            {% if selected_method %}&method={{ selected_method }}{% endif %}
+                            {% if selected_status %}&status={{ selected_status }}{% endif %}">
+                        بعدی <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+            {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">بعدی &raquo;</span>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+
+</div>
+
+{% endblock %}

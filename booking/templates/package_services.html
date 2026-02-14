@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}
+رزرو پکیج {{ package.title }}
+{% endblock title %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+    <h2 class="mb-3">{{ package.title }}</h2>
+    
+    <div class="card mb-5 shadow-sm border-0">
+        <div class="row g-0">
+
+            <div class="col-md-4">
+                <img src="{{ package.image_url }}"
+                    class="img-fluid h-100 w-100 object-fit-contain rounded-start"
+                    alt="{{ package.title }}">
+            </div>
+
+            <div class="col-md-8">
+                <div class="card-body">
+
+                    <h3 class="card-title mb-2">{{ package.title }}</h3>
+
+                    <p class="text-muted">
+                        {{ package.description }}
+                    </p>
+
+                    <div class="mb-3">
+                        {% if package.original_price %}
+                            <del class="text-muted me-2">
+                                {{ package.original_price|intcomma }} تومان
+                            </del>
+                        {% endif %}
+
+                        <span class="fs-4 fw-bold text-danger">
+                            {{ package.discounted_price|intcomma }} تومان
+                        </span>
+
+                        {% if package.discount_badge %}
+                            <span class="badge bg-danger ms-2">
+                                {{ package.discount_badge }}
+                            </span>
+                        {% endif %}
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="alert alert-info text-center mb-4">
+        {{ completed_services }} از {{ total_services }} خدمت رزرو شده
+    </div>
+
+
+    <p class="text-muted">لطفاً یکی از خدمات پکیج را انتخاب کنید:</p>
+
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-5 g-3">
+        {% for booking in bookings %}
+            <div class="col mb-4">
+                <div class="card service-card h-100 shadow-sm {% if booking.is_completed %}opacity-50{% endif %}">
+
+
+                    {% if booking.service.image %}
+                        <img src="{{ booking.service.image.url }}"
+                             class="card-img-top"
+                             alt="{{ booking.service.name }}">
+                    {% endif %}
+
+                    <div class="card-body d-flex flex-column">
+
+                        <h5 class="card-title">
+                            {{ booking.service.name }}
+                        </h5>
+
+                        <p class="text-muted small mb-2">
+                            {{ booking.service.category.name }}
+                            {% if booking.service.subcategory %}
+                                / {{ booking.service.subcategory.name }}
+                            {% endif %}
+                        </p>
+
+                        <p class="small">
+                            ⏱ {{ booking.service.duration_minutes }} دقیقه<br>
+                            💰 {{ booking.service.price|intcomma }} تومان
+                        </p>
+
+                        <div class="mt-auto">
+                            {% if booking.is_completed %}
+                                <span class="badge bg-success w-100 text-center py-2">
+                                    ✔ رزرو شد
+                                </span>
+                            {% else %}
+                                <a href="{% url 'select_date' booking.service.id %}?from_package=1"
+                                class="btn btn-primary w-100">
+                                    رزرو این خدمت
+                                </a>
+
+                            {% endif %}
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+</div>
+
+<style>
+.service-card {
+    border-radius: 15px;
+    transition: all 0.3s ease;
+}
+
+.service-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+}
+
+.service-card img {
+    height: 140px;
+    object-fit:  contain;
+    border-top-left-radius: 15px;
+    border-top-right-radius: 15px;
+}
+
+
+.service-card .card-body {
+    padding: 0.8rem;
+}
+
+.service-card h5 {
+    font-size: 0.95rem;
+}
+
+.service-card p {
+    font-size: 0.8rem;
+}
+
+</style>
+
+{% endblock content %}

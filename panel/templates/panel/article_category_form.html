@@ -1,0 +1,32 @@
+{% extends "panel/base_panel.html" %}
+{% block content %}
+
+<h4 class="mb-3">
+    {% if category %}ویرایش دسته‌بندی{% else %}افزودن دسته‌بندی{% endif %}
+</h4>
+
+<form method="post" class="col-md-6 col-12">
+    {% csrf_token %}
+
+    <input type="text"
+           name="name"
+           class="form-control mb-2"
+           placeholder="نام دسته‌بندی"
+           value="{{ category.name|default:'' }}" autofocus>
+
+    <button class="btn btn-success">ذخیره</button>
+    <a href="{% url 'panel:article_category_list' %}"
+       class="btn btn-secondary">بازگشت</a>
+</form>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const firstInput = document.querySelector("form input, form textarea, form select");
+    if (firstInput) {
+        firstInput.focus();
+    }
+});
+</script>
+
+
+{% endblock %}

@@ -1,0 +1,61 @@
+{% extends "panel/base_panel.html" %}
+
+{% block content %}
+<div class="container mt-4">
+
+    <h2 class="mb-4">ویرایش اطلاعات منشی: {{ staff.username }}</h2>
+
+    <form method="POST">
+        {% csrf_token %}
+
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                اطلاعات ورود
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">نام کاربری:</label>
+                    <input type="text" class="form-control" name="username" value="{{ staff.username }}" placeholder="مثال: ali_salam"  required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">نام</label>
+                    <input type="text" name="first_name" value="{{ staff.first_name }}" class="form-control"  placeholder="مثال: علی" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">نام خانوادگی</label>
+                    <input type="text" name="last_name" value="{{ staff.last_name }}" class="form-control"  placeholder="مثال: رشیدی" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">رمز جدید (اختیاری):</label>
+                    <input type="password" class="form-control" name="password">
+                    <small class="text-muted">اگر خالی بگذارید رمز قبلی تغییر نمیکند</small>
+                </div>
+
+                <div class="mb-3">
+                    <label for="phone" class="form-label">شماره تماس</label>
+                    <input type="tel" name="phone" value="{{ staff.profile.phone }}" id="phone" class="form-control" maxlength="11" pattern="09\d{9}"  placeholder="مثال: 09121234567" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">وضعیت</label>
+                    <select name="status" class="form-select">
+                        <option value="active" {% if staff.profile.status == "active" %}selected{% endif %}>فعال</option>
+                        <option value="inactive" {% if staff.profile.status == "inactive" %}selected{% endif %}>غیرفعال</option>
+                        <option value="leave" {% if staff.profile.status == "leave" %}selected{% endif %}>مرخصی</option>
+                    </select>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="d-flex flex-column flex-md-row gap-2">
+            {% if request.user.profile.role == "owner" %}
+                <button class="btn btn-success px-4">ذخیره تغییرات</button>
+            {% endif %}
+            <a href="{% url 'panel:staff_list' %}" class="btn btn-secondary px-4">بازگشت</a>
+        </div>
+    </form>
+
+</div>
+{% endblock %}

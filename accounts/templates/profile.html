@@ -1,0 +1,853 @@
+{# templates/profile.html #}
+{% extends 'base.html' %}
+{% load humanize %}
+
+{% load static %}
+{% load jformat %}
+{% load range_tags %}
+{% block title %}پروفایل کاربری — {{ user.get_full_name|default:user.username }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5" dir="rtl">
+  <div class="row">
+    <!-- ستون سمت راست: کارت پروفایل -->
+    <div class="col-12 col-lg-4 mb-4">
+      <div class="card shadow-sm">
+        <div class="card-body text-center">
+          <!-- آواتار -->
+          <div class="mb-3">
+            {% if profile.avatar %}
+              <img src="{{ profile.avatar.url }}" alt="عکس پروفایل" class="rounded-circle" style="width:100%;height:120px;object-fit: contain;">
+            {% else %}
+              <img src="{% static 'images/default-avatar.jfif' %}" alt="عکس پروفایل" class="rounded-circle" style="width:100%;height:120px;object-fit: contain;">
+            {% endif %}
+          </div>
+
+          <h5 class="card-title mb-0">{{ user.get_full_name|default:user.username }}</h5>
+          <a href="{% url 'accounts:notifications_list' %}" class="btn  btn-warning">
+              🔔 اعلان‌ها
+          </a>
+
+          <small class="text-muted d-block mb-2">{{ user.email }}</small>
+
+
+          <div class="mt-3 p-3 rounded" style="background:#f8f9fa;">
+            <div class="small text-muted mb-1">
+              سقف نوبت فعال: {{ max_quota }}
+            </div>
+
+            <div class="mb-1">
+              نوبت‌های فعال شما:
+              <strong>{{ active_appointments_count }}</strong>
+            </div>
+
+            <div>
+              {% if remaining_quota > 0 %}
+                می‌توانید
+                <strong class="text-success">{{ remaining_quota }}</strong>
+                نوبت دیگر رزرو کنید
+              {% else %}
+                <span class="text-danger fw-bold">
+                  به سقف مجاز رزرو رسیده‌اید
+                </span>
+              {% endif %}
+            </div>
+          </div>
+
+
+          {% if profile.birthday %}
+            <small class="text-muted d-block">
+              🎂 تاریخ تولد: {{ profile.birthday|jformat:"%Y/%m/%d" }}
+            </small>
+          {% endif %}
+
+
+
+          <p class="text-muted small">
+            {% if profile.bio %}
+              {{ profile.bio }}
+            {% else %}
+              هنوز بیوگرافی اضافه نکرده‌اید.
+            {% endif %}
+          </p>
+
+          <div class="d-grid gap-2 mt-3">
+            <a href="{% url 'accounts:logout' %}" 
+              class="btn btn-danger profile-side-btn">
+              خروج
+            </a>
+
+            <a href="{% url 'accounts:password_change' %}" 
+              class="btn btn-primary profile-side-btn">
+              تغییر رمز عبور
+            </a>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ستون سمت چپ: فرم و لیست نوبت‌ها -->
+    <div class=" col-12 col-lg-8">
+      <div class="card shadow-sm mb-4">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">ویرایش پروفایل</h5>
+          <small class="text-muted">اطلاعاتتان را به‌روز کنید</small>
+        </div>
+        <div class="card-body">
+          <form method="post"  id="profileForm" action="{% url 'accounts:profile' %}" enctype="multipart/form-data" class="row g-3">
+            {% csrf_token %}
+            <!-- avatar upload -->
+            <div class="col-md-12 d-flex align-items-center gap-3">
+              <div>
+                {% if profile.avatar %}
+                  <img id="avatarPreview" src="{{ profile.avatar.url }}" alt="avatar" class="rounded" style="width:96px;height:96px;object-fit:cover;">
+                {% else %}
+                  <img id="avatarPreview" src="{% static 'images/default-avatar.jfif' %}" alt="avatar" class="rounded" style="width:96px;height:96px;object-fit:cover;">
+                {% endif %}
+              </div>
+              <div class="flex-grow-1">
+                <label class="form-label">عکس پروفایل</label>
+                <input onchange="checkFileSize(this)" class="form-control form-control-sm" type="file" name="avatar" id="avatarInput" accept="image/*">
+                <small class="text-muted">حداکثر 1 مگابایت. JPG/PNG</small>
+              </div>
+              {% if profile.avatar %}
+                <button type="submit"
+                        name="delete_avatar"
+                        class="btn btn-sm btn-outline-danger"
+                        onclick="return confirm('آیا مطمئن هستید که می‌خواهید عکس پروفایل حذف شود؟')">
+                  حذف عکس پروفایل
+                </button>
+              {% endif %}
+
+            </div>
+
+            <!-- نام و نام خانوادگی -->
+            <div class="col-md-6">
+              <label for="fullName" class="form-label">نام و نام‌خانوادگی</label>
+              <input type="text" class="form-control" id="fullName" name="full_name" value="{{ user.get_full_name|default:'' }}">
+            </div>
+
+            <!-- ایمیل (غیر قابل تغییر یا قابل تغییر بر حسب نیاز) -->
+            <div class="col-md-6">
+              <label for="email" class="form-label">ایمیل</label>
+              <input type="email" class="form-control" id="email" name="email" value="{{ user.email }}">
+            </div>
+
+            <!-- تلفن -->
+            <div class="col-md-6">
+              <label for="phone" class="form-label">شماره تلفن</label>
+              <input type="tel" class="form-control" id="phone" name="phone" value="{{ profile.phone|default:'' }}" maxlength="11" pattern="09\d{9}" placeholder="مثال: 09123456789">
+            </div>
+
+            {% if profile.birthday_change_count >= 2 %}
+            <div class="alert alert-warning">
+              ⚠️ امکان تغییر تاریخ تولد شما به پایان رسیده است.
+            </div>
+            {% endif %}
+
+
+            <div class="col-md-6">
+              <label class="form-label">تاریخ تولد</label>
+
+              <div class="row g-2">
+                <!-- سال -->
+                <div class="col-4">
+                  <select name="birth_year" class="form-select" {% if profile.birthday_change_count >= 2 %}disabled{% endif %}>
+                    <option value="">سال</option>
+                    {% for y in birth_years %}
+                      <option value="{{ y }}"
+                        {% if profile.birthday and profile.birthday.year == y %}selected{% endif %}
+                      >{{ y }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+
+                <!-- ماه -->
+                <div class="col-4">
+                  <select name="birth_month" class="form-select">
+                    <option value="">ماه</option>
+                    {% for m in 1|to_range:12 %}
+                      <option value="{{ m }}"
+                        {% if profile.birthday and profile.birthday.month == m %}selected{% endif %}
+                      >{{ m }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+
+                <!-- روز -->
+                <div class="col-4">
+                  <select name="birth_day" class="form-select">
+                    <option value="">روز</option>
+                    {% for d in 1|to_range:31 %}
+                      <option value="{{ d }}"
+                        {% if profile.birthday and profile.birthday.day == d %}selected{% endif %}
+                      >{{ d }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+              </div>
+            </div>
+
+          
+            <!-- بیو -->
+            <div class="col-12">
+              <label for="bio" class="form-label">بیو (مختصر)</label>
+              <textarea class="form-control" id="bio" name="bio" rows="3" maxlength="300">{{ profile.bio|default:'' }}</textarea>
+              <small  id="bioCounter" class="text-muted">0 / 300 کاراکتر</small>
+            </div>
+
+            <div class="col-12 d-flex gap-2 justify-content-start">
+              <button type="submit" name="save_profile" class="btn btn-primary">ذخیره تغییرات</button>
+              <a href="{% url 'home' %}" class="btn btn-outline-secondary">بازگشت به خانه</a>
+            </div>
+          </form>
+        </div>
+      </div>
+      
+      {% if not has_any_appointment %}
+        <div class="mb-4 text-center">
+          <a href="{% url 'reserve' %}" class="btn btn-primary">
+            اولین نوبت خود را رزرو کنید
+          </a>
+        </div>
+      {% endif %}
+
+
+      <!-- ✅ فیلتر وضعیت نوبت‌ها با دکمه‌های رنگی -->
+      <div class="mb-4">
+        <div class="d-flex flex-wrap gap-2 profile-filter-group" role="group" aria-label="فیلتر وضعیت نوبت‌ها">
+          <a href="?status=all" 
+            class="btn  {% if status == 'all' or not status %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+            همه
+          </a>
+          <a href="?status=pending" 
+            class="btn  {% if status == 'pending' %}btn-warning{% else %}btn-outline-warning{% endif %}">
+            در انتظار
+          </a>
+          <a href="?status=confirmed" 
+            class="btn  {% if status == 'confirmed' %}btn-success{% else %}btn-outline-success{% endif %}">
+            تأیید شده
+          </a>
+          <a href="?status=completed" 
+            class="btn  {% if status == 'completed' %}btn-info{% else %}btn-outline-info{% endif %}">
+            انجام شده
+          </a>
+          <a href="?status=cancelled" 
+            class="btn  {% if status == 'cancelled' %}btn-danger{% else %}btn-outline-danger{% endif %}">
+            لغو شده
+          </a>
+        </div>
+      </div>
+
+      <!-- لیست نوبت‌ها (در صورت وجود) -->
+      
+      <div class="card shadow-sm mb-4">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">نوبت‌های من</h5>
+          <small class="text-muted">آخرین وضعیت نوبت‌ها</small>
+        </div>
+        <div class="card-body">
+          {% if appointments.object_list %}
+            <div class="list-group">
+              {% for appt in appointments %}
+                <!-- جایگزینی این بخش -->
+                <div class="card border border-1 border-gray-300 mb-3 rounded-3 overflow-hidden"
+                    {% if appt.is_from_package %}style="border: 1px solid #0d6efd;"{% endif %}>
+
+                    <!-- چیدمان یک ستونی (بدون فاصله‌های اضافی) -->
+                    <div class="d-flex flex-column flex-md-row align-items-start p-3">
+                        <!-- عکس خدمت (کوچک‌تر) -->
+                        <div class="flex-shrink-0 mb-2 mb-md-0 me-md-3">
+                            {% if appt.service and appt.service.image %}
+                                <img src="{{ appt.service.image.url }}"
+                                    alt="{{ appt.service.name }}"
+                                    class="rounded-2"
+                                    style="width: 60px; height: 60px; object-fit: cover;">
+                            {% else %}
+                                <img src="{% static 'images/beauty_salon.png' %}"
+                                    alt="تصویر پیش‌فرض خدمت"
+                                    class="rounded-2"
+                                    style="width: 60px; height: 60px; object-fit: cover;">
+                            {% endif %}
+                        </div>
+
+                        <!-- محتوای اصلی (یک ستون جمع‌آوری شده) -->
+                        <div class="flex-grow-1">
+                            <div class="d-flex justify-content-between align-items-start mb-1">
+                                <h6 class="mb-0 fw-bold">
+                                    {% if appt.service %}
+                                        {{ appt.service.name }}
+                                    {% else %}
+                                        <span class="text-muted">{{ appt.service_name_snapshot }}</span>
+                                        <span class="badge bg-danger ms-2">حذف شده</span>
+                                    {% endif %}
+                                </h6>
+                                
+                                {% if appt.is_from_package %}
+                                    <span class="badge bg-primary">
+                                        🎁 {{ appt.package_title }}
+                                    </span>
+                                {% endif %}
+                            </div>
+
+                            <!-- اطلاعات جمع‌آوری شده -->
+                            <div class="small text-muted">
+                                <div class="d-flex flex-wrap gap-2">
+                                    <span>📅 {{ appt.appointment_date|jformat:"%A %d %B %Y" }}</span>
+                                    <span>⏰ {{ appt.start_time|time:"H:i" }}</span>
+                                    {% if appt.status == 'pending' %}
+                                        <span class="badge bg-warning text-dark">در انتظار</span>
+                                    {% elif appt.status == 'confirmed' %}
+                                        <span class="badge bg-success">تأیید شده</span>
+                                    {% elif appt.status == 'completed' %}
+                                        <span class="badge bg-info text-dark">انجام شده</span>
+                                    {% elif appt.status == 'cancelled' %}
+                                        <span class="badge bg-danger">لغو شده</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">نامشخص</span>
+                                    {% endif %}
+                                </div>
+                                
+                                <!-- اطلاعات پرداخت -->
+                                {% if appt.payment_info %}
+                                <div class="mt-2 pt-2 border-top">
+                                    {% if appt.payment_info.discount_percent > 0 %}
+                                        <div class="d-flex justify-content-between">
+                                            <span class="text-muted">هزینه اصلی:</span>
+                                            <span class="text-decoration-line-through">{{ appt.payment_info.original_price|intcomma }} تومان</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between mt-1">
+                                            <span class="text-muted">تخفیف:</span>
+                                            <span class="fw-bold">{{ appt.payment_info.discount_percent }}%</span>
+                                        </div>
+                                    {% endif %}
+                                    
+                                    <div class="d-flex justify-content-between mt-1 fw-bold align-items-center">
+                                        <span>هزینه نهایی: {{ appt.payment_info.amount|floatformat:"0"|intcomma }} تومان</span>
+                                        <span class="price-words text-muted small" 
+                                              style="font-size: 0.85rem; direction: ltr; text-align: left;"
+                                              data-price="{{ appt.payment_info.amount|floatformat:'0' }}"></span>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- دکمه‌ها (در سمت راست) -->
+                        <div class="d-flex flex-column gap-2 ms-md-3 mt-2 mt-md-0 text-center">
+                            {% if appt.status == 'pending' or appt.status == 'confirmed' %}
+                                {% if appt.can_cancel_by_user %}
+                                <form method="post" action="{% url 'accounts:cancel_appointment' appt.id %}">
+                                    {% csrf_token %}
+                                    <button class="btn  btn-outline-danger">
+                                        <i class="fas fa-ban me-1"></i>لغو
+                                    </button>
+                                </form>
+                                {% else %}
+                                <a href="tel:02112345678" class="btn btn-outline-warning">
+                                    <i class="fas fa-phone me-1"></i>تماس
+                                </a>
+                                {% endif %}
+                            {% endif %}
+                            
+                            <a href="{% url 'confirmation' appt.tracking_code %}" class="btn  btn-outline-success">
+                                <i class="fas fa-eye me-1"></i>مشاهده
+                            </a>
+                            
+                            {% if appt.status == 'completed' and appt.reviews.count < 2 %}
+                            <button class="btn btn-sm btn-outline-primary add-review-btn"
+                                    data-appointment="{{ appt.id }}"
+                                    data-service-name="{% if appt.service %}{{ appt.service.name }}{% else %}{{ appt.service_name_snapshot }}{% endif %}"
+                                    data-date="{{ appt.appointment_date|jformat:'%Y/%m/%d' }}"
+                                    data-time="{{ appt.start_time|time:'H:i' }}"
+                                    data-url="{% url 'accounts:ajax_add_review' appt.id %}">
+                                <i class="fas fa-star me-1"></i>نقد
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+              {% endfor %}
+
+
+                  <!-- modal -->
+                  <div class="modal fade" id="reviewModal" tabindex="-1">
+                    <div class="modal-dialog">
+                      <div class="modal-content">
+                        <div class="modal-header bg-light">
+                          <div>
+                            <h5 class="modal-title">
+                              ثبت نظر
+                            </h5>
+                            <div class="small text-muted mt-1" id="modalAppointmentInfo"></div>
+                          </div>
+                          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body" id="modalBody"></div>
+                      </div>
+                    </div>
+                  </div>
+
+            </div>
+          {% else %}
+            <div class="alert alert-info mb-0">
+              در این وضعیت نوبتی وجود ندارد.
+            </div>
+          {% endif %}
+
+            {% if appointments.paginator.num_pages > 1 %}
+            <nav class="mt-3">
+              <ul class="pagination justify-content-center">
+
+                {% if appointments.has_previous %}
+                  <li class="page-item">
+                    <a class="page-link"
+                      href="?status={{ status }}&appointments_page={{ appointments.previous_page_number }}">
+                      قبلی
+                    </a>
+                  </li>
+                {% endif %}
+
+                {% for num in appointments.paginator.page_range %}
+                  <li class="page-item {% if appointments.number == num %}active{% endif %}">
+                    <a class="page-link"
+                      href="?status={{ status }}&appointments_page={{ num }}">
+                      {{ num }}
+                    </a>
+                  </li>
+                {% endfor %}
+
+                {% if appointments.has_next %}
+                  <li class="page-item">
+                    <a class="page-link"
+                      href="?status={{ status }}&appointments_page={{ appointments.next_page_number }}">
+                      بعدی
+                    </a>
+                  </li>
+                {% endif %}
+
+              </ul>
+            </nav>
+            {% endif %}
+
+        </div>
+      
+      </div>
+
+      <!-- نظرات من -->
+      <div class="card shadow-sm mb-4">
+        <div class="card-header bg-white">
+          <h5 class="mb-0">نظرات من</h5>
+        </div>
+
+        <div class="card-body">
+          {% if user_reviews %}
+            <div class="list-group">
+
+              {% for review in user_reviews %}
+                <div class="list-group-item">
+
+                  <!-- تاریخ و وضعیت -->
+                  <div class="d-flex justify-content-between align-items-center mb-1">
+                    <small class="text-muted">
+                      {{ review.created_at|jformat:"%Y/%m/%d" }}
+                    </small>
+
+                    {% if review.status == 'approved' %}
+                      <span class="badge bg-success">تأیید شده</span>
+                    {% elif review.status == 'pending' %}
+                      <span class="badge bg-warning text-dark">در انتظار تأیید</span>
+                    {% else %}
+                      <span class="badge bg-danger">رد شده</span>
+                    {% endif %}
+                  </div>
+
+                  <!-- سرویس -->
+                  {% if review.service %}
+                    <small class="text-muted d-block">
+                      خدمت: {{ review.service.name }}
+                    </small>
+                  {% endif %}
+
+                  {% if review.appointment %}
+                    <div class="small text-muted mt-1">
+                      🗓 تاریخ انجام: {{ review.appointment.appointment_date|jformat:"%Y/%m/%d" }}
+                      — ⏰ ساعت: {{ review.appointment.start_time|time:"H:i" }}
+                    </div>
+                  {% endif %}
+
+
+                  <!-- امتیاز -->
+                  <div class="mt-1">
+                    {% for i in 1|to_range:5 %}
+                      {% if i <= review.rating %}
+                        ⭐
+                      {% else %}
+                        ☆
+                      {% endif %}
+                    {% endfor %}
+                  </div>
+
+                  <!-- متن نظر -->
+                  <p class="mt-2 mb-0">
+                    {{ review.comment }}
+                  </p>
+
+                  {% if review.admin_reply %}
+                    <div class="alert alert-secondary mt-2">
+                      <strong>پاسخ مدیریت:</strong><br>
+                      {{ review.admin_reply }}
+                    </div>
+                  {% endif %}
+
+                    
+                  <a href="{% url 'delete_review' review.id %}"
+                    class="btn btn-sm btn-outline-danger"
+                    onclick="return confirm('آیا مطمئن هستید؟')">
+                    حذف
+                  </a>
+
+                  {% if review.status == 'pending' %}
+                    <a href="{% url 'edit_review' review.id %}"
+                      class="btn btn-sm btn-outline-primary">
+                      ویرایش
+                    </a>
+                  {% endif %}
+                </div>
+
+
+              {% endfor %}
+
+            </div>
+      
+
+          {% else %}
+            <div class="alert alert-info mb-0">
+              شما هنوز نظری ثبت نکرده‌اید.
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+      {% if user_reviews.paginator.num_pages > 1 %}
+      <nav class="mt-3">
+        <ul class="pagination justify-content-center">
+
+          {% if user_reviews.has_previous %}
+            <li class="page-item">
+              <a class="page-link" href="?reviews_page={{ user_reviews.previous_page_number }}">
+                قبلی
+              </a>
+            </li>
+          {% endif %}
+
+          {% for num in user_reviews.paginator.page_range %}
+            <li class="page-item {% if user_reviews.number == num %}active{% endif %}">
+              <a class="page-link" href="?reviews_page={{ num }}">{{ num }}</a>
+            </li>
+          {% endfor %}
+
+          {% if user_reviews.has_next %}
+            <li class="page-item">
+              <a class="page-link" href="?reviews_page={{ user_reviews.next_page_number }}">
+                بعدی
+              </a>
+            </li>
+          {% endif %}
+
+        </ul>
+      </nav>
+      {% endif %}
+
+
+    </div> <!-- /col-lg-8 -->
+  </div> <!-- /row -->
+</div> <!-- /container -->
+
+<!-- JS: پیش‌نمایش عکس و تعاملات کوچک -->
+{% block scripts %}
+{{ block.super }}
+
+<!-- ✅ تابع تبدیل عدد به حروف فارسی -->
+<script>
+function numberToWords(num) {
+    const units = ['', 'یک', 'دو', 'سه', 'چهار', 'پنج', 'شش', 'هفت', 'هشت', 'نه'];
+    const tens = ['', 'ده', 'بیست', 'سی', 'چهل', 'پنجاه', 'شصت', 'هفتاد', 'هشتاد', 'نود'];
+    const teens = ['ده', 'یازده', 'دوازده', 'سیزده', 'چهارده', 'پانزده', 'شانزده', 'هفده', 'هجده', 'نوزده'];
+    const hundreds = ['', 'صد', 'دویست', 'سیصد', 'چهارصد', 'پانصد', 'ششصد', 'هفتصد', 'هشتصد', 'نهصد'];
+    const bigs = ['', 'هزار', 'میلیون', 'میلیارد'];
+    
+    if (num === 0) return 'صفر';
+    
+    function convertThreeDigits(n) {
+        if (n === 0) return '';
+        
+        let result = '';
+        
+        const h = Math.floor(n / 100);
+        if (h > 0) {
+            result += hundreds[h] + ' و ';
+        }
+        
+        const t = n % 100;
+        if (t >= 10 && t < 20) {
+            result += teens[t - 10];
+        } else {
+            const ten = Math.floor(t / 10);
+            const unit = t % 10;
+            if (ten > 0) {
+                result += tens[ten];
+                if (unit > 0) result += ' و ';
+            }
+            if (unit > 0) {
+                result += units[unit];
+            }
+        }
+        
+        return result.replace(/ و $/, '');
+    }
+    
+    let result = '';
+    let i = 0;
+    
+    while (num > 0) {
+        const threeDigits = num % 1000;
+        if (threeDigits > 0) {
+            const part = convertThreeDigits(threeDigits);
+            if (i > 0 && part) {
+                result = part + ' ' + bigs[i] + ' و ' + result;
+            } else {
+                result = part + (i > 0 ? ' ' + bigs[i] : '') + (result ? ' و ' + result : '');
+            }
+        }
+        num = Math.floor(num / 1000);
+        i++;
+    }
+    
+    return result.trim().replace(/ و $/, '');
+}
+
+<!-- ✅ نمایش قیمت نهایی به حروف در کارت‌های نوبت (نسخه بهینه‌شده) -->
+document.addEventListener('DOMContentLoaded', function() {
+    // فقط برای المان‌های price-words در صفحه پروفایل
+    document.querySelectorAll('.price-words').forEach(element => {
+        const priceStr = element.dataset.price;
+        if (!priceStr) return;
+        
+        const priceNum = parseInt(priceStr.replace(/,/g, ''));
+        if (isNaN(priceNum)) return;
+        
+        // تبدیل به حروف فارسی
+        const words = numberToWords(priceNum);
+        element.textContent = `(${words} تومان)`;
+    });
+});
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const avatarInput = document.getElementById('avatarInput');
+  const avatarPreview = document.getElementById('avatarPreview');
+
+  if (avatarInput) {
+    avatarInput.addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(ev) {
+        avatarPreview.src = ev.target.result;
+      }
+      reader.readAsDataURL(file);
+    });
+  }
+});
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const bioInput = document.getElementById('bio');
+  const bioCounter = document.getElementById('bioCounter');
+  const maxLength = 300;
+
+  if (!bioInput) return;
+
+  // مقدار اولیه (وقتی قبلاً بیو ذخیره شده)
+  bioCounter.textContent = `${bioInput.value.length} / ${maxLength} کاراکتر`;
+
+  bioInput.addEventListener('input', function () {
+    const length = bioInput.value.length;
+    bioCounter.textContent = `${length} / ${maxLength} کاراکتر`;
+
+    // تغییر رنگ نزدیک به حد مجاز
+    if (length >= maxLength) {
+      bioCounter.classList.add('text-danger');
+    } else {
+      bioCounter.classList.remove('text-danger');
+    }
+  });
+});
+</script>
+
+<script>
+function checkFileSize(input) {
+  if (input.files[0].size > 1 * 1024 * 1024) {
+    alert("حجم تصویر نباید بیشتر از 1 مگابایت باشد");
+    input.value = "";
+  }
+}
+</script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const form = document.getElementById("profileForm");
+  if (!form) return;
+
+  const fields = Array.from(
+    form.querySelectorAll(
+      "input:not([type=hidden]):not([type=file]):not([disabled]), textarea, select"
+    )
+  );
+
+  form.addEventListener("keydown", function (e) {
+    if (e.key !== "Enter") return;
+
+    const active = document.activeElement;
+
+    // فقط اگر فوکوس روی یکی از فیلدهای فرم است
+    if (!fields.includes(active)) return;
+
+    // داخل textarea، اینتر طبیعی باشد
+    if (active.tagName === "TEXTAREA") return;
+
+    e.preventDefault();
+
+    const index = fields.indexOf(active);
+
+    if (index < fields.length - 1) {
+      fields[index + 1].focus();
+    } else {
+      form.querySelector("button[name='save_profile']").click();
+    }
+  });
+});
+</script>
+
+<script>
+document.addEventListener('click', function(e){
+  if(e.target.classList.contains('add-review-btn')){
+    console.log('clicked review button');
+
+    const appointmentId = e.target.dataset.appointment;
+
+    const url = e.target.dataset.url;
+
+    fetch(url, {headers: { 'X-Requested-With': 'XMLHttpRequest' }})
+      .then(res => res.json())
+      .then(data => {
+        if(data.html){
+          document.getElementById('modalBody').innerHTML = data.html;
+          const serviceName = e.target.dataset.serviceName;
+          const date = e.target.dataset.date;
+          const time = e.target.dataset.time;
+
+          document.getElementById('modalAppointmentInfo').innerText =
+            `خدمت: ${serviceName} — تاریخ: ${date} — ساعت: ${time}`;
+
+          new bootstrap.Modal(
+            document.getElementById('reviewModal')
+          ).show();
+
+          bindReviewForm();
+          initStarRating();
+        } else if (data.error) {
+          alert(data.error);
+        }
+      });
+  }
+});
+
+
+function bindReviewForm(){
+  const form = document.getElementById('reviewForm');
+  form.addEventListener('submit', function(ev){
+
+    const rating = document.getElementById('ratingInput').value;
+
+    if(!rating){
+      ev.preventDefault();
+      document.getElementById('reviewMsg').innerText =
+        "لطفاً قبل از ثبت نظر، امتیاز ستاره‌ای را انتخاب کنید ⭐";
+      return;
+    }
+
+    ev.preventDefault();
+    const appointmentId = form.dataset.appointment;
+    const data = new FormData(form);
+    fetch(`{% url 'accounts:ajax_add_review' 0 %}`.replace('/0/','/'+appointmentId+'/'),{
+      method:'POST',
+      body:data,
+      headers:{'X-Requested-With':'XMLHttpRequest'}
+    })
+    .then(r=>r.json())
+    .then(d=>{
+      if(d.success){
+        location.reload();   // یا بروز رسانی لیست نظرات به دلخواه
+      }else if(d.error){
+        alert(d.error);
+      }else{
+        document.getElementById('reviewMsg').innerHTML =
+          Object.values(d.errors).join('<br>');
+      }
+    });
+  });
+}
+</script>
+
+<script>
+function initStarRating(){
+  const stars = document.querySelectorAll('#starRating .star');
+  const input = document.getElementById('ratingInput');
+  const label = document.getElementById('ratingValue');
+
+  if(!stars.length || !input || !label) return;
+
+  let selected = 0;
+
+  stars.forEach(star => {
+
+    star.addEventListener('mouseenter', () => {
+      highlight(star.dataset.value);
+    });
+
+    star.addEventListener('mouseleave', () => {
+      highlight(selected);
+    });
+
+    star.addEventListener('click', () => {
+      selected = star.dataset.value;
+      input.value = selected;
+      label.innerText = `امتیاز انتخاب‌شده: ${selected} از 5`;
+      highlight(selected);
+    });
+
+  });
+
+  function highlight(count){
+    stars.forEach(star => {
+      if(star.dataset.value <= count){
+        star.classList.add('active');
+      } else {
+        star.classList.remove('active');
+      }
+    });
+  }
+}
+</script>
+
+
+{% endblock scripts %}
+
+{% endblock content %}

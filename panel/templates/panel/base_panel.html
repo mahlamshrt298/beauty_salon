@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+{% load static %}
+
+
+<head>
+    <meta charset="UTF-8">
+    <title>پنل مدیریت</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Bootstrap -->
+    <!--<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">--> 
+    <!--<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">--> 
+
+
+    <!-- CSS -->
+   <!-- <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}"> --> 
+    <link rel="stylesheet" href="{% static 'css/persian-datepicker.min.css' %}">
+    <link rel="stylesheet" href="{% static 'bootstrap.rtl.min.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}"> 
+    <!-- در بخش <head> فایل base_panel.html این خط رو اضافه کن: -->
+    <link rel="stylesheet" href="{% static 'css/all.min.css' %}">
+
+    <!-- JS -->
+    <script src="{% static 'js/jquery-3.6.0.min.js' %}"></script>
+    <script src="{% static 'js/persian-date.min.js' %}"></script>
+    <script src="{% static 'js/persian-datepicker.min.js' %}"></script>
+    <!--<script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>-->
+    <script src="{% static 'js/moment.min.js' %}"></script>
+    <script src="{% static 'js/jalali-moment.browser.js' %}"></script>
+    <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+
+    <script src="{% static 'js/chart.min.js' %}"></script>
+
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .sidebar {
+            width: 260px;
+            height: 100vh;
+            background-color: #1e1e2d;
+            position: fixed;
+            top: 0;
+            right: 0;
+            padding-top: 80px;
+            color: white;
+            overflow-y: auto;   /* 👈 فعال شدن اسکرول عمودی */
+            scrollbar-width: thin; /* برای فایرفاکس */
+        }
+
+        /* اسکرول سفارشی برای کروم */
+        .sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar::-webkit-scrollbar-track {
+            background: #1e1e2d;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: #4c4cff;
+            border-radius: 10px;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb:hover {
+            background: #6c6cff;
+        }
+
+
+        .sidebar a {
+            display: block;
+            padding: 12px 20px;
+            color: #c7c7d1;
+            text-decoration: none;
+            transition: 0.3s;
+        }
+
+        .sidebar a:hover {
+            background-color: #27293d;
+            color: white;
+        }
+
+        .sidebar a.active {
+            background-color: #4c4cff !important;
+            color: white !important;
+            font-weight: bold;
+            border-right: 4px solid #ffffff;
+        }
+
+
+        .content {
+            margin-right: 260px;
+            padding: 30px;
+            margin-top: 65px; 
+        }
+
+        @media(max-width: 768px){
+            .sidebar {
+                width: 260px !important;   /* ❗ جلوگیری از 100% شدن */
+                position: fixed !important;
+                height: calc(100vh - 65px) !important;
+            }
+            .content {
+                margin-right: 0;
+            }
+        }
+        /* هدر مشکی */
+        .navbar-dark.bg-dark {
+            background-color: #212529 !important;
+        }
+
+        /* ===== Sidebar Mobile Toggle (Safe Mode) ===== */
+
+        @media (max-width: 991px) {
+
+            .sidebar {
+                position: fixed;
+                top: 65px;
+                right: -260px;
+                height: calc(100vh - 65px);
+                width: 260px;
+                background: #1e1e2d;
+                transition: right 0.3s ease;
+                z-index: 1050;
+            }
+
+            .sidebar.open {
+                right: 0;
+            }
+
+            .content {
+                margin-right: 0 !important;
+                padding: 20px;
+            }
+        }
+
+
+        /* ===== Table horizontal scroll (SAFE) ===== */
+        .table-scroll {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .table-scroll table {
+            min-width: 900px; /* جدول له نشه */
+        }
+
+        /* ===============================
+        PANEL MOBILE FIX (SAFE)
+        ================================= */
+
+        @media (max-width: 768px) {
+
+            /* جدول‌ها */
+            .table {
+                font-size: 0.85rem;
+            }
+
+            .table th,
+            .table td {
+                white-space: nowrap;
+                padding: 8px;
+            }
+
+            /* اسکرول افقی امن */
+            .table-scroll {
+                overflow-x: auto;
+            }
+
+            /* فرم‌ها فول عرض */
+            form[class*="col-md"] {
+                width: 100% !important;
+            }
+
+            /* دکمه‌ها */
+            .btn {
+                font-size: 0.85rem;
+                padding: 6px 10px;
+            }
+
+            /* کارت‌ها */
+            .card {
+                margin-bottom: 15px;
+            }
+
+            /* عنوان‌ها */
+            h4, h5 {
+                font-size: 1.1rem;
+            }
+
+            /* ===============================
+            PANEL RESPONSIVE FIX (SAFE)
+            ================================= */
+
+            @media (max-width: 992px) {
+
+                /* کانتینرها نفس بکشن */
+                .container,
+                .container-fluid {
+                    padding-left: 15px;
+                    padding-right: 15px;
+                }
+
+                /* کارت‌ها فاصله مناسب */
+                .card {
+                    margin-bottom: 20px;
+                }
+
+                /* فرم‌ها فول عرض */
+                .row > [class*="col-"] {
+                    margin-bottom: 15px;
+                }
+
+                /* دکمه‌ها کوچکتر */
+                .btn {
+                    font-size: 0.85rem;
+                    padding: 6px 10px;
+                }
+
+                /* تیترها کوچکتر */
+                h2, h3, h4, h5 {
+                    font-size: 1.1rem;
+                }
+
+                /* جدول‌ها اسکرول‌دار */
+                .panel-table-wrapper {
+                    overflow-x: auto;
+                    -webkit-overflow-scrolling: touch;
+                }
+
+                .panel-table-wrapper table {
+                    min-width: 700px;
+                }
+
+                .table-scroll,
+                .table-responsive {
+                    overflow-x: auto;
+                    -webkit-overflow-scrolling: touch;
+                }
+
+                .table-scroll table {
+                    min-width: 800px;
+                }
+            }
+
+
+        }
+
+    </style>
+</head>
+
+<body>
+
+<!-- نوار بالا -->
+<nav class="navbar navbar-dark bg-dark fixed-top px-4">
+    <a href="{% url 'home' %}" target="_blank" class="navbar-brand d-flex align-items-center gap-2" data-bs-toggle="tooltip" data-bs-placement="bottom" title="صفحه خانه">
+        
+        <img src="{% static 'images/logo.png' %}"
+            alt="Beauty Salon"
+            height="50">
+    </a>
+
+    <button id="toggleSidebar"
+            class="btn btn-outline-light d-md-none me-2">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    
+    <span class="navbar-brand">پنل مدیریت</span>
+
+   <!-- این div همه‌چیز را می‌برد سمت راست -->
+    <div class=" d-flex align-items-center gap-2">
+        
+        <!-- ✅ دکمه جدید: مشاهده سایت اصلی (در تب جدید) -->
+        <a href="{% url 'home' %}" 
+        target="_blank"
+        class="btn btn-outline-light d-flex align-items-center gap-2"
+        style="
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 6px;
+            padding: 6px 14px;
+            transition: all 0.3s;
+            text-decoration: none;
+        "
+        onmouseover="this.style.background='rgba(255, 255, 255, 0.2)'; this.style.borderColor='white'; this.style.transform='translateY(-1px)'"
+        onmouseout="this.style.background='rgba(255, 255, 255, 0.1)'; this.style.borderColor='rgba(255, 255, 255, 0.3)'; this.style.transform='translateY(0)'"
+        data-bs-toggle="tooltip" 
+        data-bs-placement="bottom" 
+        title="باز کردن سایت اصلی در تب جدید">
+            <i class="fas fa-external-link-alt" style="font-size: 0.9rem;"></i>
+            <span style="font-size: 0.9rem; font-weight: 500;">مشاهده سایت</span>
+        </a>
+
+
+        <span class="text-white">
+            <div class="text-end">
+                <div class="text-white fw-semibold">
+
+                    {% if request.user.profile.role == "owner" %}
+                        <span class="text-info">مالک</span>
+                    {% elif request.user.profile.role == "receptionist" %}
+                        <span class="text-warning">منشی</span>
+                    {% else %}
+                        <span class="text-secondary">کاربر</span>
+                    {% endif %}
+
+                    – <i class="bi bi-person-circle me-1"></i>
+                    {{ request.user.username }}
+                </div>
+            </div>
+        </span>
+
+        
+        <a href="{% url 'accounts:logout' %}" class="btn btn-sm btn-danger">
+            خروج
+        </a>
+    </div>
+</nav>
+
+{% if messages %}
+  {% for message in messages %}
+    {% if "panel" in message.tags %}
+      <div class="alert 
+                  {% if message.level_tag == 'error' %}alert-danger
+                  {% elif message.level_tag == 'success' %}alert-success
+                  {% elif message.level_tag == 'warning' %}alert-warning
+                  {% else %}alert-info{% endif %}
+                  alert-dismissible fade show"
+                  role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    {% endif %}
+  {% endfor %}
+{% endif %}
+
+
+<!-- سایدبار -->
+<div class="sidebar">
+
+    <a href="{% url 'panel:dashboard' %}"
+    class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+        📊 داشبورد
+    </a>
+
+    <a href="{% url 'panel:booking_list' %}"
+    class="{% if request.resolver_match.url_name == 'booking_list' %}active{% endif %}">
+        🗓 نوبت‌ها
+    </a>
+
+    <!-- ✅ لینک جدید: نوبت‌های امروز (بالای لیست نوبت‌ها) -->
+    <a href="{% url 'panel:today_appointments' %}"
+       class="{% if request.resolver_match.url_name == 'today_appointments' %}active{% endif %}">
+        📅 نوبت‌های امروز
+    </a>
+
+     <!-- ✅ لینک جدید برای نوبت‌های فردا -->
+    <a href="{% url 'panel:tomorrow_appointments' %}"
+       class="{% if request.resolver_match.url_name == 'tomorrow_appointments' %}active{% endif %}">
+        📅 نوبت‌های فردا
+    </a>
+
+    <a href="{% url 'panel:services_list' %}"
+    class="{% if request.resolver_match.url_name == 'services_list' %}active{% endif %}">
+        💅 خدمات
+    </a>
+
+    <a href="{% url 'panel:staff_list' %}"
+    class="{% if request.resolver_match.url_name == 'staff_list' %}active{% endif %}">
+        👩‍💼 پرسنل
+    </a>
+
+    <a href="{% url 'panel:popular_services_list' %}"
+    class="{% if request.resolver_match.url_name == 'popular_services_list' %}active{% endif %}">
+        ⭐ خدمات پرطرفدار
+    </a>
+
+    <a href="{% url 'panel:article_list' %}"
+    class="{% if request.resolver_match.url_name == 'article_list' %}active{% endif %}">
+        📝 مقالات
+    </a>
+
+    <a href="{% url 'panel:review_list' %}" class="{% if request.resolver_match.url_name == 'review_list' %}active{% endif %}">
+            📝 نظرات مشتریان
+        
+    </a>
+
+    <a href="{% url 'panel:discount_codes' %}"
+    class="{% if request.resolver_match.url_name == 'discount_codes' %}active{% endif %}">
+    🎁 کد تخفیف‌ها
+    </a>
+
+    
+        <a href="{% url 'panel:holiday_list' %}" class=" {% if request.resolver_match.url_name == 'holiday_list' %}active{% endif %}" >
+            <i class="fas fa-calendar-times"></i> 🎉 تعطیلات 
+        </a>
+    
+        <!-- ⚙️ تنظیمات سالن -->
+    <a href="{% url 'panel:salon_settings' %}" 
+    class="{% if request.resolver_match.url_name == 'salon_settings' %}active{% endif %}">
+        ⚙️ تنظیمات سالن
+    </a>
+
+    <a class="{% if request.resolver_match.url_name == 'package_list' %}active{% endif %}" href="{% url 'panel:package_list' %}">
+        <i class="fas fa-gift"></i>
+        <span>پکیج‌های ویژه</span>
+    </a>
+
+    <a class="{% if request.resolver_match.url_name == 'payment_list' %}active{% endif %}" href="{% url 'panel:payment_list' %}">
+       💳  پرداخت‌ها
+    </a>
+
+</div>
+
+
+
+<!-- محتوای اصلی -->
+<div class="content">
+    {% block content %}
+    {% endblock %}
+</div>
+
+
+<!--<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>--> 
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const tooltipTriggerList = [].slice.call(
+        document.querySelectorAll('[data-bs-toggle="tooltip"]')
+    )
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
+    })
+})
+</script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const toggleBtn = document.getElementById("toggleSidebar");
+    const sidebar = document.querySelector(".sidebar");
+
+    if (toggleBtn && sidebar) {
+        toggleBtn.addEventListener("click", function () {
+            sidebar.classList.toggle("open");
+        });
+    }
+});
+</script>
+
+
+</body>
+</html>

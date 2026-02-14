@@ -1,0 +1,308 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}پرداخت و تأیید - رزرو نوبت{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <!-- متن راهنمایی -->
+  <div class="text-center mb-4" style="font-size: 1.1rem; color: #6c757d;">
+    لطفاً روش پرداخت خود را انتخاب کنید و نوبت خود را تأیید نمایید.
+  </div>
+
+  <!-- نوار پیشرفت -->
+  <div class="custom-progress-bar mb-4">
+    {% for step in steps %}
+      <div class="step {% if step.active %}active{% endif %}" style="width: {{ step_width }}%;">
+        <div class="step-number">{{ step.number }}</div>
+        <div class="step-title">{{ step.title }}</div>
+      </div>
+    {% endfor %}
+  </div>
+
+  <!-- کادر پرداخت -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-header bg-primary text-white">
+      <h3 class="mb-0">مرحله ۴: پرداخت و تأیید</h3>
+    </div>
+    <div class="card-body">
+      <div class="summary-box mb-4 p-3 bg-light rounded">
+        <!-- ✅ اضافه کردن عکس خدمت در بالای خلاصه -->
+        {% if service.image %}
+        <div class="text-center mb-3">
+            <img src="{{ service.image.url }}" 
+                alt="{{ service.name }}"
+                class="img-fluid rounded shadow-sm"
+                style="max-height: 200px; object-fit: contain; background: #f8f9fa; padding: 8px;">
+            <small class="text-muted d-block mt-1">{{ service.name }}</small>
+        </div>
+        {% endif %}
+        <h5>خلاصه رزرو:</h5>
+        <p><strong>خدمت:</strong> {{ service.name }}</p>
+        <p><strong>تاریخ:</strong>{{ weekday_fa }} {{ appointment_date_jalali }} | <strong>ساعت:</strong> {{ start_time }}</p>
+        <p><strong>شماره تماس:</strong> {{ phone }}</p>
+        
+        <!-- ✅ نمایش قیمت به عدد (حروف با جاوااسکریپت اضافه می‌شود) -->
+        <p>
+            <strong>قیمت کل:</strong> 
+            <span class="text-success fw-bold price-amount" data-price="{{ service.price }}">
+                {{ service.price|intcomma }} تومان
+            </span>
+        </p>
+        
+        {% if discounted_price %}
+            <p class="text-success">
+                تخفیف {{ discount_percent }}٪ اعمال شد →
+                قیمت نهایی: 
+                <span class="fw-bold discounted-price" data-price="{{ discounted_price }}">
+                    {{ discounted_price|intcomma }} تومان
+                </span>
+            </p>
+        {% endif %}
+        
+        <p><strong>پرسنل انجام‌دهنده:</strong>
+         <span>{{ staff_label }}</span></p>
+      </div>
+
+        <form method="post">
+            {% csrf_token %}
+            <!-- فیلد کد تخفیف -->
+            <div class="mb-3">
+                <label class="form-label">کد تخفیف (در صورت داشتن):</label>
+                <input type="text" name="discount_code" class="form-control" placeholder="کد تخفیف">
+                <button type="submit" name="apply_discount" class="btn btn-outline-primary mt-2" data-submit-type="discount">
+                    اعمال کد تخفیف
+                </button>
+            </div>
+            {% if discount_percent %}
+                <p class="text-success">
+                    تخفیف {{ discount_percent }}٪ اعمال شد → قیمت نهایی:
+                    <span class="fw-bold">{{ discounted_price|intcomma }} تومان</span>
+                </p>
+            {% endif %}
+
+             <hr>
+            <div class="mb-3">
+                <label class="form-label">روش پرداخت:</label>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="payment_method" value="cash" id="cash" checked>
+                    <label class="form-check-label" for="cash">پرداخت در محل (نقدی)</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="payment_method" value="card" id="card">
+                    <label class="form-check-label" for="card">پرداخت در محل (کارت‌خوان)</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="payment_method" value="online" id="online">
+                    <label class="form-check-label" for="online">پرداخت آنلاین (درگاه زرین ال یا آیدی پی)</label>
+                </div>
+                </div>
+
+                <div class="d-flex justify-content-between">
+                <a href="{% url 'contact_info' %}" class="btn btn-secondary booking-exit-link" data-no-exit>بازگشت</a>
+                <button type="submit" name="final_submit" class="btn btn-success" data-no-exit>تأیید نهایی و رزرو نوبت</button>
+            </div>
+        </form>
+
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+
+<!-- ✅ تابع تبدیل عدد به حروف فارسی -->
+<script>
+function numberToWords(num) {
+    const units = ['', 'یک', 'دو', 'سه', 'چهار', 'پنج', 'شش', 'هفت', 'هشت', 'نه'];
+    const tens = ['', 'ده', 'بیست', 'سی', 'چهل', 'پنجاه', 'شصت', 'هفتاد', 'هشتاد', 'نود'];
+    const teens = ['ده', 'یازده', 'دوازده', 'سیزده', 'چهارده', 'پانزده', 'شانزده', 'هفده', 'هجده', 'نوزده'];
+    const hundreds = ['', 'صد', 'دویست', 'سیصد', 'چهارصد', 'پانصد', 'ششصد', 'هفتصد', 'هشتصد', 'نهصد'];
+    const bigs = ['', 'هزار', 'میلیون', 'میلیارد'];
+    
+    if (num === 0) return 'صفر';
+    
+    function convertThreeDigits(n) {
+        if (n === 0) return '';
+        
+        let result = '';
+        
+        const h = Math.floor(n / 100);
+        if (h > 0) {
+            result += hundreds[h] + ' و ';
+        }
+        
+        const t = n % 100;
+        if (t >= 10 && t < 20) {
+            result += teens[t - 10];
+        } else {
+            const ten = Math.floor(t / 10);
+            const unit = t % 10;
+            if (ten > 0) {
+                result += tens[ten];
+                if (unit > 0) result += ' و ';
+            }
+            if (unit > 0) {
+                result += units[unit];
+            }
+        }
+        
+        return result.replace(/ و $/, '');
+    }
+    
+    let result = '';
+    let i = 0;
+    
+    while (num > 0) {
+        const threeDigits = num % 1000;
+        if (threeDigits > 0) {
+            const part = convertThreeDigits(threeDigits);
+            if (i > 0 && part) {
+                result = part + ' ' + bigs[i] + ' و ' + result;
+            } else {
+                result = part + (i > 0 ? ' ' + bigs[i] : '') + (result ? ' و ' + result : '');
+            }
+        }
+        num = Math.floor(num / 1000);
+        i++;
+    }
+    
+    return result.trim().replace(/ و $/, '');
+}
+
+// ✅ نمایش قیمت به حروف در صفحه
+document.addEventListener('DOMContentLoaded', function() {
+    // قیمت اصلی
+    const priceElement = document.querySelector('.price-amount');
+    if (priceElement) {
+        const priceNum = parseInt(priceElement.dataset.price);
+        if (!isNaN(priceNum)) {
+            const priceWords = numberToWords(priceNum);
+            const small = document.createElement('small');
+            small.className = 'text-muted d-block mt-1';
+            small.style.fontSize = '0.85rem';
+            small.textContent = `(${priceWords} تومان)`;
+            priceElement.parentNode.appendChild(small);
+        }
+    }
+    
+    // قیمت تخفیف‌خورده
+    const discountElement = document.querySelector('.discounted-price');
+    if (discountElement) {
+        const discountNum = parseInt(discountElement.dataset.price);
+        if (!isNaN(discountNum)) {
+            const discountWords = numberToWords(discountNum);
+            const small = document.createElement('small');
+            small.className = 'text-muted d-block mt-1';
+            small.style.fontSize = '0.85rem';
+            small.textContent = `(${discountWords} تومان)`;
+            discountElement.parentNode.appendChild(small);
+        }
+    }
+});
+</script>
+
+<script src="{% static 'js/booking-flow.js' %}"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const phoneInput = document.getElementById("phone");
+    const notesInput = document.getElementById("notes");
+
+    if (!phoneInput || !notesInput) return;
+
+    const form = phoneInput.closest("form");
+    if (!form) return;
+
+    phoneInput.addEventListener("keydown", function (e) {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            notesInput.focus();
+        }
+    });
+
+    notesInput.addEventListener("keydown", function (e) {
+        if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            form.submit();
+        }
+    });
+});
+
+</script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const form = document.querySelector("form");
+    const radios = document.querySelectorAll('input[name="payment_method"]');
+
+    if (!radios.length) return;
+
+    // 1️⃣ فوکوس خودکار روی اولین روش پرداخت
+    radios[0].focus();
+
+    radios.forEach((radio, index) => {
+
+        radio.addEventListener("keydown", function (e) {
+
+            // 2️⃣ حرکت با ↑ ↓
+            if (e.key === "ArrowDown" || e.key === "ArrowRight") {
+                e.preventDefault();
+                const next = radios[index + 1] || radios[0];
+                next.focus();
+                next.checked = true;
+            }
+
+            if (e.key === "ArrowUp" || e.key === "ArrowLeft") {
+                e.preventDefault();
+                const prev = radios[index - 1] || radios[radios.length - 1];
+                prev.focus();
+                prev.checked = true;
+            }
+
+            
+        });
+
+    });
+});
+</script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const form = document.querySelector("form");
+    let isFinalSubmitted = false;
+
+   /* form.addEventListener("submit", function (e) {
+
+        const clickedBtn = document.activeElement;
+        const submitType = clickedBtn?.dataset?.submitType;
+
+        // ✅ اگر رزرو نهایی است، popup را خفه کن
+        if (submitType === "final") {
+            popupShown = true;   // 👈🔥 این خط نجات‌دهنده است
+        }
+        // فقط برای رزرو نهایی قفل کن
+        if (submitType === "final") {
+
+            if (isFinalSubmitted) {
+                e.preventDefault(); // ⛔ جلوگیری از ارسال دوباره
+                return;
+            }
+
+            isFinalSubmitted = true;
+            clickedBtn.disabled = true;
+            clickedBtn.innerText = "در حال ثبت نوبت...";
+        }
+    console.log("submitType:", submitType);
+    console.log("popupShown:", popupShown);
+
+    });*/
+
+});
+</script>
+
+{% endblock scripts %}

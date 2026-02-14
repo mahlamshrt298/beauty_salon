@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{%block title%}
+صفحه خروج - سالن زیبایی
+{%endblock title%}
+
+
+{% block content %}
+    <div class="card shadow p-4 text-center col-11 col-md-8 col-lg-6 mx-auto mt-5">
+        <h3 class="mb-3">خروج موفقیت‌آمیز ✅</h3>
+        <p class="text-muted mb-4">
+            شما با موفقیت از حساب کاربری خود خارج شدید
+        </p>
+        <a href="{% url 'accounts:login' %}" class="btn btn-primary mt-3">
+            بازگشت به صفحه ورود
+        </a>
+    </div>
+
+
+<script>
+  document.addEventListener("keydown", function (event) {
+    if (event.key === "Enter") {
+      window.location.href = "{% url 'accounts:login' %}";
+    }
+  });
+</script>
+
+{% endblock content %}

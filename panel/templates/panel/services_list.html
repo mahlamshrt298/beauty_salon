@@ -1,0 +1,347 @@
+{% extends "panel/base_panel.html" %}
+{% block content %}
+{% load humanize %}
+
+<h2  style="color: #2c3e50;">💅 خدمات</h2>
+
+<div class="container mt-4">
+
+   {% if request.user.profile.role == "owner" %}
+
+        <!-- ردیف دکمه‌ها -->
+        <div class="row mb-4 align-items-center">
+
+            <div class="col-md-8">
+                <div class="d-flex flex-column flex-md-row gap-2">
+                    <a href="{% url 'panel:category_add' %}" class="btn btn-outline-primary">
+                        ➕ افزودن دسته
+                    </a>
+                    <a href="{% url 'panel:subcategory_add' %}" class="btn btn-outline-secondary">
+                        ➕ افزودن زیردسته
+                    </a>
+                    <a href="{% url 'panel:service_add' %}" class="btn btn-success">
+                        ➕ افزودن خدمت جدید
+                    </a>
+                </div>
+            </div>
+
+            <div class="col-md-4 mt-3 mt-md-0">
+                <button class="btn btn-outline-danger w-100"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#dangerZone">
+                    ⚠️ مدیریت حذف دسته‌ها و زیردسته‌ها
+                </button>
+            </div>
+
+        </div>
+
+        <!-- بخش collapse -->
+        <div id="dangerZone" class="collapse mb-4">
+            <div class="row">
+
+                <!-- حذف دسته -->
+                <div class="col-12 col-lg-6 mb-4">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-danger text-white">
+                            ⚠️ حذف دسته‌ها
+                        </div>
+                        <div class="card-body">
+                            <div class="alert alert-warning">
+                                دسته‌ای که زیردسته دارد، قابل حذف نیست.
+                            </div>
+
+                            <div class="table-responsive">
+                                <table class="table table-sm table-bordered">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>نام دسته</th>
+                                            <th>تعداد زیردسته‌ها</th>
+                                            <th>عملیات</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for cat in categories %}
+                                        <tr>
+                                            <td>{{ cat.name }}</td>
+                                            <td>{{ cat.subcategories.count }}</td>
+                                            <td>
+                                                {% if cat.subcategories.exists %}
+                                                    <button class="btn btn-secondary btn-sm" disabled>
+                                                        غیرقابل حذف
+                                                    </button>
+                                                {% else %}
+                                                    <form method="post"
+                                                        action="{% url 'panel:service_delete_category' cat.id %}">
+                                                        {% csrf_token %}
+                                                        <button class="btn btn-danger btn-sm">
+                                                            حذف
+                                                        </button>
+                                                    </form>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- حذف زیردسته -->
+                <div class="col-12 col-lg-6 mb-4">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-warning">
+                            ⚠️ حذف زیردسته‌ها
+                        </div>
+                        <div class="card-body">
+                            <div class="alert alert-info">
+                                زیردسته‌ای که خدمت دارد، قابل حذف نیست.
+                            </div>
+
+                            <div class="table-responsive">
+                                <table class="table table-sm table-bordered">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>نام</th>
+                                            <th>دسته</th>
+                                            <th>تعداد خدمات</th>
+                                            <th>عملیات</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for sub in subcategories %}
+                                        <tr>
+                                            <td>{{ sub.name }}</td>
+                                            <td>{{ sub.category.name }}</td>
+                                            <td>{{ sub.services.count }}</td>
+                                            <td>
+                                                {% if sub.services.exists %}
+                                                    <button class="btn btn-secondary btn-sm" disabled>
+                                                        غیرقابل حذف
+                                                    </button>
+                                                {% else %}
+                                                    <form method="post"
+                                                        action="{% url 'panel:service_delete_subcategory' sub.id %}">
+                                                        {% csrf_token %}
+                                                        <button class="btn btn-danger btn-sm">
+                                                            حذف
+                                                        </button>
+                                                    </form>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    {% endif %}
+
+
+    <form method="get" class="row mb-4">
+
+        <!-- دسته -->
+        <div class="col-12 col-md-4">
+            <label class="form-label">دسته</label>
+            <select name="category" class="form-select" onchange="this.form.submit()">
+                <option value="">همه دسته‌ها</option>
+                {% for cat in categories %}
+                    <option value="{{ cat.id }}"
+                        {% if cat.id|stringformat:"s" == selected_category %}selected{% endif %}>
+                        {{ cat.name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- زیردسته -->
+        <div class="col-md-4">
+            <label class="form-label">زیردسته</label>
+            <select name="subcategory" class="form-select" onchange="this.form.submit()">
+                <option value="">همه زیردسته‌ها</option>
+                {% for sub in subcategories %}
+                    <option value="{{ sub.id }}"
+                        {% if sub.id|stringformat:"s" == selected_subcategory %}selected{% endif %}>
+                        {{ sub.name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+    </form>
+
+    <div class="table-scroll">
+        <table class="table table-bordered text-center align-middle">
+            <thead class="table-dark">
+                <tr>
+                    <th>عنوان خدمت</th>
+                    <th>هزینه</th>
+                    <th>وضعیت</th>
+                    {% if request.user.profile.role == "owner" %}
+                        <th>عملیات</th>
+                    {% endif %}
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for service in services %}
+                <tr>
+                    <!-- ستون عنوان خدمت - نسخه نهایی با عکس -->
+                    <td>
+                        <div class="d-flex align-items-center gap-3">
+                            <!-- ✅ نمایش عکس خدمت -->
+                            <div class="service-image-wrapper">
+                                {% if service.image %}
+                                    <img src="{{ service.image.url }}" 
+                                        alt="{{ service.name }}"
+                                        class="service-image">
+                                {% else %}
+                                    <div class="service-image-placeholder">
+                                        <i class="fas fa-image text-muted"></i>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- ✅ اطلاعات متنی خدمت -->
+                            <div class="service-info">
+                                <span>{{ service.category.name }}</span>
+                                {% if service.subcategory %}
+                                    <span class="text-muted">/ {{ service.subcategory.name }}</span>
+                                {% endif %}
+                                <br>
+                                <strong>{{ service.name }}</strong>
+                            </div>
+                        </div>
+                    </td>
+
+
+                    <td>{{ service.price|intcomma }} تومان</td>
+                    
+                    <td>
+                        {% if service.is_active %}
+                            <span class="badge bg-success">فعال</span>
+                        {% else %}
+                            <span class="badge bg-danger">غیرفعال</span>
+                        {% endif %}
+                    </td>
+
+
+                    {% if request.user.profile.role == "owner" %}
+                        <td class="d-flex gap-2 justify-content-center">
+
+                            <form method="post"
+                                action="{% url 'panel:service_toggle_status' service.id %}">
+                                {% csrf_token %}
+                                {% if service.is_active %}
+                                    <button type="submit"
+                                            class="btn btn-warning">
+                                        غیرفعال کردن
+                                    </button>
+                                {% else %}
+                                    <button type="submit"
+                                            class="btn btn-success">
+                                        فعال کردن
+                                    </button>
+                                {% endif %}
+                            </form>
+
+
+                            <!-- حذف -->
+                            <form method="post"
+                                action="{% url 'panel:service_delete' service.id %}"
+                                style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit"
+                                        class="btn btn-danger"
+                                        onclick="return confirm('حذف شود؟');">
+                                    حذف
+                                </button>
+                            </form>
+
+                            <!-- ویرایش (همچنان GET بماند) -->
+                            <a href="{% url 'panel:service_edit' service.id %}"
+                            class="btn btn-primary">
+                                ویرایش
+                            </a>
+
+                        </td>
+
+                    {% endif %}
+                </tr>
+
+                {% empty %}
+                <tr>
+                    <td colspan="3" class="text-muted">هیچ خدمتی ثبت نشده است</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- قبل از بسته شدن </div> کانتینر، این کد را اضافه کنید -->
+    {% if services.has_other_pages %}
+    <nav aria-label="صفحه‌بندی خدمات" class="mt-4">
+        <ul class="pagination justify-content-center">
+            <!-- دکمه قبلی -->
+            {% if services.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" 
+                    href="?page={{ services.previous_page_number }}
+                            {% if selected_category %}&category={{ selected_category }}{% endif %}
+                            {% if selected_subcategory %}&subcategory={{ selected_subcategory }}{% endif %}">
+                        <span aria-hidden="true">&laquo;</span> قبلی
+                    </a>
+                </li>
+            {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">&laquo; قبلی</span>
+                </li>
+            {% endif %}
+
+            <!-- شماره صفحات -->
+            {% for num in services.paginator.page_range %}
+                {% if services.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }} <span class="sr-only">(فعلی)</span></span>
+                    </li>
+                {% else %}
+                    <li class="page-item">
+                        <a class="page-link" 
+                        href="?page={{ num }}
+                                {% if selected_category %}&category={{ selected_category }}{% endif %}
+                                {% if selected_subcategory %}&subcategory={{ selected_subcategory }}{% endif %}">
+                            {{ num }}
+                        </a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+
+            <!-- دکمه بعدی -->
+            {% if services.has_next %}
+                <li class="page-item">
+                    <a class="page-link" 
+                    href="?page={{ services.next_page_number }}
+                            {% if selected_category %}&category={{ selected_category }}{% endif %}
+                            {% if selected_subcategory %}&subcategory={{ selected_subcategory }}{% endif %}">
+                        بعدی <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+            {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">بعدی &raquo;</span>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+
+</div>
+
+{% endblock %}

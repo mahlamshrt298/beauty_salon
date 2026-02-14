@@ -1,0 +1,190 @@
+{% extends "panel/base_panel.html" %}
+{% load static %}
+{% block content %}
+
+<div class="container mt-4">
+    <h2 class="mb-4">ویرایش نوبت</h2>
+
+    <!-- ✅ اضافه کردن id به فرم -->
+    <form method="post" class="card p-4 shadow" id="bookingUpdateForm">
+        {% csrf_token %}
+
+        <div class="mb-3">
+            <label class="form-label">کاربر</label>
+            <input type="text" class="form-control" 
+                   value="{{ appointment.user.username }} | {{ appointment.user.first_name }} {{ appointment.user.last_name }}" 
+                   readonly>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">تاریخ نوبت</label>
+            <div class="input-group">
+                <input type="text"
+                    id="appointment_date"
+                    name="date"  
+                    class="form-control"
+                    value="{{ jalali_date_str }}"
+                    placeholder="1404/12/16"
+                    pattern="\d{4}/\d{2}/\d{2}"
+                    title="لطفاً تاریخ را به فرمت 1404/12/16 وارد کنید 
+                     ---  تاریخی از گذشته انتخاب نکنید"
+                    required>
+                <!-- ✅ اضافه کردن id به آیکون -->
+                <span class="input-group-text" id="datePickerIcon">
+                    <i class="fas fa-calendar-alt"></i>
+                </span>
+            </div>
+            <small class="text-muted d-block mt-1">
+                فرمت تاریخ: سال/ماه/روز (مثال: 1404/12/16)
+            </small>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">ساعت نوبت</label>
+            <input type="time"
+                name="start_time"
+                class="form-control"
+                value="{{ appointment.start_time|time:'H:i' }}"
+                required>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">خدمت</label>
+            <select name="service" class="form-select" required>
+                {% for service in services %}
+                    <option value="{{ service.id }}"
+                        {% if service.id == appointment.service.id %}selected{% endif %}>
+                        {{ service.category }} | {{ service.subcategory }} | {{ service.name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="mb-3">
+            <label class="form-label">وضعیت نوبت</label>
+            <select name="status" class="form-select">
+                <option value="pending" {% if appointment.status == "pending" %}selected{% endif %}>در انتظار</option>
+                <option value="confirmed" {% if appointment.status == "confirmed" %}selected{% endif %}>تایید شده</option>
+                <option value="cancelled" {% if appointment.status == "cancelled" %}selected{% endif %}>لغو شده</option>
+                <option value="completed" {% if appointment.status == "completed" %}selected{% endif %}>انجام شده</option>
+            </select>
+        </div>
+
+        <textarea name="notes" class="form-control" readonly>{{ appointment.notes }}</textarea>
+
+        <!-- ✅ حذف onclick از دکمه چون در جاوااسکریپت مدیریت می‌شود -->
+        <button type="submit" class="btn btn-success w-100">ذخیره تغییرات</button>
+    </form>
+</div>
+
+{% block scripts %}
+{{ block.super }}
+
+<script>
+$(document).ready(function() {
+    // تقویم با onSelect برای گرفتن انتخاب کاربر
+    $('#appointment_date').persianDatepicker({
+        format: 'YYYY/MM/DD',
+        autoClose: true,
+        initialValue: "{{ jalali_date_str }}",
+        initialValueType: 'persian',
+        observer: true,
+        
+        // 🎯 **اضافه کردن onSelect**
+        onSelect: function(unixDate) {
+            // وقتی کاربر تاریخ را از تقویم انتخاب کرد
+            const dateValue = $(this).val();
+            validateDate(dateValue, $(this));
+        }
+    });
+    
+    // کلیک روی آیکون
+    $('#datePickerIcon').on('click', function(e) {
+        e.preventDefault();
+        $('#appointment_date').focus();
+        $('#appointment_date').persianDatepicker('show');
+    });
+    
+    // 🎯 **تابع مشترک برای اعتبارسنجی**
+    function validateDate(dateValue, $inputElement) {
+        if (!dateValue) return true;
+        
+        const dateRegex = /^\d{4}\/\d{2}\/\d{2}$/;
+        
+        // بررسی فرمت
+        if (!dateRegex.test(dateValue)) {
+            alert('❌ فرمت تاریخ اشتباه است!\n\nلطفاً تاریخ را به این فرمت وارد کنید:\nسال/ماه/روز\n\nمثال: 1404/12/16');
+            if ($inputElement) {
+                $inputElement.val('');
+                $inputElement.focus();
+            }
+            return false;
+        }
+        
+        const selectedDate = dateValue.replace(/\//g, '');
+        const yesterday = "{{ jalali_yesterday_str }}";
+        const todayFormatted = "{{ jalali_today_formatted }}";
+        
+        // بررسی تاریخ گذشته
+        if (parseInt(selectedDate) <= parseInt(yesterday)) {
+            alert(`⚠️ **تاریخ گذشته انتخاب کردید!**\n\n` +
+                `📅 تاریخ انتخابی: ${dateValue}\n` +
+                `📅 امروز: ${todayFormatted}\n\n` +
+                `لطفاً تاریخ امروز یا آینده را انتخاب کنید.`);
+            
+            if ($inputElement) {
+                $inputElement.val('');
+                $inputElement.focus();
+            }
+            return false;
+        }
+        
+        return true;
+    }
+    
+    // 🎯 اعتبارسنجی لحظه‌ای برای تایپ دستی
+    $('#appointment_date').on('input', function() {
+        const dateValue = $(this).val();
+        // فقط وقتی کامل تایپ شد بررسی کن (10 کاراکتر: 1404/12/16)
+        if (dateValue.length === 10) {
+            validateDate(dateValue, $(this));
+        }
+    });
+    
+    // اعتبارسنجی فرم
+    $('#bookingUpdateForm').on('submit', function(e) {
+        // 1. تایید
+        if (!confirm('آیا از ویرایش نوبت مطمئن هستید؟')) {
+            e.preventDefault();
+            return false;
+        }
+        
+        // 2. بررسی فرمت و تاریخ گذشته
+        const dateValue = $('#appointment_date').val();
+        
+        if (!validateDate(dateValue, $('#appointment_date'))) {
+            e.preventDefault();
+            return false;
+        }
+        
+        return true;
+    });
+});
+</script>
+
+<style>
+/* آیکون تقویم */
+#datePickerIcon {
+    cursor: pointer;
+    background-color: #f8f9fa;
+    border: 1px solid #ced4da;
+}
+
+#datePickerIcon:hover {
+    background-color: #e9ecef;
+}
+</style>
+
+{% endblock scripts %}
+
+{% endblock %}

@@ -1,0 +1,16 @@
+asgiref==3.10.0
+crispy-bootstrap4==2025.6
+Django==5.2.7
+django-crispy-forms==2.4
+django-environ==0.12.1
+django-jalali==7.4.0
+django-jalali-date==2.0.0
+hijri-converter==2.3.2.post1
+hijridate==2.3.0
+jalali_core==1.0.0
+jdatetime==5.2.0
+packaging==25.0
+pillow==11.3.0
+setuptools==80.9.0
+sqlparse==0.5.3
+tzdata==2025.2

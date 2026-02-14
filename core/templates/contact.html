@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% load salon_footer_tags %} 
+
+{%block title%}
+صفحه تماس با ما - سالن زیبایی
+{%endblock title%}
+
+
+{% block content %}
+<div class="container mt-5">
+   <!-- ===== متن معرفی صفحه تماس ===== -->
+  <h5 class="text-center">برای رزرو ، مشاوره یا هر پرسشی با ما در تماس باشید.</h5>
+  <h5 class="text-center">تیم سالن نورا همیشه آماده پاسخگویی و همراهی شماست.</h5>
+
+  {% get_salon_footer_info as footer_info %}
+
+  <!-- تماس و موقعیت -->
+  <div class="container mt-5 mb-5">
+    <div class="row g-4">
+      <!-- اطلاعات تماس -->
+      <div class="col-md-6">
+        <div class="contact-info">
+          <h4>آدرس</h4>
+          <p>{{ footer_info.address }}</p>
+
+          <h4>شماره تماس</h4>
+          <p>📞 <a href="tel:+98{{ footer_info.phone|slice:'1:' }}" class="contact-link">
+            {{ footer_info.phone_display }}
+          </a>
+          </p>
+
+          <h4>اینستاگرام</h4>
+          <p>📸 <a href="https://instagram.com/{{ footer_info.instagram }}" 
+            target="_blank" 
+            class="contact-link">
+            @{{ footer_info.instagram }}
+          </a>
+          </p>
+
+          <h4>ساعت کاری</h4>
+          <p> 
+            <span dir="ltr">{{ footer_info.open_time|time:"H:i" }}</span> 
+            تا 
+            <span dir="ltr">{{ footer_info.close_time|time:"H:i" }}</span>
+          </p>
+
+          <!-- دکمه واتساپ -->
+          <h4>واتس‌اپ</h4>
+        
+                    <!-- ✅ دکمه واتس‌اپ پویا -->
+          <a href="https://wa.me/{{ footer_info.whatsapp }}?text=سلام،%20برای%20رزرو%20خدمت%20سوال%20دارم" 
+            target="_blank" 
+            class="btn btn-gold mt-3">
+            💬 ارتباط از طریق واتساپ
+          </a>
+        </div>
+      </div>
+
+      <!-- نقشه گوگل -->
+      <div class="col-md-6">
+        <div class="google-map">
+          <iframe 
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d1722.3548421801895!2d57.05072353967285!3d30.302325399999997!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3f021907e804b547%3A0xd62677e739287e22!2z2KLYsdin24zYtNqv2KfZhyDZgtuM2obbjCDZhtmC2LHZhyDYp9uM!5e0!3m2!1sen!2s!4v1763302664885!5m2!1sen!2s" 
+            width="100%" 
+            height="300" 
+            style="border:0; border-radius: 12px;" 
+            allowfullscreen="" 
+            loading="lazy">
+          </iframe>
+        </div>
+        <p class="text-center">برای مشاهده مسیر دقیق روی نقشه کلیک کنید.</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock content %}

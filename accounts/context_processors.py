@@ -1,0 +1,19 @@
+from .models import Notification
+
+def unread_notifications(request):
+    if request.user.is_authenticated:
+        count = Notification.objects.filter(
+            user=request.user,
+            is_read=False
+        ).count()
+        latest = Notification.objects.filter(
+            user=request.user
+        ).order_by('-created_at')[:5]
+    else:
+        count = 0
+        latest = []
+
+    return {
+        'unread_notifications_count': count,
+        'latest_notifications': latest
+    }

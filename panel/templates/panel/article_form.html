@@ -1,0 +1,185 @@
+{% extends "panel/base_panel.html" %}
+{% block content %}
+
+<div class="card shadow-sm col-lg-8 col-12 mx-auto">
+    <div class="card-header bg-success text-white">
+        <h5 class="mb-0">
+            {% if article %}✏️ ویرایش مقاله{% else %}➕ افزودن مقاله{% endif %}
+        </h5>
+    </div>
+
+    <div class="card-body">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <!-- عنوان -->
+            <div class="mb-3">
+                <label class="form-label">عنوان مقاله</label>
+                <input name="title"
+                       class="form-control"
+                       placeholder="عنوان مقاله"
+                       value="{{ article.title|default:'' }}"
+                       autofocus>
+            </div>
+
+            <!-- دسته بندی -->
+            <div class="mb-3">
+                <label class="form-label">دسته‌بندی</label>
+                <select name="category" class="form-select">
+                    {% for c in categories %}
+                        <option value="{{ c.id }}"
+                            {% if article.category.id == c.id %}selected{% endif %}>
+                            {{ c.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- تصویر -->
+            <div class="mb-3">
+                <label class="form-label">تصویر مقاله</label>
+                <input type="file" name="image" class="form-control">
+            </div>
+
+            <!-- محتوا -->
+            <div class="mb-3">
+                <label class="form-label">محتوای مقاله</label>
+                <textarea name="content"
+                          rows="6"
+                          class="form-control"
+                          placeholder="محتوای مقاله">{{ article.content|default:'' }}</textarea>
+            </div>
+
+            <!-- برچسب ها -->
+            <div class="mb-3">
+                <label class="form-label">برچسب‌ها</label>
+                <input name="tags"
+                       class="form-control"
+                       placeholder="با ، جدا شود"
+                       value="{{ article.tags|default:'' }}">
+            </div>
+
+            <!-- نکات کلیدی -->
+            <div class="mb-3">
+                <label class="form-label">نکات کلیدی</label>
+                <textarea name="Key_points"
+                          class="form-control"
+                          rows="3"
+                          placeholder="نکات مهم مقاله">{{ article.Key_points|default:'' }}</textarea>
+            </div>
+
+            <!-- خدمت مرتبط -->
+            <div class="mb-3">
+                <label class="form-label">خدمت مرتبط (اختیاری)</label>
+                <!-- دسته خدمات -->
+                <div class="mb-3">
+                    <label class="form-label">دسته خدمات</label>
+                    <select id="service_category" class="form-select">
+                        <option value="">— انتخاب دسته —</option>
+                        {% for sc in service_categories %}
+                            <option value="{{ sc.id }}"
+                                {% if article.for_reserve and article.for_reserve.subcategory.category.id == sc.id %}selected{% endif %}>
+                                {{ sc.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- زیر دسته -->
+                <div class="mb-3">
+                    <label class="form-label">زیر دسته</label>
+                    <select id="service_subcategory" class="form-select">
+                        <option value="">— انتخاب زیر دسته —</option>
+                        {% for sub in subcategories %}
+                            <option value="{{ sub.id }}"
+                                    data-category="{{ sub.category.id }}"
+                                    {% if article.for_reserve and article.for_reserve.subcategory.id == sub.id %}selected{% endif %}>
+                                {{ sub.name }}
+                            </option>
+
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- خدمت -->
+                <div class="mb-3">
+                    <label class="form-label">خدمت</label>
+                    <select name="for_reserve" id="service_select" class="form-select">
+                        <option value="">— انتخاب خدمت —</option>
+                        {% for s in services %}
+                            <option value="{{ s.id }}"
+                                    data-subcategory="{{ s.subcategory.id }}"
+                                    {% if article.for_reserve and article.for_reserve.id == s.id %}selected{% endif %}>
+                                {{ s.name }}
+                            </option>
+
+                        {% endfor %}
+                    </select>
+                </div>
+
+            </div>
+
+            <!-- نمایش در خانه -->
+            <div class="form-check mb-3">
+                <input type="checkbox"
+                       name="show_on_home"
+                       class="form-check-input"
+                       {% if article.show_on_home %}checked{% endif %}>
+                <label class="form-check-label">
+                    نمایش در صفحه اصلی
+                </label>
+            </div>
+
+            <div class="d-flex justify-content-between mt-4">
+                <a href="{% url 'panel:article_list' %}" class="btn btn-secondary">
+                    بازگشت
+                </a>
+                <button class="btn btn-success">
+                    ذخیره
+                </button>
+            </div>
+
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const categorySelect = document.getElementById("service_category");
+    const subSelect = document.getElementById("service_subcategory");
+    const serviceSelect = document.getElementById("service_select");
+
+    // فیلتر زیر دسته بر اساس دسته
+    categorySelect.addEventListener("change", function () {
+        const categoryId = this.value;
+
+        for (let option of subSelect.options) {
+            if (!option.dataset.category) continue;
+
+            option.style.display =
+                option.dataset.category === categoryId ? "block" : "none";
+        }
+
+        subSelect.value = "";
+        serviceSelect.value = "";
+    });
+
+    // فیلتر خدمات بر اساس زیر دسته
+    subSelect.addEventListener("change", function () {
+        const subId = this.value;
+
+        for (let option of serviceSelect.options) {
+            if (!option.dataset.subcategory) continue;
+
+            option.style.display =
+                option.dataset.subcategory === subId ? "block" : "none";
+        }
+
+        serviceSelect.value = "";
+    });
+
+});
+</script>
+
+{% endblock %}

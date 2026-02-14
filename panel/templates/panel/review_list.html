@@ -1,0 +1,198 @@
+{% extends "panel/base_panel.html" %}
+
+{% block content %}
+<h2 class="fw-bold mb-1" style="color: #2c3e50;">📝 نظرات مشتریان</h2>
+</br>
+<div class="d-flex flex-wrap gap-2 mb-4">
+    <a href="?status=all" class="btn btn-outline-secondary px-2">همه</a>
+    <a href="?status=pending" class="btn btn-outline-warning px-2">در انتظار</a>
+    <a href="?status=approved" class="btn btn-outline-success px-2">تأیید شده</a>
+    <a href="?status=rejected" class="btn btn-outline-danger px-2">رد شده</a>
+</div>
+
+<div class="table-scroll">
+    <table class="table table-striped align-middle">
+        <thead>
+            <tr>
+                <th>کاربر</th>
+                <th>خدمت</th>
+                <th>امتیاز</th>
+                <th>نظر</th>
+                <th>تاریخ ارسال</th>
+                <th>وضعیت</th>
+                <th>عملیات</th>
+                <th>پاسخ به نظر</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for r in reviews %}
+            <tr>
+                <td class="text-center">{{ r.user.username|default:"مهمان" }}</td>
+
+                <td class="text-center">
+                    {% if r.service %}
+                        {{ r.service.name }}
+                    {% else %}
+                        —
+                    {% endif %}
+                </td>
+
+                <td class="text-center">{{ r.rating }}/5</td>
+
+                <td class="text-center">{{ r.comment|truncatewords:8 }}</td>
+
+                <td class="text-muted small text-center">
+                    {{ r.jalali_date_str }} <br>  {# تاریخ شمسی #}
+                    {{ r.jalali_time_str }}        {# زمان شمسی (همان زمان واقعی) #}
+                </td>
+
+
+                <td class="text-center">
+                    {% if r.status == 'approved' %}
+                        <span class="badge bg-success">تأیید شده</span>
+                    {% elif r.status == 'rejected' %}
+                        <span class="badge bg-danger">رد شده</span>
+                    {% else %}
+                        <span class="badge bg-warning text-dark">در انتظار</span>
+                    {% endif %}
+                </td>
+
+
+                <td class="text-center">
+                    {% if r.status == 'pending' %}
+
+                        <!-- تأیید -->
+                        <form method="post"
+                            action="{% url 'panel:review_approve' r.id %}"
+                            style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit"
+                                    class="btn  btn-success">
+                                تأیید
+                            </button>
+                        </form>
+
+                        <!-- رد -->
+                        <form method="post"
+                            action="{% url 'panel:review_reject' r.id %}"
+                            style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit"
+                                    class="btn btn-warning"
+                                    onclick="return confirm('نظر رد شود؟')">
+                                رد
+                            </button>
+                        </form>
+
+                    {% elif r.status == 'approved' %}
+
+                        <!-- فقط رد -->
+                        <form method="post"
+                            action="{% url 'panel:review_reject' r.id %}"
+                            style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit"
+                                    class="btn  btn-warning"
+                                    onclick="return confirm('نظر رد شود؟')">
+                                رد
+                            </button>
+                        </form>
+
+                    {% else %}
+                        <span class="text-muted">—</span>
+                    {% endif %}
+                </td>
+
+
+                <td class="text-center">
+                    {% if r.status != 'rejected' %}
+
+                        <form method="post"
+                            action="{% url 'panel:review_reply' r.id %}"
+                            class="mt-1">
+                            {% csrf_token %}
+
+                            <textarea name="admin_reply"
+                                    rows="2"
+                                    class="form-control form-control-sm mb-1"
+                                    placeholder="پاسخ منشی...">{{ r.admin_reply|default_if_none:"" }}</textarea>
+
+                            <button class="btn  btn-outline-primary">
+                                ثبت پاسخ
+                            </button>
+                        </form>
+
+                    {% else %}
+                        <span class="text-muted small">—</span>
+                    {% endif %}
+                </td>
+
+
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+    {% if reviews.has_other_pages %}
+    <nav aria-label="صفحه‌بندی نظرات" class="mt-4">
+        <ul class="pagination justify-content-center">
+            <!-- دکمه قبلی -->
+            {% if reviews.has_previous %}
+                <li class="page-item">
+                    {% if status %}
+                        <a class="page-link" href="?page={{ reviews.previous_page_number }}&status={{ status }}">
+                            <span aria-hidden="true">&laquo;</span> قبلی
+                        </a>
+                    {% else %}
+                        <a class="page-link" href="?page={{ reviews.previous_page_number }}">
+                            <span aria-hidden="true">&laquo;</span> قبلی
+                        </a>
+                    {% endif %}
+                </li>
+            {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">&laquo; قبلی</span>
+                </li>
+            {% endif %}
+
+            <!-- شماره صفحات -->
+            {% for num in reviews.paginator.page_range %}
+                {% if reviews.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }} <span class="sr-only">(فعلی)</span></span>
+                    </li>
+                {% else %}
+                    <li class="page-item">
+                        {% if status %}
+                            <a class="page-link" href="?page={{ num }}&status={{ status }}">{{ num }}</a>
+                        {% else %}
+                            <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                        {% endif %}
+                    </li>
+                {% endif %}
+            {% endfor %}
+
+            <!-- دکمه بعدی -->
+            {% if reviews.has_next %}
+                <li class="page-item">
+                    {% if status %}
+                        <a class="page-link" href="?page={{ reviews.next_page_number }}&status={{ status }}">
+                            بعدی <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    {% else %}
+                        <a class="page-link" href="?page={{ reviews.next_page_number }}">
+                            بعدی <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    {% endif %}
+                </li>
+            {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">بعدی &raquo;</span>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+
+{% endblock %}

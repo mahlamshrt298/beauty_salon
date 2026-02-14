@@ -1,0 +1,95 @@
+<!-- booking/templates/contact_info.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}اطلاعات تماس - رزرو نوبت{% endblock %}
+
+{% block content %}
+<div class="container mt-5 small">
+    <!-- متن راهنمایی -->
+  <div class="text-center mb-4 small" style="font-size: 1.1rem; color: #6c757d;">
+   شما در حال رزرو خدمت " {{service.name}} " در تاریخ : {{ weekday_fa }} | {{ appointment_date_fa }} و ساعت : {{start_time}} هستید.
+   <strong>پرسنل انجام‌دهنده:</strong>{{ staff_label }}
+  </div>
+
+  <!-- متن راهنمایی -->
+  <div class="text-center mb-4 small" style="font-size: 1.1rem; color: #6c757d;">
+    لطفاً اطلاعات تماس خود را وارد کنید تا بتوانیم نوبت شما را ثبت کنیم.
+  </div>
+
+  <!-- نوار پیشرفت -->
+  <div class="custom-progress-bar mb-4">
+    {% for step in steps %}
+      <div class="step {% if step.active %}active{% endif %}" style="width: {{ step_width }}%;">
+        <div class="step-number">{{ step.number }}</div>
+        <div class="step-title">{{ step.title }}</div>
+      </div>
+    {% endfor %}
+  </div>
+
+  <!-- کادر اطلاعات تماس -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-header bg-primary text-white">
+      <h3 class="mb-0">مرحله ۳: اطلاعات تماس</h3>
+    </div>
+    <div class="card-body">
+      <div class="alert alert-info mb-4">
+        <strong>دسته انتخاب‌شده:</strong>{{ service.subcategory }}<br>
+        <strong>خدمت انتخاب‌شده:</strong> {{ service.name }}<br>
+        <strong>پرسنل:</strong> {{ staff_label }}<br>
+        <strong>تاریخ:</strong>{{ weekday_fa }} | {{ appointment_date_fa }}<br>
+        <strong>ساعت:</strong> {{ start_time }}
+      </div>
+
+      <form method="POST">
+        {% csrf_token %}
+        <div class="mb-3">
+          <label for="phone" class="form-label">شماره تماس (ضروری)</label>
+          <input type="text" pattern="^09\d{9}$" id="phone" maxlength="11" minlength="11" name="phone" class="form-control" placeholder="09123456789" value="{{ phone_value }}" required autofocus>
+        </div>
+        <div class="mb-3">
+          <label for="notes" class="form-label">یادداشت‌ یا توضیح (اختیاری)</label>
+          <textarea id="notes" name="notes" class="form-control" rows="3" placeholder="مثلاً: به دلیل آلرژی از محصول فلان استفاده نشود"></textarea>
+        </div>
+        <div class="d-flex flex-column flex-sm-row justify-content-between gap-2">
+
+          <a href="{% url 'select_date' service_id %}" class="btn btn-secondary booking-exit-link" data-no-exit>بازگشت</a>
+          <button type="submit" class="btn btn-success" data-no-exit>ادامه به پرداخت</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %} 
+
+
+<script src="{% static 'js/booking-flow.js' %}"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const phoneInput = document.getElementById("phone");
+    const notesInput = document.getElementById("notes");
+    const form = phoneInput.closest("form");
+
+    if (!phoneInput || !notesInput || !form) return;
+
+    phoneInput.addEventListener("keydown", function (e) {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            notesInput.focus();
+        }
+    });
+
+    notesInput.addEventListener("keydown", function (e) {
+        if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            form.submit();
+        }
+    });
+});
+</script>
+
+{% endblock scripts %}

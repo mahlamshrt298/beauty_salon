@@ -1,0 +1,253 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+صفحه بلاگ - سالن زیبایی
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+
+    <!-- جست‌وجو و دسته‌بندی -->
+    <div class="row mb-5 align-items-center">
+        <!-- فضای خالی در سمت چپ برای تعادل -->
+        <div class="col-md-1"></div>
+
+        <!-- جست‌وجو و دسته‌بندی در سمت راست -->
+        <div class="col-12 d-flex flex-column flex-md-row justify-content-center gap-3">
+            <!-- منوی کشویی دسته‌بندی -->
+            <div class="dropdown">
+                <button class="btn btn-outline-gold dropdown-toggle" type="button" id="categoryDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    {% if selected_category %}{{ selected_category }}{% else %}دسته‌بندی{% endif %}
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="categoryDropdown">
+                    <li><a class="dropdown-item {% if not selected_category %}active{% endif %}" href="?q={{ search_query }}">همه</a></li>
+                    {% for category in categories %}
+                      <li>
+                          <a class="dropdown-item d-flex justify-content-between align-items-center
+                            {% if selected_category == category.name %}active{% endif %}"
+                            href="?category={{ category.name|urlencode }}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}">
+
+                              <span>{{ category.name }}</span>
+
+                              <span class="badge bg-secondary">
+                                  {{ category.articles_count }}
+                              </span>
+                          </a>
+                      </li>
+                    {% endfor %}
+
+                </ul>
+            </div>
+
+            <!-- جست‌وجو در کنار دسته‌بندی -->
+            <div class="position-relative d-flex">
+                <input type="text" 
+                    id="search-input"
+                    name="q" 
+                    placeholder="به دنبال چه موضوعی هستید؟" 
+                    class="form-control me-2"
+                    value="{{ search_query }}"
+                    onkeypress="if(event.keyCode == 13) { submitSearch(); }">
+
+                <button type="button" class="btn btn-gold" onclick="submitSearch()">
+                    جستجو
+                </button>
+
+                <div id="suggestions" class="list-group position-absolute w-100" style="z-index: 1000; display: none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- پیام عدم یافتن نتیجه -->
+    {% if no_results %}
+    <div class="alert alert-warning text-center" role="alert">
+        <i class="fas fa-exclamation-circle"></i>
+        متأسفانه مقاله‌ای با عبارت "<strong>{{ search_query }}</strong>" یافت نشد.
+    </div>
+    {% endif %}
+
+    <!-- اگر هیچ مقاله‌ای وجود نداشت -->
+    {% if page_obj.paginator.count == 0 and not no_results %}
+    <div class="alert alert-info text-center" role="alert">
+        هنوز مقاله‌ای در این بخش ثبت نشده است.
+    </div>
+    {% endif %}
+
+
+
+
+    <script>
+    // تابع ارسال فرم جست‌وجو
+    function submitSearch() {
+      const query = document.getElementById('search-input').value.trim();
+      const category = new URLSearchParams(window.location.search).get('category');
+      let url = '/blog/';
+      if (query || category) {
+        url += '?';
+        if (query) url += `q=${encodeURIComponent(query)}`;
+        if (category) {
+          if (query) url += '&';
+          url += `category=${encodeURIComponent(category)}`;
+        }
+      }
+      window.location.href = url;
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      const searchInput = document.getElementById('search-input');
+      const suggestionsBox = document.getElementById('suggestions');
+
+      searchInput.addEventListener('input', function() {
+        const query = this.value.trim();
+        
+        if (query.length < 2) {
+          suggestionsBox.style.display = 'none';
+          return;
+        }
+
+        // لغو درخواست‌های قبلی
+        if (window.searchTimeout) {
+          clearTimeout(window.searchTimeout);
+        }
+
+        // تأخیر برای جلوگیری از درخواست زیاد
+        window.searchTimeout = setTimeout(() => {
+          const category = new URLSearchParams(window.location.search).get('category');
+          let url = `/blog/search-suggestions/?q=${encodeURIComponent(query)}`;
+          if (category) {
+            url += `&category=${encodeURIComponent(category)}`;
+          }
+          
+          fetch(url)
+            .then(response => response.json())
+            .then(data => {
+              if (data.length > 0) {
+                suggestionsBox.innerHTML = data.map(item => 
+                  `<a href="${item.url}" class="list-group-item list-group-item-action">${item.title}</a>`
+                ).join('');
+                suggestionsBox.style.display = 'block';
+              } else {
+                suggestionsBox.style.display = 'none';
+              }
+            })
+            .catch(() => {
+              suggestionsBox.style.display = 'none';
+            });
+        }, 300);
+      });
+
+      // مخفی کردن پیشنهادها هنگام کلیک خارج
+      document.addEventListener('click', function(e) {
+        if (!searchInput.contains(e.target) && !suggestionsBox.contains(e.target)) {
+          suggestionsBox.style.display = 'none';
+        }
+      });
+    });
+    </script>
+
+
+    <div class="row mb-4">
+        <div class="col-12 text-center">
+            {% if search_query or selected_category %}
+            <p class="lead blog-intro-text">
+                نتایج جست‌وجو برای «<strong>{{ search_query|default:selected_category }}</strong>»:
+            </p>
+            {% else %}
+            <p class="lead blog-intro-text">
+                در این بخش جدیدترین توصیه‌ها و ترفند‌های زیبایی را از متخصصان ما بخوانید و همیشه بدرخشید 💫
+            </p>
+            {% endif %}
+        </div>
+    </div>
+
+
+
+    <!-- جایگزینی مقالات ثابت با حلقه -->
+    <div class="row g-4">
+    {% for article in page_obj %}
+    <div class="col-12 col-md-6 col-lg-4 blog-item" data-category="{{ article.category.name|slugify }}">
+        <div class="blog-card" ondblclick="window.location.href='{% url 'blog_detail' article.pk %}'">
+        <img src="{{ article.image_url }}" alt="{{ article.title }}" class="blog-img">
+        <div class="blog-content">
+            <span class="blog-category">{{ article.category.name }}</span>
+            <h4>{{ article.title }}</h4>
+            <p>{{ article.content|truncatewords:20 }}</p>
+            <a href="{% url 'blog_detail' article.pk %}" class="btn-read">ادامه مطلب →</a>
+        </div>
+        </div>
+    </div>
+    {% endfor %}
+    </div>
+
+    <!-- ناوبری صفحه‌بندی -->
+    <!-- ناوبری صفحه‌بندی حرفه‌ای -->
+    {% if page_obj.paginator.num_pages > 1 %}
+    <nav class="mt-5">
+        <ul class="pagination justify-content-center align-items-center">
+
+            {% with request.GET.q as q %}
+            {% with request.GET.category as category %}
+
+            {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link"
+                      href="?page=1{% if q %}&q={{ q }}{% endif %}{% if category %}&category={{ category }}{% endif %}">
+                      &laquo;
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link"
+                      href="?page={{ page_obj.previous_page_number }}{% if q %}&q={{ q }}{% endif %}{% if category %}&category={{ category }}{% endif %}">
+                      قبلی
+                    </a>
+                </li>
+            {% else %}
+                <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
+                <li class="page-item disabled"><span class="page-link">قبلی</span></li>
+            {% endif %}
+
+            <!-- شماره صفحات -->
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                {% else %}
+                    <li class="page-item">
+                        <a class="page-link"
+                          href="?page={{ num }}{% if q %}&q={{ q }}{% endif %}{% if category %}&category={{ category }}{% endif %}">
+                          {{ num }}
+                        </a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link"
+                      href="?page={{ page_obj.next_page_number }}{% if q %}&q={{ q }}{% endif %}{% if category %}&category={{ category }}{% endif %}">
+                      بعدی
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link"
+                      href="?page={{ page_obj.paginator.num_pages }}{% if q %}&q={{ q }}{% endif %}{% if category %}&category={{ category }}{% endif %}">
+                      &raquo;
+                    </a>
+                </li>
+            {% else %}
+                <li class="page-item disabled"><span class="page-link">بعدی</span></li>
+                <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
+            {% endif %}
+
+            {% endwith %}
+            {% endwith %}
+
+        </ul>
+    </nav>
+    {% endif %}
+
+
+</div>
+{% endblock content %}

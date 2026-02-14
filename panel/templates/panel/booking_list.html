@@ -1,0 +1,315 @@
+{% extends "panel/base_panel.html" %}
+{% load jformat %}
+
+{% load jalali_tags %}
+
+{% block content %}
+    <h2 class="fw-bold mb-1" style="color: #2c3e50;">🗓 نوبت‌ها</h2>
+
+<div class="container mt-4">
+
+    <!-- فرم جستجو - نسخه نهایی با دو فیلد تاریخ -->
+    <form method="get" class="row align-items-center g-2 mb-4">
+        <div class="col-md-3">
+            <input type="text"
+                name="q"
+                class="form-control"
+                placeholder="جستجو بر اساس کاربر، خدمت ..."
+                value="{{ q|default:'' }}">
+        </div>
+
+        <div class="col-md-2">
+            <select name="status" class="form-select">
+                <option value="">همه وضعیت‌ها</option>
+                <option value="pending" {% if status == 'pending' %}selected{% endif %}>در انتظار تایید</option>
+                <option value="confirmed" {% if status == 'confirmed' %}selected{% endif %}>تایید شده</option>
+                <option value="cancelled" {% if status == 'cancelled' %}selected{% endif %}>لغو شده</option>
+                <option value="completed" {% if status == 'completed' %}selected{% endif %}>انجام شده</option>
+            </select>
+        </div>
+
+        <!-- ✅ فیلتر بازه زمانی (دو فیلد جداگانه) -->
+        <div class="col-md-5">
+            <div class="date-range-filter">
+                <input type="text"
+                    name="start_date"
+                    class="form-control date-input"
+                    placeholder="تاریخ شروع (مثال: 1404/11/01)"
+                    value="{{ start_date|default:'' }}"
+                    dir="ltr">
+                <span class="separator">تا</span>
+                <input type="text"
+                    name="end_date"
+                    class="form-control date-input"
+                    placeholder="تاریخ پایان (مثال: 1404/11/30)"
+                    value="{{ end_date|default:'' }}"
+                    dir="ltr">
+            </div>
+        </div>
+
+        <div class="col-md-2">
+            <button class="btn btn-dark w-100">جستجو</button>
+        </div>
+    </form>
+
+
+    <div class="table-scroll">
+        <table class="table table-bordered text-center align-middle">
+            <thead class="table-dark">
+                <tr>
+                    <th>کاربر</th>
+                    <th class="phone-column text-center">شماره تماس</th> 
+                    <th>خدمت</th>
+                    <th>تاریخ</th>
+                    <th>ساعت</th>
+                    <th>وضعیت</th>
+                    <th>اسم پرسنل</th>
+                    <th>یادداشت</th>
+                    <th>اقدامات</th>
+                    
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for booking in appointments  %}
+                <tr>
+                    <td>{{ booking.user }}</td>
+                    
+                    <td class="phone-column"> <!-- اینجا تغییر اصلی -->
+                        {% if booking.display_phones %}
+                            <div class="d-flex flex-column gap-1 text-center">
+                                {% for phone_info in booking.display_phones %}
+                                    <div class="phone-item">    
+                                        <a href="tel:{{ phone_info.number }}" 
+                                            title="تماس با مشتری">
+                                                <i class="fas fa-phone fa-sm"></i>
+                                                <span class="phone-number">{{ phone_info.number }}</span> <!-- تغییر اصلی -->
+                                                {% if phone_info.label == 'رزرو' %}
+                                                    <span class="badge bg-warning text-dark">رزرو</span>
+                                                {% elif phone_info.label == 'پروفایل' %}
+                                                    <span class="badge bg-info">پروفایل</span>
+                                                {% endif %}
+                                        </a>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <span class="text-muted">—</span>
+                        {% endif %}
+                    </td>
+                    
+                    <td>
+                        {% if booking.service %}
+                            {{ booking.service }}
+                        {% else %}
+                            <span class="text-muted">
+                                {{ booking.service_name_snapshot }}
+                            </span>
+                            <span class="badge bg-danger ms-1">حذف شده</span>
+                        {% endif %}
+                    </td>
+
+                    <td>{{ booking.shamsi_date}}</td>
+
+                    <td style="direction:ltr; text-align:center;">
+                        {{ booking.fixed_time }}
+                    </td>
+
+                    <td>{{ booking.get_status_display }}</td>
+
+
+                    <td>
+                        {% if booking.staff %}
+                            {{ booking.staff.full_name }}
+                        {% else %}
+                            <span class="text-muted">سیستم</span>
+                        {% endif %}
+                    </td>
+
+                    <td class="note-cell" data-note="{{ booking.notes|escape }}">
+                        {% if booking.notes_preview %}    
+                             {{ booking.notes_preview }}
+                        {% else %}
+                            -----
+                        {% endif%}
+                    </td>
+
+
+                    <td class="d-flex flex-wrap gap-2 justify-content-center">
+
+                        {% if booking.is_past %}
+                            <span class="text-muted">تاریخ این نوبت گذشته است</span>
+                        {% else %}
+                            <!-- ویرایش: owner + receptionist -->
+                            {% if booking.status in "pending confirmed" %}
+                                {% if request.user.profile.role == "owner" or request.user.profile.role == "receptionist" %}
+                                    <a href="{% url 'panel:booking_update' booking.id %}"
+                                    class="btn btn-primary px-2 py-1 d-flex align-items-center gap-1 fw-medium"
+                                    >
+                                    <i class="fas fa-edit"></i>
+                                        <span>ویرایش</span>
+                                    </a>
+                                {% endif %}
+                            {% endif %}
+
+                            <!-- فقط وقتی در انتظار تایید است -->
+                            {% if booking.status == "pending" %}
+
+                                <!-- تایید -->
+                                <form method="post"
+                                    action="{% url 'panel:booking_approve' booking.id %}"
+                                    style="display:inline;">
+                                    {% csrf_token %}
+                                    <button type="submit"
+                                            class="btn btn-success px-2 py-1 d-flex align-items-center gap-1 fw-medium"
+                                            onclick="return confirm('آیا از تایید نوبت مطمئن هستید؟')">
+                                        <i class="fas fa-check"></i>
+                                        <span>تأیید</span>
+                                    </button>
+                                </form>
+
+                                <!-- لغو -->
+                                <form method="post"
+                                    action="{% url 'panel:booking_cancel' booking.id %}"
+                                    style="display:inline;">
+                                    {% csrf_token %}
+                                    <button type="submit"
+                                            class="btn btn-danger px-2 py-1 d-flex align-items-center gap-1 fw-medium"
+                                            onclick="return confirm('آیا از لغو نوبت مطمئن هستید؟')">
+                                        <i class="fas fa-times"></i>
+                                        <span>لغو</span>
+                                    </button>
+                                </form>
+
+                            {% endif %}
+
+                            {% if booking.status == "cancelled" %}
+                                <span>❌</span>
+                            {% endif %}
+                            {% if booking.status == "completed" %}
+                                <span>✔️</span>
+                            {% endif %}
+                        {% endif %}
+                    </td>
+                </tr>
+
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="text-muted">هیچ نوبتی ثبت نشده است</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- اضافه کردن بعد از بسته شدن تگ </table> -->
+    {% if appointments.has_other_pages %}
+    <nav aria-label="صفحه‌بندی نوبت‌ها" class="mt-4">
+        <ul class="pagination justify-content-center">
+            <!-- دکمه قبلی -->
+            {% if appointments.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" 
+                    href="?page={{ appointments.previous_page_number }}
+                        {% if q %}&q={{ q }}{% endif %}
+                        {% if status %}&status={{ status }}{% endif %}
+                        {% if start_date %}&start_date={{ start_date }}{% endif %}
+                        {% if end_date %}&end_date={{ end_date }}{% endif %}"
+                    aria-label="قبلی">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+            {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">&laquo;</span>
+                </li>
+            {% endif %}
+
+            <!-- شماره صفحات -->
+            {% for num in appointments.paginator.page_range %}
+                {% if appointments.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }} <span class="sr-only">(فعلی)</span></span>
+                    </li>
+                {% else %}
+                    <li class="page-item">
+                        <a class="page-link" 
+                        href="?page={{ num }}
+                            {% if q %}&q={{ q }}{% endif %}
+                            {% if status %}&status={{ status }}{% endif %}
+                            {% if start_date %}&start_date={{ start_date }}{% endif %}
+                            {% if end_date %}&end_date={{ end_date }}{% endif %}">
+                            {{ num }}
+                        </a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+
+            <!-- دکمه بعدی -->
+            {% if appointments.has_next %}
+                <li class="page-item">
+                    <a class="page-link" 
+                    href="?page={{ appointments.next_page_number }}
+                        {% if q %}&q={{ q }}{% endif %}
+                        {% if status %}&status={{ status }}{% endif %}
+                        {% if start_date %}&start_date={{ start_date }}{% endif %}
+                        {% if end_date %}&end_date={{ end_date }}{% endif %}"
+                    aria-label="بعدی">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+            {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">&raquo;</span>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="noteModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered" style="max-width: 40vw; max-height: 80vh;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">یادداشت کامل</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="noteModalBody" 
+        style="white-space: pre-wrap; line-height: 1.6; 
+            max-height: 70vh; overflow-y: auto; padding: 1.5rem;">
+        ...
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ✅ اسکریپت اصلاح‌شده و کاملاً صحیح برای نمایش یادداشت با دابل‌کلیک -->
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // انتخاب تمام سلول‌های یادداشت و افزودن رویداد دابل‌کلیک
+    document.querySelectorAll('.note-cell').forEach(function(cell) {
+        cell.addEventListener('dblclick', function() {
+            const note = this.getAttribute('data-note');
+            
+            // بررسی کامل: خالی، فاصله، یا مقدار "None"
+            if (!note || note.trim() === '' || note === 'None' || note === '-----') {
+                return;
+            }
+            
+            // نمایش یادداشت در مودال
+            const modalBody = document.getElementById('noteModalBody');
+            modalBody.textContent = note;
+            
+            // نمایش مودال با روش صحیح بوت‌استرپ 5
+            const modal = new bootstrap.Modal(document.getElementById('noteModal'));
+            modal.show();
+        });
+    });
+});
+</script>
+
+{% endblock %}
+

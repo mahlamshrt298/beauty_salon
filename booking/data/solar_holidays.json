@@ -1,0 +1,11 @@
+[
+  {"jalali_date": "1404/01/01", "title": "عید نوروز", "holiday_type": "solar"},
+  {"jalali_date": "1404/01/02", "title": "عید نوروز", "holiday_type": "solar"},
+  {"jalali_date": "1404/01/03", "title": "عید نوروز", "holiday_type": "solar"},
+  {"jalali_date": "1404/01/04", "title": "عید نوروز", "holiday_type": "solar"},
+  {"jalali_date": "1404/01/12", "title": "روز جمهوری اسلامی", "holiday_type": "solar"},
+  {"jalali_date": "1404/01/13", "title": "سیزده به در", "holiday_type": "solar"},
+  {"jalali_date": "1404/03/14", "title": "رحلت امام خمینی", "holiday_type": "solar"},
+  {"jalali_date": "1404/03/15", "title": "قیام ۱۵ خرداد", "holiday_type": "solar"},
+  {"jalali_date": "1404/11/22", "title": "پیروزی انقلاب اسلامی", "holiday_type": "solar"}
+]

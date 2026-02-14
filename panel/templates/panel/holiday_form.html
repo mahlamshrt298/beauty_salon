@@ -1,0 +1,109 @@
+{% extends "panel/base_panel.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        {% if holiday %}ویرایش تعطیلی{% else %}افزودن تعطیلی جدید{% endif %}
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label class="form-label">تاریخ شمسی</label>
+                            <input type="text" 
+                                   name="date" 
+                                   class="form-control" 
+                                   placeholder="مثال: 1404/02/15"
+                                   value="{{ jalali_date_str|default:'' }}"
+                                   required>
+                            <small class="text-muted">فرمت: سال/ماه/روز</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">عنوان تعطیلی</label>
+                            <input type="text" 
+                                   name="title" 
+                                   class="form-control" 
+                                   placeholder="مثال: عید نوروز"
+                                   value="{{ holiday.title|default:'' }}"
+                                   required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">توضیحات</label>
+                            <textarea name="description" 
+                                      class="form-control" 
+                                      rows="3"
+                                      placeholder="توضیحات اختیاری">{{ holiday.description|default:'' }}</textarea>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">نوع تعطیلی</label>
+                            <select name="holiday_type" class="form-select">
+                                <option value="official" {% if holiday and holiday.holiday_type == 'official' %}selected{% endif %}>رسمی</option>
+                                <option value="religious" {% if holiday and holiday.holiday_type == 'religious' %}selected{% endif %}>مذهبی</option>
+                                <option value="custom" {% if holiday and holiday.holiday_type == 'custom' %}selected{% endif %}>سفارشی</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" 
+                                       type="checkbox" 
+                                       name="is_active" 
+                                       id="is_active"
+                                       {% if holiday and holiday.is_active or not holiday %}checked{% endif %}>
+                                <label class="form-check-label" for="is_active">
+                                    فعال باشد
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" 
+                                       type="checkbox" 
+                                       name="is_half_day" 
+                                       id="is_half_day"
+                                       {% if holiday and holiday.is_half_day %}checked{% endif %}>
+                                <label class="form-check-label" for="is_half_day">
+                                    نیم‌روز باشد
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3" id="half_day_period_div" style="display: {% if holiday and holiday.is_half_day %}block{% else %}none{% endif %};">
+                            <label class="form-label">بازه نیم‌روز</label>
+                            <select name="half_day_period" class="form-select">
+                                <option value="morning" {% if holiday and holiday.half_day_period == 'morning' %}selected{% endif %}>صبح (تا ظهر)</option>
+                                <option value="afternoon" {% if holiday and holiday.half_day_period == 'afternoon' %}selected{% endif %}>عصر (بعد از ظهر)</option>
+                            </select>
+                        </div>
+                        
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> ذخیره
+                            </button>
+                            <a href="{% url 'panel:holiday_list' %}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> انصراف
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('is_half_day').addEventListener('change', function() {
+    document.getElementById('half_day_period_div').style.display = this.checked ? 'block' : 'none';
+});
+</script>
+{% endblock %}

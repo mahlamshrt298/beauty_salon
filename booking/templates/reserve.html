@@ -1,0 +1,348 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}  
+
+{% block title %}
+صفحه رزرو - سالن زیبایی
+{% endblock title %}
+
+{% block content %}
+
+{% if user_active_appointments_count >= max_allowed %}
+<div class="alert alert-warning text-center">
+    شما حداکثر {{ max_allowed }} نوبت فعال می‌توانید داشته باشید.
+</div>
+{% endif %}
+
+{% if selected_package %}
+<div class="alert alert-warning text-center mt-3">
+  شما در حال رزرو پکیج:
+  <strong>{{ selected_package.title }}</strong>
+  هستید
+</div>
+{% endif %}
+
+<div class="container mt-5">
+
+    <!-- متن راهنمایی -->
+    <div class="text-center mb-4" style="font-size: 1.1rem; color: #6c757d;">
+        {{ reserve_text }}
+    </div>
+
+    <!-- نوار پیشرفت -->
+    <div class="custom-progress-bar mb-4">
+        {% for step in steps %}
+        <div class="step {% if step.active %}active{% endif %}" style="width: {{ step_width }}%;">
+            <div class="step-number">{{ step.number }}</div>
+            <div class="step-title">{{ step.title }}</div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- کادر انتخاب خدمت -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-primary text-white pb-3">
+            <h3 class="mb-0">مرحله ۱: انتخاب خدمت</h3>
+        </div>
+
+        <div class="card-body">
+
+            <!-- بخش اسکرول افقی دسته‌بندی‌ها -->
+            <div class="d-flex gap-2 pb-3 category-scroll mt-3">
+                {% for category in categories %}
+                <button class="btn btn-outline-gold category-btn" data-slug="{{ category.slug }}">
+                    {{ category.name }}
+                </button>
+                {% endfor %}
+            </div>
+
+            <div id="subcategory-container" class="mt-4"></div>
+
+        </div>
+    </div>
+    
+</div>
+
+{% endblock content %}
+
+{% block scripts %}
+<script>
+// تابع تبدیل عدد به حروف فارسی
+function numberToWords(num) {
+    const units = ['', 'یک', 'دو', 'سه', 'چهار', 'پنج', 'شش', 'هفت', 'هشت', 'نه'];
+    const tens = ['', 'ده', 'بیست', 'سی', 'چهل', 'پنجاه', 'شصت', 'هفتاد', 'هشتاد', 'نود'];
+    const teens = ['ده', 'یازده', 'دوازده', 'سیزده', 'چهارده', 'پانزده', 'شانزده', 'هفده', 'هجده', 'نوزده'];
+    const hundreds = ['', 'صد', 'دویست', 'سیصد', 'چهارصد', 'پانصد', 'ششصد', 'هفتصد', 'هشتصد', 'نهصد'];
+    const bigs = ['', 'هزار', 'میلیون', 'میلیارد'];
+    
+    if (num === 0) return 'صفر';
+    
+    function convertThreeDigits(n) {
+        if (n === 0) return '';
+        
+        let result = '';
+        
+        // صدگان
+        const h = Math.floor(n / 100);
+        if (h > 0) {
+            result += hundreds[h] + ' و ';
+        }
+        
+        // دهگان و یکان
+        const t = n % 100;
+        if (t >= 10 && t < 20) {
+            result += teens[t - 10];
+        } else {
+            const ten = Math.floor(t / 10);
+            const unit = t % 10;
+            if (ten > 0) {
+                result += tens[ten];
+                if (unit > 0) result += ' و ';
+            }
+            if (unit > 0) {
+                result += units[unit];
+            }
+        }
+        
+        return result.replace(/ و $/, '');
+    }
+    
+    let result = '';
+    let i = 0;
+    
+    while (num > 0) {
+        const threeDigits = num % 1000;
+        if (threeDigits > 0) {
+            const part = convertThreeDigits(threeDigits);
+            if (i > 0 && part) {
+                result = part + ' ' + bigs[i] + ' و ' + result;
+            } else {
+                result = part + (i > 0 ? ' ' + bigs[i] : '') + (result ? ' و ' + result : '');
+            }
+        }
+        num = Math.floor(num / 1000);
+        i++;
+    }
+    
+    return result.trim().replace(/ و $/, '');
+}
+</script>
+
+<script>
+    const DEFAULT_SERVICE_IMAGE = "{% static 'images/default-service.jpg' %}";
+
+    // داده‌های ساخته‌شده از Django
+    const categoriesData = {
+        {% for category in categories %}
+        "{{ category.slug }}": {
+            name: "{{ category.name }}",
+            subcategories: [
+                {% for sub in category.subcategories.all %}
+                {
+                    id: {{ sub.id }},
+                    name: "{{ sub.name|escapejs }}",
+                    description: "{{ sub.description|truncatewords:10|escapejs }}",
+                    services: [
+                        {% for s in sub.services.all %}
+                        {
+                            id: {{ s.id }},
+                            name: "{{ s.name|escapejs }}",
+                            duration: "{{ s.duration_minutes }}",
+                            description: "{{ s.description|truncatewords:10|escapejs }}",
+                            price: "{{ s.price|intcomma }}",
+
+                            imageUrl: "{% if s.image %}{{ s.image.url }}{% else %}{{ DEFAULT_SERVICE_IMAGE }}{% endif %}",
+                        }{% if not forloop.last %},{% endif %}
+                        {% endfor %}
+                    ]
+                }{% if not forloop.last %},{% endif %}
+                {% endfor %}
+            ]
+        }{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    };
+</script>
+
+<script>
+    
+    console.log("SCRIPT RAN")
+
+    const preSelectedCategory = "{{ selected_category|default:'' }}";
+
+    document.addEventListener('DOMContentLoaded', function () {
+
+    // اگر دسته از قبل انتخاب شده بود (از صفحه خانه)
+    if (preSelectedCategory && categoriesData[preSelectedCategory]) {
+        showCategory(preSelectedCategory);
+
+        // active کردن دکمه دسته
+        document.querySelectorAll('.category-btn').forEach(btn => {
+            if (btn.dataset.slug === preSelectedCategory) {
+                btn.classList.add('active');
+            }
+        });
+
+    } else {
+        // در غیر این صورت، اولین دسته
+        const firstSlug = Object.keys(categoriesData)[0];
+        if (firstSlug) showCategory(firstSlug);
+    }
+
+    // کلیک دسته‌ها
+    document.querySelectorAll('.category-btn').forEach(btn => {
+        btn.addEventListener('click', () => showCategory(btn.dataset.slug));
+    });
+
+    // ✅ Event Delegation برای دکمه‌های انتخاب - فقط یک بار اضافه می‌شود
+    document.addEventListener('click', function(e) {
+        const btn = e.target.closest('.select-service-btn');
+        if (!btn) return;
+        
+        e.preventDefault();
+        e.stopPropagation();
+        
+         // ✅ جلوگیری از beforeunload و پاپ‌آپ خروج
+        if (window.bookingExitGuard) {
+            window.bookingExitGuard.popupShown = true;
+        }
+
+        const serviceId = btn.getAttribute('data-id');
+        window.location.href = `/booking/select-date/${serviceId}/`;
+    });
+
+    function showCategory(slug) {
+        const category = categoriesData[slug];
+        if (!category) return;
+
+    // ✅ active کردن دکمه دسته
+    document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector(`.category-btn[data-slug="${slug}"]`)?.classList.add('active');
+
+        let html = `<h3 class="mb-4">${category.name}</h3><div class="row">`;
+
+        category.subcategories.forEach(sub => {
+            html += `
+                <div class="col-md-6 mb-3">
+                    <div class="subcategory-card">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h4>${sub.name}</h4>
+                            <button class="btn btn-sm btn-outline-primary toggle-services" data-open="false">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                        <div class="services-list d-none">
+                            ${renderServices(sub.services)}
+                        </div>
+                    </div>
+                </div>`;
+        });
+
+        html += `</div>`;
+
+        document.getElementById('subcategory-container').innerHTML = html;
+
+        document.querySelectorAll('.toggle-services').forEach(btn => {
+            btn.addEventListener('click', function () {
+                 const card = this.closest('.subcategory-card');
+                const list = card.querySelector('.services-list');
+                const open = this.dataset.open === "true";
+
+                // ✅ بستن تمام زیردسته‌های دیگر
+                document.querySelectorAll('.subcategory-card').forEach(otherCard => {
+                    if (otherCard !== card) {
+                        const otherList = otherCard.querySelector('.services-list');
+                        const otherBtn = otherCard.querySelector('.toggle-services');
+                        if (otherList && !otherList.classList.contains('d-none')) {
+                            otherList.classList.add('d-none');
+                            otherBtn.querySelector('i').className = "fas fa-plus";
+                            otherBtn.dataset.open = "false";
+                        }
+                    }
+                });
+
+
+                if (open) {
+                    list.classList.add('d-none');
+                    this.querySelector('i').className = "fas fa-plus";
+                    this.dataset.open = "false";
+                } else {
+                    list.classList.remove('d-none');
+                    this.querySelector('i').className = "fas fa-minus";
+                    this.dataset.open = "true";
+                }
+            });
+        });
+            // ✅ اگر دسته از قبل انتخاب شده بود، زیر‌دسته‌ها خودکار باز شوند
+        if (slug === preSelectedCategory) {
+            const firstToggle = document.querySelector('.toggle-services');
+            if (firstToggle) {
+                firstToggle.click();
+            }
+        }
+    }
+   
+
+
+    function renderServices(services) {
+        if (!services.length) return `<p class="text-muted">هیچ خدمتی موجود نیست.</p>`;
+
+        let html = `<div class="row g-3">`;
+        services.forEach(s => {
+            // ✅ تبدیل قیمت به حروف
+            const priceWords = numberToWords(parseInt(s.price.replace(/,/g, '')));
+            
+            html += `
+            <div class="col-12">
+                <div class="service-item d-flex align-items-center gap-3 p-3">
+                    <img src="${s.imageUrl}" 
+     class="service-img"
+     style="width:300px;
+            height:170px;
+            object-fit:contain;
+            background:#f8f9fa;
+            padding:8px;
+            border-radius:12px;">
+
+                    <div class="service-info flex-grow-1 d-flex flex-column">
+                        <h5>${s.name}</h5>
+                        <p class="text-muted">زمان: ${s.duration} دقیقه | قیمت: ${s.price} تومان <br>
+                        <span class="text-muted" style="font-size: 0.85rem;">
+                            (${priceWords} تومان)
+                        </span>
+                    </p>
+                        <div class="mt-auto text-center">
+                            <button class="btn btn-primary mt-2 select-service-btn" 
+                                    data-id="${s.id}"
+                                    data-no-exit>
+                                انتخاب
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+        });
+        html += `</div>`;
+        return html;
+    }
+
+    const preSelected = "{{ selected_service.id|default:'' }}";
+
+    if (preSelected) {
+        const selectedBtn = document.querySelector(`[data-id="${preSelected}"]`);
+        if (selectedBtn) {
+            selectedBtn.classList.add("active-service");
+        }
+    }
+
+});
+
+
+
+</script>
+
+
+<script src="{% static 'js/booking-flow.js' %}"></script>
+
+{% endblock scripts %}
+
+

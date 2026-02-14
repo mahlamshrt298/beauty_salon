@@ -1,0 +1,462 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{%block title%}
+صفحه درباره ما - سالن زیبایی
+{%endblock title%}
+
+
+{% block content %}
+<div class="container mt-5">
+  
+
+
+    <!-- بخش شعار  -->
+    <div class="hero-about text-center mb-5">
+      <h1 class="hero-title">هر لحظه در سالن نورا، سرمایه‌گذاری بر زیبایی شماست.</h1>
+      <div class="gold-divider"></div>
+    </div>
+
+    <!-- متن معرفی سالن -->
+    <div class="about-content mb-5">
+      <p class="about-text lead">
+        سالن زیبایی نورا در سال ۱۳۹۴ تأسیس شد تا فضایی امن، لوکس و متمرکز بر کیفیت برای زیباتر شدن شما فراهم کند.
+      </p>
+      <p class="about-text">
+        ما با بیش از ده سال سابقه، به‌عنوان یکی از سالن‌های پیشرو در تهران شناخته می‌شویم. 
+        تیم متخصصان ما نه‌تنها از جدیدترین تکنیک‌ها و محصولات جهانی استفاده می‌کنند، 
+        بلکه به هر مشتری به‌عنوان یک مهمان ویژه نگاه می‌کنند.
+      </p>
+      <p class="about-text">
+        فلسفه ما ساده است: <strong>«زیبایی واقعی، زمانی شکل می‌گیرد که شما احساس راحتی و اعتماد کنید.»</strong>
+        همین باور، ما را به انتخاب دقیق تجهیزات، مواد اولیه و افراد تیم‌مان سوق داده است.
+      </p>
+
+      <!-- بخش معرفی تیم - کاروسل خودکار -->
+      <div class="container mt-5 mb-5">
+        <h2 class="text-center mb-4" style="color: #D4AF37;">تیم متخصصان ما</h2>
+        
+        {% if staff_members %}
+          <!-- Swiper Container -->
+          <div class="swiper staffSwiper">
+            <div class="swiper-wrapper">
+              {% for staff in staff_members %}
+                <div class="swiper-slide">
+                  <div class="team-card">
+                    <div class="team-img-container">
+                    <!-- نمایش عکس پرسنل -->
+                    {% if staff.photo %}
+                      <img 
+                        src="{{ staff.photo.url }}" 
+                        alt="{{ staff.full_name }} - {{ staff.role }}" 
+                        class="team-img"
+                        onerror="this.src='{% static 'images/default-avatar.jfif' %}'"
+                      >
+                    {% else %}
+                      <img 
+                        src="{% static 'images/default-avatar.jfif' %}" 
+                        alt="{{ staff.full_name }} - {{ staff.role }}" 
+                        class="team-img"
+                      >
+                    {% endif %}
+                    </div>
+
+                    <div class="team-info">
+                      <h5>{{ staff.full_name }}</h5>
+                      <p class="team-specialty">{{ staff.role }}</p>
+                      
+                      <!-- نمایش توضیحات یا روزهای کاری -->
+                      {% if staff.bio %}
+                        <p class="team-desc">{{ staff.bio }}</p>
+                      {% elif staff.work_days %}
+                        <p class="team-desc small">
+                          <i class="bi bi-calendar-check me-1"></i>
+                          {% for day in staff.work_days %}
+                            {{ day }}{% if not forloop.last %}، {% endif %}
+                          {% endfor %}
+                        </p>
+                      {% endif %}
+                 
+                    </div>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+            
+            <!-- دکمه‌های ناوبری -->
+            <div class="swiper-button-next"></div>
+            <div class="swiper-button-prev"></div>
+            
+            <!-- نشانگرها -->
+            <div class="swiper-pagination"></div>
+          </div>
+          
+        {% else %}
+          <!-- پیام در صورت عدم وجود پرسنل فعال -->
+          <div class="col-12 text-center py-5">
+            <div class="alert alert-info">
+              <i class="fas fa-info-circle fa-2x mb-3"></i>
+              <p class="mb-0">تیم متخصص ما به زودی معرفی خواهد شد.</p>
+            </div>
+          </div>
+        {% endif %}
+      </div>
+
+      <p class="about-text">
+        امروز، هزاران مشتری راضی از ما، بهترین گواهی بر کیفیت خدمات ماست. 
+        شما هم می‌توانید بخشی از این تجربه لوکس و لذت‌بخش باشید.
+      </p>
+    </div>
+
+
+    <!-- بخش اسلایدر تصاویر فضای سالن -->
+    <div class="container mt-5 mb-5">
+      <h2 class="text-center mb-4" style="color: #D4AF37;">فضای لوکس ما</h2>
+
+      <!-- اسلایدر -->
+      <div id="salonGallery" class="carousel slide" data-bs-ride="carousel">
+        <!-- نوار نشانگرها -->
+        <div class="carousel-indicators">
+          <button type="button" data-bs-target="#salonGallery" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
+          <button type="button" data-bs-target="#salonGallery" data-bs-slide-to="1" aria-label="Slide 2"></button>
+          <button type="button" data-bs-target="#salonGallery" data-bs-slide-to="2" aria-label="Slide 3"></button>
+          <button type="button" data-bs-target="#salonGallery" data-bs-slide-to="3" aria-label="Slide 4"></button>
+          <button type="button" data-bs-target="#salonGallery" data-bs-slide-to="4" aria-label="Slide 5"></button>
+          <button type="button" data-bs-target="#salonGallery" data-bs-slide-to="5" aria-label="Slide 6"></button>
+        </div>
+
+        <!-- اسلایدها -->
+        <div class="carousel-inner">
+          <!-- اسلاید ۱ -->
+          <div class="carousel-item active">
+            <img src="{% static 'images/gallery1.jpg' %}" class="d-block w-100" alt="فضای سالن - آرایش مو" style="height: 400px; object-fit:  contain; object-position: center; background: #f8f9fa;">
+          </div>
+          <!-- اسلاید ۲ -->
+          <div class="carousel-item">
+            <img src="{% static 'images/gallery6.jpg' %}" class="d-block w-100" alt="فضای سالن - ماساژ" style="height: 400px; object-fit: contain; object-position: center; background: #f8f9fa;">
+          </div>
+          <!-- اسلاید ۳ -->
+          <div class="carousel-item">
+            <img src="{% static 'images/gallery5.jpg' %}" class="d-block w-100" alt="فضای سالن - میز ناخن" style="height: 400px; object-fit: contain; object-position: center; background: #f8f9fa;">
+          </div>
+          <!-- اسلاید ۴ -->
+          <div class="carousel-item">
+            <img src="{% static 'images/gallery4.jpg' %}" class="d-block w-100" alt="فضای سالن - لابی" style="height: 400px; object-fit: contain; object-position: center; background: #f8f9fa;">
+          </div>
+          <!-- اسلاید ۵ -->
+          <div class="carousel-item">
+            <img src="{% static 'images/gallery2.jpg' %}" class="d-block w-100" alt="فضای سالن - آینه‌ها" style="height: 400px; object-fit: contain; object-position: center; background: #f8f9fa;">
+          </div>
+          <!-- اسلاید ۶ -->
+          <div class="carousel-item">
+            <img src="{% static 'images/gallery3.jpg' %}" class="d-block w-100" alt="فضای سالن - جزئیات" style="height: 400px; object-fit: contain; object-position: center; background: #f8f9fa;">
+          </div>
+        </div>
+
+        
+        <!-- دکمه‌های کنترل -->
+        <button class="carousel-control-prev" type="button" data-bs-target="#salonGallery" data-bs-slide="prev">
+          <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+          <span class="visually-hidden">قبلی</span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#salonGallery" data-bs-slide="next">
+          <span class="carousel-control-next-icon" aria-hidden="true"></span>
+          <span class="visually-hidden">بعدی</span>
+        </button>
+      </div>
+    </div>
+
+
+    <!-- بخش گواهی‌نامه‌ها و دوره‌ها -->
+    <div class="container mt-5 mb-5">
+      <h2 class="text-center mb-4" style="color: #D4AF37;">گواهی‌نامه‌ها و تخصص‌های معتبر</h2>
+      <div class="row g-4">
+        <!-- گواهی ۱ -->
+        <div class="col-md-6">
+          <div class="certificate-card">
+            <img src="{% static 'images/certificate1.jpg' %}" alt="گواهی آرایشگری بین‌المللی" class="certificate-img">
+            <div class="certificate-info">
+              <h5>گواهی آرایشگری بین‌المللی</h5>
+              <p>صادرشده از آکادمی L’Oréal – لندن، ۲۰۲۳</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- گواهی ۲ -->
+        <div class="col-md-6">
+          <div class="certificate-card">
+            <img src="{% static 'images/certificate2.png' %}" alt="دوره تخصصی اصلاح ابرو" class="certificate-img">
+            <div class="certificate-info">
+              <h5>دوره تخصصی اصلاح ابرو و مژه</h5>
+              <p>موسسه زیبایی آنا، تهران – ۲۰۲۲</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- گواهی ۳ -->
+        <div class="col-md-6">
+          <div class="certificate-card">
+            <img src="{% static 'images/certificate3.jpg' %}" alt="گواهی ماساژ درمانی" class="certificate-img">
+            <div class="certificate-info">
+              <h5>گواهی ماساژ درمانی و SPA</h5>
+              <p>انجمن بین‌المللی درمان‌های زیبایی – آلمان، ۲۰۲۱</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+
+    <!-- دکمه رزرو -->
+    <div class="text-center">
+      <p class="about-text">برای تجربه متفاوت زیبایی،همین خالا نوبت خود را رزرو کنید  <a href="{% url 'reserve' %}" class="btn btn-gold ">رزرو نوبت</a></p>
+      
+    </div>
+
+    <!-- مقالات بلاگ -->
+    <!-- مقالات بلاگ -->
+  <div class="container mt-5 mb-5">
+    <h2 class="text-center mb-4" style="color: #D4AF37;">نکات طلایی زیبایی</h2>
+    <div class="row justify-content-center">
+      {% for a in latest_articles %}
+        <div class="col-md-6 mb-4">
+          <div class="blog-card h-100" ondblclick="window.location.href='{% url 'blog_detail' a.id %}'">
+            <img src="{{ a.image.url }}" class="blog-img">
+            <div class="blog-content">
+              <h4>{{ a.title }}</h4>
+              <p>{{ a.content|truncatewords:20 }}</p>
+              <a href="{% url 'blog_detail' a.id %}" class="btn-read">
+                ادامه مطلب →
+              </a>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+  <!-- دکمه مشاهده همه -->
+      <div class="text-center mt-4">
+        <a href="{% url 'blog' %}" class="btn btn-gold header-btn">مشاهده همه مقالات</a>
+      </div>
+
+  </div>
+
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const staffSwiperElement = document.querySelector('.staffSwiper');
+  
+  if (staffSwiperElement) {
+    const staffSwiper = new Swiper('.staffSwiper', {
+      slidesPerView: 3,
+      spaceBetween: 20,
+      loop: true,
+      effect: 'slide',
+      autoHeight: true, 
+      speed: 500,
+      autoplay: {
+        delay: 4000,
+        disableOnInteraction: false,
+      },
+      pagination: {
+        el: '.swiper-pagination',
+        clickable: true,
+      },
+      navigation: {
+        nextEl: '.swiper-button-next',
+        prevEl: '.swiper-button-prev',
+      },
+      breakpoints: {
+        576: {
+          slidesPerView: 1,
+        },
+        768: {
+          slidesPerView: 2,
+        },
+        992: {
+          slidesPerView: 3,
+        },
+      },
+    });
+    
+    // متوقف کردن خودکار هنگام هاور
+    staffSwiperElement.addEventListener('mouseenter', function() {
+      staffSwiper.autoplay.stop();
+    });
+    
+    // ادامه خودکار هنگام خارج شدن موس
+    staffSwiperElement.addEventListener('mouseleave', function() {
+      staffSwiper.autoplay.start();
+    });
+  }
+});
+</script>
+
+<style>
+/* کاروسل تیم */
+.staffSwiper {
+  width: 100%;
+  position: relative;
+  padding: 20px 0;
+  margin-bottom: 30px;
+  overflow: hidden;
+}
+
+.staffSwiper .swiper-wrapper {
+  padding: 0 40px;
+  display: flex;
+  align-items:  flex-start; /* جلوگیری از تغییر ارتفاع */
+}
+
+/* کارت‌های تیم */
+.team-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+  width: 100%;
+  padding: 10px 0 12px;
+  transition: transform 0.3s ease;
+  border: 1px solid rgba(212, 175, 55, 0.15);
+  min-height: 180px; /* ارتفاع ثابت برای هماهنگی */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.team-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 28px rgba(0,0,0,0.12);
+}
+
+/* عکس دایره‌ای */
+.team-img-container {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  overflow: hidden;
+  margin: 0 auto 10px;
+  background: #f8f9fa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.team-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain; /* جلوگیری از کشیدگی */
+  border-radius: 50%;
+}
+
+/* متن‌ها */
+.team-info {
+  text-align: center;
+  padding: 0 10px;
+  width: 100%;
+}
+
+.team-info h5 {
+  font-size: 1.05rem;
+  margin-bottom: 5px;
+  color: #2d3748;
+}
+
+.team-specialty {
+  font-size: 0.9rem;
+  margin-bottom: 8px;
+  color: #D4AF37;
+  font-weight: 600;
+}
+
+.team-desc {
+  font-size: 0.8rem;
+  line-height: 1.3;
+  color: #4a5568;
+  min-height: 35px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* دکمه‌های ناوبری */
+.swiper-button-next,
+.swiper-button-prev {
+  color: #D4AF37 !important;
+  background: rgba(212, 175, 55, 0.2);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.swiper-button-next {
+  right: 15px;
+}
+
+.swiper-button-prev {
+  left: 15px;
+}
+
+/* نشانگرها */
+.swiper-pagination {
+  position: relative;
+  margin-top: 20px;
+}
+
+.swiper-pagination-bullet {
+  background: #D4AF37 !important;
+  opacity: 0.5;
+  width: 10px;
+  height: 10px;
+  margin: 0 5px;
+  border-radius: 50%;
+}
+
+.swiper-pagination-bullet-active {
+  opacity: 1;
+  width: 14px;
+}
+
+.staffSwiper .swiper-slide {
+  display: flex;
+  align-items: flex-start;
+}
+
+
+/* ریسپانسیو */
+@media (max-width: 991px) {
+  .staffSwiper .swiper-wrapper {
+    padding: 0 30px;
+  }
+  
+  .team-card {
+    min-height: 170px;
+
+  }
+}
+
+@media (max-width: 767px) {
+  .team-img-container {
+    width: 110px;
+    height: 110px;
+  }
+  
+  .team-info h5 {
+    font-size: 1rem;
+  }
+  
+  .staffSwiper .swiper-wrapper {
+    padding: 0 20px;
+  }
+}
+</style>
+
+
+{% endblock content %}

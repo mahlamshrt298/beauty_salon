@@ -1,0 +1,354 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load jalali_tags %}
+
+{% block title %}
+نظرات مشتریان - سالن زیبایی نورا
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+
+    <!-- سربرگ -->
+    <div class="text-center mb-5">
+        <h1 class="hero-title">نظرات شما افتخار ماست.</h1>
+        <p class="lead">آنچه مشتریان درباره تجربه شان در سالن نورا گفته‌اند.</p>
+    </div>
+
+    <!-- میانگین امتیاز و تعداد نظرات -->
+    <div class="text-center mb-5">
+        <div class="d-flex justify-content-center align-items-center gap-3">
+            <div class="rating-box">
+                <span class="rating-value">{{ avg_rating|floatformat:1 }}</span>
+                <span class="rating-out-of">/ 5</span>
+            </div>
+            <div class="review-count">
+                <span>{{ total_reviews }} نظر</span>
+            </div>
+        </div>
+    </div>
+
+    <!--برای اینکه پیام بعد از 3 ثانیه بسته شود-->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach(alert => {
+            setTimeout(() => {
+                alert.classList.add('d-none'); // یا alert.remove()
+            }, 10000); // ۳ ثانیه
+        });
+    });
+    </script>
+
+
+    <!-- ✅ جایگزینی کامل فیلتر سرویس با فیلتر دسته‌بندی -->
+    <!-- ✅ نمایش تعداد نظرات در منوی فیلتر -->
+    <div class="dropdown mb-3">
+        <button class="btn btn-outline-gold dropdown-toggle" type="button" data-bs-toggle="dropdown">
+            <i class="fas fa-filter me-1"></i> فیلتر بر اساس دسته‌بندی
+        </button>
+        <ul class="dropdown-menu">
+            <li>
+                <a class="dropdown-item {% if not request.GET.category or request.GET.category == 'all' %}active{% endif %}" 
+                href="?category=all">
+                    <i class="fas fa-list me-2 text-muted"></i>
+                    همه دسته‌بندی‌ها
+                    <span class="badge bg-secondary ms-2">{{ total_reviews }}</span>
+                </a>
+            </li>
+            <li><hr class="dropdown-divider"></li>
+            {% for category in all_categories %}
+                <li>
+                    <a class="dropdown-item {% if request.GET.category == category.id|stringformat:'s' %}active{% endif %}" 
+                    href="?category={{ category.id }}">
+                        <i class="fas fa-spa me-2 text-gold"></i>
+                        {{ category.name }}
+                        {% if category.review_count > 0 %}
+                            <span class="badge bg-success ms-2">{{ category.review_count }}</span>
+                        {% else %}
+                            <span class="badge bg-secondary ms-2">0</span>
+                        {% endif %}
+                    </a>
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <!-- ✅ نمایش فیلتر فعال در بالای لیست نظرات -->
+    {% if selected_category %}
+    <div class="alert alert-info d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <i class="fas fa-filter me-2"></i>
+            <strong>فیلتر فعال:</strong> نمایش نظرات دسته‌بندی «{{ selected_category.name }}»
+        </div>
+        <a href="{% url 'reviews' %}" class="btn  btn-outline-secondary px-2">
+            حذف فیلتر
+        </a>
+    </div>
+    {% elif request.GET.category == 'all' %}
+    <div class="alert alert-light d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <i class="fas fa-list me-2"></i>
+            <strong>فیلتر فعال:</strong> نمایش همه نظرات
+        </div>
+        <span class="badge bg-primary">{{ total_reviews }} نظر</span>
+    </div>
+    {% endif %}
+
+        <!-- لیست نظرات -->
+    <div class="row g-4">
+        {% for review in page_obj %}
+        <div class="col-md-4">
+            <div class="testimonial-card">
+                <!-- نمایش آواتار کاربر در بالای کارت -->
+                <div class="d-flex justify-content-center mb-3">
+                    {% if review.user.profile and review.user.profile.avatar %}
+                        <img src="{{ review.user.profile.avatar.url }}" 
+                            class="user-avatar" 
+                            alt="{{ review.user.get_full_name|default:review.user.username }}">
+                    {% else %}
+                        <img src="{% static 'images/default-avatar.jfif' %}" 
+                            class="user-avatar" 
+                            alt="{{ review.user.get_full_name|default:review.user.username }}">
+                    {% endif %}
+                </div>
+
+                 <!-- نمایش ستاره‌های امتیاز -->
+                <div class="stars mb-3">
+                    {% for i in "12345" %}
+                        {% if i|add:"0" <= review.rating %}
+                            <i class="fas fa-star text-gold"></i>   <!-- ستاره پر -->
+                        {% else %}
+                            <i class="far fa-star text-gold"></i>   <!-- ستاره خالی -->
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                <div class="testimonial-content">
+                    <p>{{ review.comment }}</p>
+                    
+                    <!-- نمایش نام سرویس اگر وجود داشته باشد -->
+                    {% if review.service %}
+                        <div class="service-info mt-2">
+                            <span class="badge bg-light text-dark">خدمت: {{ review.service.name }}</span>
+                        </div>
+                    {% endif %}
+                    
+                     <!-- اطلاعات کاربر و تاریخ -->
+                    <div class="client-info mt-3">
+                        <strong>{{ review.user.get_full_name|default:review.user.username }}</strong>
+                        <div class="text-muted mt-1">
+                        <!-- ✅ تاریخ شمسی با فرمت فارسی -->
+                        {{ review.created_at|to_jalali:"%d %B %Y" }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+
+         <!-- پیغام زمانی که هیچ نظری وجود ندارد -->
+        <div class="col-12 text-center">
+            <p>هیچ نظری ثبت نشده است.</p>
+        </div>
+        {% endfor %}
+    </div>
+    
+
+
+        <!-- اسکریپت ستاره‌های تعاملی -->
+        <script>
+            function setRating(value) {
+            // تنظیم مقدار فیلد rating
+            document.getElementById('id_rating').value = value;
+            // به‌روزرسانی نمایش ستاره‌ها
+            for (let i = 1; i <= 5; i++) {
+                const star = document.getElementById(`star-${i}`);
+                if (i <= value) {
+                    star.classList.remove('far');
+                    star.classList.add('fas');
+                } else {
+                    star.classList.remove('fas');
+                    star.classList.add('far');
+                }
+                 }
+            }
+        </script>
+
+        <!-- فرم ثبت نظر جدید -->
+    <div class="row mt-5">
+        <div class="col-md-6 me-auto">
+            <h4 class="mb-4">نظر خود را ثبت کنید</h4>
+            <form method="post" class="bg-white p-4 rounded shadow-sm">
+                {% csrf_token %}
+
+                <!-- پیغام برای کاربران لاگین نکرده -->
+                {% if not user.is_authenticated %}
+                    <p class="text-muted mb-3">
+                        <small>
+                            برای ثبت نظر، باید 
+                            <a href="{% url 'accounts:login' %}?next={% url 'reviews' %}" class="text-gold">وارد شوید</a> 
+                            یا 
+                            <a href="{% url 'accounts:register' %}" class="text-gold">ثبت‌نام کنید</a>.
+                        </small>
+                    </p>
+                {% endif %}
+                    
+                 <!-- ✅ فیلد جدید: انتخاب نوبت -->
+                <div class="mb-3">
+                    <label class="form-label">نوبت مربوطه <span class="text-danger">*</span></label>
+                    {{ form.appointment }}
+                    {% if form.appointment.errors %}
+                        <div class="text-danger mt-2">{{ form.appointment.errors }}</div>
+                    {% endif %}
+                    {% if not form.appointment.field.queryset.exists %}
+                        <small class="text-muted d-block mt-1">
+                            شما هنوز نوبت تکمیل‌شده‌ای ندارید. پس از اتمام نوبت، می‌توانید نظر بدهید.
+                        </small>
+                    {% endif %}
+                </div>
+
+                <!-- فیلد امتیاز -->
+                <div class="mb-3">
+                    <label class="form-label">امتیاز شما:</label>
+                    <div class="d-flex gap-2">
+                        {% for i in "12345" %}
+                            <span onclick="setRating({{ i }})" id="star-{{ i }}" class="far fa-star text-gold star-selectable" style="font-size: 1.5rem; cursor: pointer;"></span>
+                        {% endfor %}
+                    </div>
+                    <!-- فیلد rating به صورت مخفی است -->
+                    {{ form.rating }}
+                    {% if form.rating.errors %}
+                        <div class="text-danger">{{ form.rating.errors }}</div>
+                    {% endif %}
+                </div>
+                <!-- فیلد متن نظر -->
+                <div class="mb-3">
+                    {{ form.comment.label_tag }}
+                    {{ form.comment }}
+                    {% if form.comment.errors %}
+                        <div class="text-danger">{{ form.comment.errors }}</div>
+                    {% endif %}
+                </div>
+                 <!-- دکمه ارسال نظر -->
+                <button type="submit" class="btn btn-gold">ارسال نظر</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- متن تشویقی + دکمه رزرو -->
+    <div class="row mt-5">
+        <div class="col-md-6 me-auto text-end"> <!-- ← text-end برای راست‌چین کردن متن -->
+            <div class="d-flex justify-content-end align-items-center gap-3">
+                <p class="lead mb-0">شما هم تجربه تون رو با ما به اشتراک بگذارید 🌟</p>
+                <a href="{% url 'reserve' %}" class="btn btn-gold">
+                    <i class="fas fa-calendar-check"></i> رزرو نوبت
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- ناوبری صفحه‌بندی حرفه‌ای -->
+    {% if page_obj.paginator.num_pages > 1 %}
+    <nav class="mt-5">
+        <ul class="pagination justify-content-center align-items-center">
+
+            {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1">&laquo;</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">قبلی</a>
+                </li>
+            {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">&laquo;</span>
+                </li>
+                <li class="page-item disabled">
+                    <span class="page-link">قبلی</span>
+                </li>
+            {% endif %}
+
+            <!-- شماره صفحات -->
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                {% else %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">بعدی</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">&raquo;</a>
+                </li>
+            {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link">بعدی</span>
+                </li>
+                <li class="page-item disabled">
+                    <span class="page-link">&raquo;</span>
+                </li>
+            {% endif %}
+
+        </ul>
+    </nav>
+    {% endif %}
+
+
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    // پیدا کردن textarea ساخته‌شده توسط Django
+    const commentField = document.querySelector("textarea");
+
+    if (!commentField) return;
+
+    commentField.addEventListener("keydown", function (e) {
+
+        // Enter بدون Shift → ارسال فرم
+        if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();   // جلوگیری از رفتن به خط جدید
+            this.form.submit();  // ارسال فرم
+        }
+
+    });
+});
+</script>
+<!-- ✅ استایل آواتار کاربر در نظرات -->
+<style>
+.user-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #D4AF37;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease;
+}
+
+.user-avatar:hover {
+    transform: scale(1.05);
+}
+
+/* بهبود ظاهر کارت نظر برای آواتار */
+.testimonial-card {
+    min-height: 320px; /* فضای کافی برای آواتار */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.testimonial-content {
+    flex-grow: 1;
+}
+</style>
+{% endblock content %}
