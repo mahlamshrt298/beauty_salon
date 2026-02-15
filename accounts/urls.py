@@ -76,5 +76,4 @@ urlpatterns = [
     path('ajax/add_review/<int:appointment_id>/', views.ajax_add_review, name='ajax_add_review'),
     path('cancel_appointment/<int:appt_id>/', views.cancel_appointment, name='cancel_appointment'),
     
-    path("create-admin/", views.create_admin,name="create_admin"),
     ]
