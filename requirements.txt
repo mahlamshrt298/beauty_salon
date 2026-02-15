@@ -16,3 +16,4 @@ pillow==11.3.0
 setuptools==80.9.0
 sqlparse==0.5.3
 tzdata==2025.2
+whitenoise==6.11.0
