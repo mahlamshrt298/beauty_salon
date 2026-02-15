@@ -30,8 +30,12 @@ SECRET_KEY = env('DJANGO_SECRET_KEY')
 DEBUG = env.bool('DJANGO_DEBUG', default=False)
 
 ALLOWED_HOSTS = env.list('DJANGO_ALLOWED_HOSTS', default=['localhost', '127.0.0.1'])
-
-
+# ✅ اضافه کردن بعد از ALLOWED_HOSTS
+# CSRF Trusted Origins
+CSRF_TRUSTED_ORIGINS = env.list('CSRF_TRUSTED_ORIGINS', default=[])
+if not CSRF_TRUSTED_ORIGINS and ALLOWED_HOSTS:
+    # ایجاد خودکار CSRF_TRUSTED_ORIGINS از ALLOWED_HOSTS
+    CSRF_TRUSTED_ORIGINS = [f'https://{host}' for host in ALLOWED_HOSTS if host != '*']
 # Application definition
 
 INSTALLED_APPS = [
@@ -93,11 +97,13 @@ WSGI_APPLICATION = 'beauty_salon.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+# ✅ راه‌حل: پشتیبانی از هر دو SQLite و PostgreSQL
+import dj_database_url
+
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    'default': dj_database_url.config(
+        default=f'sqlite:///{BASE_DIR / "db.sqlite3"}'
+    )
 }
 
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
@@ -168,3 +174,18 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = "mahlamashrooti@gmail.com"
 EMAIL_HOST_PASSWORD = "yjwjszhycybubtri"
 DEFAULT_FROM_EMAIL = 'Beauty Salon <mahlamashrooti@gmail.com>'
+
+# ✅ اضافه کردن در انتهای settings.py
+if not DEBUG:
+    STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
+
+# ✅ اضافه کردن برای پشتیبانی از HTTPS
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SECURE_SSL_REDIRECT = False  # فقط در تولید
+
+# ✅ امنیت کوکی‌ها در HTTPS
+if not DEBUG:
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
