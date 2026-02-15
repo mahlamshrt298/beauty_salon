@@ -173,7 +173,7 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 
 EMAIL_HOST_USER = "mahlamashrooti@gmail.com"
-EMAIL_HOST_PASSWORD = "yjwjszhycybubtri"
+EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD")
 DEFAULT_FROM_EMAIL = 'Beauty Salon <mahlamashrooti@gmail.com>'
 
 # ✅ اضافه کردن در انتهای settings.py
