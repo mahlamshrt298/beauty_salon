@@ -73,69 +73,60 @@ document.addEventListener("keydown", function (e) {
 });
 </script>
 <!-- ✅ اسکریپت نمایش/پنهان کردن رمز عبور - با محافظت کامل -->
-<!-- ✅ اسکریپت نمایش/پنهان کردن رمز عبور - نسخه نهایی و تست‌شده برای راست‌چین -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // 🔒 فقط در صفحه ورود اجرا شود
-    if (!window.location.pathname.includes('/login')) {
-        return;
+
+    function addPasswordToggle(inputId) {
+        const input = document.getElementById(inputId);
+        if (!input) return;
+
+        // ساخت wrapper اختصاصی
+        const wrapper = document.createElement('div');
+        wrapper.style.position = 'relative';
+        wrapper.style.width = '100%';
+
+        // انتقال input داخل wrapper
+        const parent = input.parentNode;
+        parent.insertBefore(wrapper, input);
+        wrapper.appendChild(input);
+
+        // ساخت دکمه چشم
+        const toggleBtn = document.createElement('button');
+        toggleBtn.type = 'button';
+        toggleBtn.className = 'btn btn-sm btn-outline-secondary';
+        toggleBtn.innerHTML = '<i class="fas fa-eye"></i>';
+        toggleBtn.style.position = 'absolute';
+        toggleBtn.style.left = '12px';
+        toggleBtn.style.top = '50%';
+        toggleBtn.style.transform = 'translateY(-50%)';
+        toggleBtn.style.zIndex = '10';
+        toggleBtn.style.padding = '3px 8px';
+        toggleBtn.style.borderRadius = '4px 0 0 4px';
+        toggleBtn.style.border = '1px solid #ced4da';
+        toggleBtn.style.borderLeft = 'none';
+        toggleBtn.style.background = 'white';
+
+        // تنظیم padding فیلد
+        input.style.paddingLeft = '48px';
+        input.style.borderRadius = '0 4px 4px 0';
+        input.style.borderLeft = 'none';
+
+        wrapper.appendChild(toggleBtn);
+
+        let isVisible = false;
+        toggleBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            input.type = isVisible ? 'password' : 'text';
+            toggleBtn.innerHTML = isVisible
+                ? '<i class="fas fa-eye"></i>'
+                : '<i class="fas fa-eye-slash"></i>';
+            isVisible = !isVisible;
+            input.focus();
+        });
     }
 
-    const passwordInput = document.getElementById('id_password');
-    if (!passwordInput) return;
-
-    // ✅ ایجاد wrapper اختصاصی برای فیلد رمز عبور
-    const wrapper = document.createElement('div');
-    wrapper.style.position = 'relative';
-    wrapper.style.width = '100%';
-    
-    // جایگذاری wrapper قبل از فیلد و انتقال فیلد به داخل wrapper
-    const parent = passwordInput.parentNode;
-    parent.insertBefore(wrapper, passwordInput);
-    wrapper.appendChild(passwordInput);
-
-    // ✅ ایجاد دکمه چشم با استایل دقیق برای راست‌چین
-    const toggleBtn = document.createElement('button');
-    toggleBtn.type = 'button';
-    toggleBtn.className = 'btn btn-sm btn-outline-secondary password-toggle';
-    toggleBtn.innerHTML = '<i class="fas fa-eye"></i>';
-    toggleBtn.style.position = 'absolute';
-    toggleBtn.style.left = '12px'; // فاصله دقیق از لبه چپ فیلد
-    toggleBtn.style.top = '50%';
-    toggleBtn.style.transform = 'translateY(-50%)';
-    toggleBtn.style.zIndex = '10';
-    toggleBtn.style.padding = '3px 8px';
-    toggleBtn.style.borderRadius = '4px 0 0 4px'; // فقط سمت چپ گرد
-    toggleBtn.style.border = '1px solid #ced4da';
-    toggleBtn.style.borderLeft = 'none';
-    toggleBtn.style.background = 'white';
-    toggleBtn.style.boxShadow = 'none';
-    toggleBtn.title = 'نمایش رمز عبور';
-
-    // ✅ تنظیم پدینگ فیلد برای جلوگیری از همپوشانی
-    passwordInput.style.paddingLeft = '48px'; // فضای کافی برای دکمه + متن
-    passwordInput.style.borderRadius = '0 4px 4px 0'; // فقط سمت راست گرد
-    passwordInput.style.borderLeft = 'none';
-
-    // اضافه کردن دکمه به wrapper
-    wrapper.appendChild(toggleBtn);
-
-    // ✅ منطق تغییر وضعیت
-    let isPasswordVisible = false;
-    toggleBtn.addEventListener('click', function(e) {
-        e.preventDefault();
-        if (isPasswordVisible) {
-            passwordInput.type = 'password';
-            toggleBtn.innerHTML = '<i class="fas fa-eye"></i>';
-            toggleBtn.title = 'نمایش رمز عبور';
-        } else {
-            passwordInput.type = 'text';
-            toggleBtn.innerHTML = '<i class="fas fa-eye-slash"></i>';
-            toggleBtn.title = 'پنهان کردن رمز عبور';
-        }
-        isPasswordVisible = !isPasswordVisible;
-        passwordInput.focus();
-    });
+    addPasswordToggle('id_password1');
+    addPasswordToggle('id_password2');
 });
 </script>
 
