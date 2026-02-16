@@ -82,13 +82,11 @@ class CustomRegisterForm(UserCreationForm):
         if commit:
             user.save()
 
-            try:
-                profile, created = Profile.objects.get_or_create(user=user)
-                profile.phone = self.cleaned_data["phone"]
-                profile.save()
-            except Exception as e:
-                print("PROFILE ERROR:", e)
-
+            # چون سیگنال پروفایل را ساخته،
+            # فقط باید شماره را ست کنیم
+            user.profile.phone = self.cleaned_data["phone"]
+            user.profile.save()
+            
         return user
 
     
