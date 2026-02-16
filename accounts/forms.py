@@ -89,18 +89,24 @@ class CustomRegisterForm(UserCreationForm):
         return phone
 
     def save(self, commit=True):
-        user = super().save(commit=commit)
+        user = super().save(commit=False)
+
         user.first_name = self.cleaned_data["first_name"]
         user.last_name = self.cleaned_data["last_name"]
         user.email = self.cleaned_data["email"]
+
         if commit:
             user.save()
 
-        profile, created = Profile.objects.get_or_create(user=user)
-        profile.phone = self.cleaned_data["phone"]
-        profile.save()
+            try:
+                profile, created = Profile.objects.get_or_create(user=user)
+                profile.phone = self.cleaned_data["phone"]
+                profile.save()
+            except Exception as e:
+                print("PROFILE ERROR:", e)
 
         return user
+
     
 class ReviewForm(forms.ModelForm):
     class Meta:
