@@ -44,20 +44,23 @@ class CustomRegisterForm(UserCreationForm):
             try:
                 password_validation.validate_password(password2, self.instance)
             except ValidationError as error:
-                error_messages = []
-                for e in error.messages:
-                    if "too similar" in e:
-                        error_messages.append("رمز عبور نباید شبیه نام کاربری یا اطلاعات شخصی شما باشد.")
-                    elif "too short" in e:
-                        error_messages.append("رمز عبور باید حداقل ۸ کاراکتر باشد.")
-                    elif "too common" in e:
-                        error_messages.append("این رمز عبور خیلی ساده و قابل حدس است.")
-                    elif "entirely numeric" in e:
-                        error_messages.append("رمز عبور نباید فقط شامل اعداد باشد.")
-                    else:
-                        error_messages.append("رمز عبور معتبر نیست.")
+                messages = []
 
-                raise ValidationError(error_messages)
+                for msg in error:
+                    text = str(msg)
+
+                    if "too similar" in text:
+                        messages.append("رمز عبور نباید شبیه نام کاربری یا اطلاعات شخصی شما باشد.")
+                    elif "too short" in text:
+                        messages.append("رمز عبور باید حداقل ۸ کاراکتر باشد.")
+                    elif "too common" in text:
+                        messages.append("این رمز عبور بسیار ساده است و امنیت کافی ندارد.")
+                    elif "entirely numeric" in text:
+                        messages.append("رمز عبور نباید فقط شامل اعداد باشد.")
+                    else:
+                        messages.append("رمز عبور معتبر نیست.")
+
+                raise ValidationError(messages)
 
         return password2
 
