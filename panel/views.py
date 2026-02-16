@@ -42,24 +42,13 @@ def panel_access_required(view_func):
     def _wrapped_view(request, *args, **kwargs):
         if not request.user.is_authenticated:
             return redirect('accounts:login')
-        
-        if not hasattr(request.user, 'profile'):
-            return redirect('panel:no_access')
 
-        if request.user.profile.role not in ['owner', 'receptionist']:
+        if not request.user.groups.filter(name__in=["owner", "receptionist"]).exists():
             return redirect('panel:no_access')
 
         return view_func(request, *args, **kwargs)
 
     return _wrapped_view
-
-# مجوزها بر اساس گروه
-# -----------------------------
-def is_owner(user):
-    return user.is_authenticated and user.groups.filter(name="owner").exists()
-
-def is_staff_panel(user):
-    return user.is_authenticated and user.groups.filter(name__in=["owner", "receptionist"]).exists()
 
 
 # داشبورد

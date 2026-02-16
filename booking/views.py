@@ -544,8 +544,7 @@ def contact_info(request):
 
     # ✅ پیش‌پر کردن شماره تماس از پروفایل (اولویت: سشن > پروفایل)
     phone_value = request.session.get('phone', '')  # اگر قبلاً در این فرآیند وارد کرده
-    if not phone_value and hasattr(request.user, 'profile'):
-        phone_value = request.user.profile.phone or ''  # از پروفایل بگیر
+    phone_value = request.user.profile.phone or ''  # از پروفایل بگیر
 
     context = {
         'active_page': 'reserve',
