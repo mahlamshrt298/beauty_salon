@@ -7,6 +7,7 @@ from reviews_app.models import Review
 from django.core.exceptions import ValidationError
 from django.contrib.auth import password_validation
 from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _
 
 class CustomRegisterForm(UserCreationForm):
     # فرم سفارشی ثبت‌نام با فارسی‌سازی کامل
@@ -43,27 +44,10 @@ class CustomRegisterForm(UserCreationForm):
 
             try:
                 password_validation.validate_password(password2, self.instance)
-            except ValidationError as error:
-                messages = []
-
-                for msg in error:
-                    text = str(msg)
-
-                    if "too similar" in text:
-                        messages.append("رمز عبور نباید شبیه نام کاربری یا اطلاعات شخصی شما باشد.")
-                    elif "too short" in text:
-                        messages.append("رمز عبور باید حداقل ۸ کاراکتر باشد.")
-                    elif "too common" in text:
-                        messages.append("این رمز عبور بسیار ساده است و امنیت کافی ندارد.")
-                    elif "entirely numeric" in text:
-                        messages.append("رمز عبور نباید فقط شامل اعداد باشد.")
-                    else:
-                        messages.append("رمز عبور معتبر نیست.")
-
-                raise ValidationError(messages)
+            except ValidationError as e:
+                raise ValidationError(e.messages)
 
         return password2
-
 
     class Meta:
         model = User
