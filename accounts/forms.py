@@ -4,6 +4,9 @@ from django.contrib.auth.models import User
 from accounts.models import Profile
 import re
 from reviews_app.models import Review
+from django.core.exceptions import ValidationError
+from django.contrib.auth import password_validation
+from django.utils.translation import gettext as _
 
 class CustomRegisterForm(UserCreationForm):
     # فرم سفارشی ثبت‌نام با فارسی‌سازی کامل
@@ -29,6 +32,35 @@ class CustomRegisterForm(UserCreationForm):
         label="نام خانوادگی",
         help_text="نام خانوادگی خود را به فارسی وارد کنید"
     )
+
+    def clean_password2(self):
+        password1 = self.cleaned_data.get("password1")
+        password2 = self.cleaned_data.get("password2")
+
+        if password1 and password2:
+            if password1 != password2:
+                raise ValidationError("رمز عبور و تکرار آن یکسان نیستند.")
+
+            try:
+                password_validation.validate_password(password2, self.instance)
+            except ValidationError as error:
+                error_messages = []
+                for e in error.messages:
+                    if "too similar" in e:
+                        error_messages.append("رمز عبور نباید شبیه نام کاربری یا اطلاعات شخصی شما باشد.")
+                    elif "too short" in e:
+                        error_messages.append("رمز عبور باید حداقل ۸ کاراکتر باشد.")
+                    elif "too common" in e:
+                        error_messages.append("این رمز عبور خیلی ساده و قابل حدس است.")
+                    elif "entirely numeric" in e:
+                        error_messages.append("رمز عبور نباید فقط شامل اعداد باشد.")
+                    else:
+                        error_messages.append("رمز عبور معتبر نیست.")
+
+                raise ValidationError(error_messages)
+
+        return password2
+
 
     class Meta:
         model = User
