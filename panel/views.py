@@ -2339,15 +2339,46 @@ def payment_list(request):
 #گزارش درامد
 from django.db.models import Sum, Q
 from django.utils import timezone
-from booking.models import Payment, PackagePayment
-from datetime import datetime
+from booking.models import Payment, PackagePayment , Staff
+from datetime import datetime , timedelta
+from django.db.models import Count
+from django.db.models import F
 
 @panel_access_required
 def income_report(request):
+
     payments = Payment.objects.filter(status='success')
     package_payments = PackagePayment.objects.filter(status='success')
 
-    # 📅 فیلتر تاریخ
+    today = timezone.localdate()
+
+    # 📌 فیلترهای سریع
+    filter_type = request.GET.get('filter')
+
+    if filter_type == 'today':
+        payments = payments.filter(paid_at__date=today)
+        package_payments = package_payments.filter(created_at__date=today)
+
+    elif filter_type == 'week':
+        start_week = today - timedelta(days=today.weekday())
+        payments = payments.filter(paid_at__date__gte=start_week)
+        package_payments = package_payments.filter(created_at__date__gte=start_week)
+
+    elif filter_type == 'month':
+        payments = payments.filter(
+            paid_at__year=today.year,
+            paid_at__month=today.month
+        )
+        package_payments = package_payments.filter(
+            created_at__year=today.year,
+            created_at__month=today.month
+        )
+
+    elif filter_type == 'year':
+        payments = payments.filter(paid_at__year=today.year)
+        package_payments = package_payments.filter(created_at__year=today.year)
+
+    # 📅 بازه دلخواه
     start_date = request.GET.get('start_date')
     end_date = request.GET.get('end_date')
 
@@ -2359,18 +2390,59 @@ def income_report(request):
         payments = payments.filter(paid_at__date__lte=end_date)
         package_payments = package_payments.filter(created_at__date__lte=end_date)
 
-    # 💰 مجموع‌ها
-    total_services_income = payments.aggregate(total=Sum('amount'))['total'] or 0
-    total_packages_income = package_payments.aggregate(total=Sum('amount'))['total'] or 0
+    # 👩‍🔧 فیلتر پرسنل
+    staff_id = request.GET.get('staff')
+    if staff_id:
+        payments = payments.filter(appointment__staff_id=staff_id)
+        package_payments = package_payments.filter(appointment__staff_id=staff_id)
 
-    total_income = total_services_income + total_packages_income
+    # 💳 فیلتر روش پرداخت
+    payment_method = request.GET.get('method')
+    if payment_method:
+        payments = payments.filter(payment_method=payment_method)
+
+    top_service = payments.values(
+        service_name=F('appointment__service__name')
+    ).annotate(
+        total_sales=Count('id'),
+        total_income=Sum('amount')
+    ).order_by('-total_sales').first()
+
+
+    # 💰 محاسبه درآمد
+    services_income = payments.aggregate(total=Sum('amount'))['total'] or 0
+    packages_income = package_payments.aggregate(total=Sum('amount'))['total'] or 0
+    total_income = services_income + packages_income
+
+    top_staff = payments.values(
+        'appointment__staff__full_name'
+    ).annotate(
+        total_income=Sum('amount')
+    ).order_by('-total_income')
+
+    online_income = payments.filter(payment_method='online').aggregate(total=Sum('amount'))['total'] or 0
+    cash_income = payments.filter(payment_method='cash').aggregate(total=Sum('amount'))['total'] or 0
+    card_income = payments.filter(payment_method='card').aggregate(total=Sum('amount'))['total'] or 0
+
+    total_payment_income = online_income + cash_income + card_income
+
 
     context = {
         'total_income': total_income,
-        'total_services_income': total_services_income,
-        'total_packages_income': total_packages_income,
-        'start_date': start_date,
-        'end_date': end_date,
+        'services_income': services_income,
+        'packages_income': packages_income,
+        'staffs': Staff.objects.all(),
+        'selected_staff': staff_id,
+        'selected_method': payment_method,
+        'filter_type': filter_type,
+        'top_service': top_service,
+        'top_staff': top_staff[:5],
+        'online_income': online_income,
+        'cash_income': cash_income,
+        'card_income': card_income,
+        'total_payment_income': total_payment_income,
+
     }
 
     return render(request, 'panel/income_report.html', context)
+

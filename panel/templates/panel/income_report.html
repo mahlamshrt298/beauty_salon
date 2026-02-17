@@ -6,34 +6,78 @@
 
     <h3 class="mb-4">📊 گزارش درآمد</h3>
 
+    <div class="mb-4 d-flex gap-2 flex-wrap">
+        <a href="?filter=today" class="btn btn-outline-primary">امروز</a>
+        <a href="?filter=week" class="btn btn-outline-primary">این هفته</a>
+        <a href="?filter=month" class="btn btn-outline-primary">این ماه</a>
+        <a href="?filter=year" class="btn btn-outline-primary">این سال</a>
+        <a href="{% url 'panel:income_report' %}" class="btn btn-secondary">ریست</a>
+    </div>
+
+
     <!-- فیلتر تاریخ -->
     <form method="get" class="row g-3 mb-4">
+
         <div class="col-md-3">
             <label>از تاریخ</label>
-            <input type="date" name="start_date" class="form-control" value="{{ start_date }}">
+            <input type="text" id="start_date" class="form-control">
+            <input type="hidden" id="start_date_gregorian" name="start_date"
+                value="{{ request.GET.start_date }}">
         </div>
+
         <div class="col-md-3">
             <label>تا تاریخ</label>
-            <input type="date" name="end_date" class="form-control" value="{{ end_date }}">
+            <input type="text" id="end_date" class="form-control">
+            <input type="hidden" id="end_date_gregorian" name="end_date"
+                value="{{ request.GET.end_date }}">
         </div>
+
+        <div class="col-md-3">
+            <label>پرسنل</label>
+            <select name="staff" class="form-select">
+                <option value="">همه</option>
+                {% for s in staffs %}
+                    <option value="{{ s.id }}"
+                        {% if selected_staff == s.id|stringformat:"s" %}selected{% endif %}>
+                        {{ s.full_name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-md-3">
+            <label>روش پرداخت</label>
+            <select name="method" class="form-select">
+                <option value="">همه</option>
+                <option value="online" {% if selected_method == "online" %}selected{% endif %}>آنلاین</option>
+                <option value="cash" {% if selected_method == "cash" %}selected{% endif %}>نقدی</option>
+                <option value="card" {% if selected_method == "card" %}selected{% endif %}>کارتخوان</option>
+            </select>
+        </div>
+
         <div class="col-md-3 align-self-end">
-            <button class="btn btn-primary">اعمال فیلتر</button>
+            <button class="btn btn-primary w-100">اعمال فیلتر</button>
         </div>
+
     </form>
+
+    
 
     <!-- کارت‌ها -->
     <div class="row">
         <div class="col-md-4">
             <div class="card p-3 text-center">
                 <h6>درآمد خدمات</h6>
-                <h4>{{ total_services_income|intcomma }} تومان</h4>
+                <h4>{{ services_income|intcomma }} تومان</h4>
+
             </div>
         </div>
 
         <div class="col-md-4">
             <div class="card p-3 text-center">
                 <h6>درآمد پکیج‌ها</h6>
-                <h4>{{ total_packages_income|intcomma }} تومان</h4>
+                <h4>{{ packages_income|intcomma }} تومان</h4>
+
             </div>
         </div>
 
@@ -45,5 +89,76 @@
         </div>
     </div>
 
+    <div class="row mt-4">
+
+        <div class="col-md-4">
+            <div class="card p-3 text-center">
+                <h6>🏆 پرفروش‌ترین خدمت</h6>
+                {% if top_service %}
+                    <h5>{{ top_service.service_name }}</h5>
+                    <small>{{ top_service.total_sales }} فروش</small>
+                {% else %}
+                    <p>داده‌ای موجود نیست</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card p-3">
+                <h6>👩‍🔧 بیشترین درآمد پرسنل</h6>
+                {% for staff in top_staff %}
+                    <div class="d-flex justify-content-between">
+                        <span>{{ staff.appointment__staff__full_name }}</span>
+                        <span>{{ staff.total_income|intcomma }} تومان</span>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card p-3">
+                <h6>📊 تفکیک روش پرداخت</h6>
+
+                <div class="d-flex justify-content-between">
+                    <span>آنلاین</span>
+                    <span>{{ online_income|intcomma }} تومان</span>
+                </div>
+
+                <div class="d-flex justify-content-between">
+                    <span>نقدی</span>
+                    <span>{{ cash_income|intcomma }} تومان</span>
+                </div>
+
+                <div class="d-flex justify-content-between">
+                    <span>کارتخوان</span>
+                    <span>{{ card_income|intcomma }} تومان</span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+
+
 </div>
+
+<script>
+$("#start_date").persianDatepicker({
+    format: 'YYYY/MM/DD',
+    onSelect: function(unix){
+        var date = new persianDate(unix).toCalendar('gregorian').format('YYYY-MM-DD');
+        $("#start_date_gregorian").val(date);
+    }
+});
+
+$("#end_date").persianDatepicker({
+    format: 'YYYY/MM/DD',
+    onSelect: function(unix){
+        var date = new persianDate(unix).toCalendar('gregorian').format('YYYY-MM-DD');
+        $("#end_date_gregorian").val(date);
+    }
+});
+</script>
+
+
 {% endblock %}
