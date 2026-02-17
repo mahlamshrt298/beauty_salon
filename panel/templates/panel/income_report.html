@@ -1,0 +1,49 @@
+{% extends "panel/base_panel.html" %}
+{% load humanize %}
+
+{% block content %}
+<div class="container mt-4">
+
+    <h3 class="mb-4">📊 گزارش درآمد</h3>
+
+    <!-- فیلتر تاریخ -->
+    <form method="get" class="row g-3 mb-4">
+        <div class="col-md-3">
+            <label>از تاریخ</label>
+            <input type="date" name="start_date" class="form-control" value="{{ start_date }}">
+        </div>
+        <div class="col-md-3">
+            <label>تا تاریخ</label>
+            <input type="date" name="end_date" class="form-control" value="{{ end_date }}">
+        </div>
+        <div class="col-md-3 align-self-end">
+            <button class="btn btn-primary">اعمال فیلتر</button>
+        </div>
+    </form>
+
+    <!-- کارت‌ها -->
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card p-3 text-center">
+                <h6>درآمد خدمات</h6>
+                <h4>{{ total_services_income|intcomma }} تومان</h4>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card p-3 text-center">
+                <h6>درآمد پکیج‌ها</h6>
+                <h4>{{ total_packages_income|intcomma }} تومان</h4>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card bg-success text-white p-3 text-center">
+                <h6>کل درآمد</h6>
+                <h3>{{ total_income|intcomma }} تومان</h3>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

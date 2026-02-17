@@ -2335,3 +2335,42 @@ def payment_list(request):
 
     return render(request, "panel/payment_list.html", context)
 
+
+#گزارش درامد
+from django.db.models import Sum, Q
+from django.utils import timezone
+from booking.models import Payment, PackagePayment
+from datetime import datetime
+
+@panel_access_required
+def income_report(request):
+    payments = Payment.objects.filter(status='success')
+    package_payments = PackagePayment.objects.filter(status='success')
+
+    # 📅 فیلتر تاریخ
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
+
+    if start_date:
+        payments = payments.filter(paid_at__date__gte=start_date)
+        package_payments = package_payments.filter(created_at__date__gte=start_date)
+
+    if end_date:
+        payments = payments.filter(paid_at__date__lte=end_date)
+        package_payments = package_payments.filter(created_at__date__lte=end_date)
+
+    # 💰 مجموع‌ها
+    total_services_income = payments.aggregate(total=Sum('amount'))['total'] or 0
+    total_packages_income = package_payments.aggregate(total=Sum('amount'))['total'] or 0
+
+    total_income = total_services_income + total_packages_income
+
+    context = {
+        'total_income': total_income,
+        'total_services_income': total_services_income,
+        'total_packages_income': total_packages_income,
+        'start_date': start_date,
+        'end_date': end_date,
+    }
+
+    return render(request, 'panel/income_report.html', context)

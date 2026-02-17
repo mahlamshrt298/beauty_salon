@@ -96,4 +96,7 @@ urlpatterns = [
     # مدیریت پرداخت‌ها
     path('payments/', views.payment_list, name='payment_list'),
 
+    #گزارش درامد
+    path('reports/income/', views.income_report, name='income_report'),
+
 ]
