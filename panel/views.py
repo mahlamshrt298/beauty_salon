@@ -2446,3 +2446,26 @@ def income_report(request):
 
     return render(request, 'panel/income_report.html', context)
 
+
+from django.shortcuts import get_object_or_404
+from booking.models import Staff, Appointment
+from django.utils import timezone
+
+@panel_access_required
+def staff_plan(request, staff_id):
+    staff = get_object_or_404(Staff, id=staff_id)
+
+    today = timezone.localdate()
+
+    appointments = Appointment.objects.filter(
+        staff=staff,
+        appointment_date=today
+    ).order_by('start_time')
+
+    context = {
+        "staff": staff,
+        "appointments": appointments,
+        "today": today,
+    }
+
+    return render(request, "panel/staff_plan.html", context)

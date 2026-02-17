@@ -99,4 +99,7 @@ urlpatterns = [
     #گزارش درامد
     path('reports/income/', views.income_report, name='income_report'),
 
+    #برنامه کاری پرسنل
+    path('staff/<int:staff_id>/plan/', views.staff_plan, name='staff_plan'),
+
 ]

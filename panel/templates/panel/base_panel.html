@@ -418,6 +418,12 @@
     <a class="{% if request.resolver_match.url_name == 'income_report' %}active{% endif %}" href="{% url 'panel:income_report' %}">
        💲  گزارش درآمد
     </a>
+
+    <a href="{% url 'panel:staff_schedule' s.id %}"
+    class="btn btn-sm btn-outline-primary">
+    برنامه کاری
+    </a>
+
 </div>
 
 
