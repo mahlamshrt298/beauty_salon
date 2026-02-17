@@ -7,12 +7,43 @@
     <h3 class="mb-4">📊 گزارش درآمد</h3>
 
     <div class="mb-4 d-flex gap-2 flex-wrap">
-        <a href="?filter=today" class="btn btn-outline-primary">امروز</a>
-        <a href="?filter=week" class="btn btn-outline-primary">این هفته</a>
-        <a href="?filter=month" class="btn btn-outline-primary">این ماه</a>
-        <a href="?filter=year" class="btn btn-outline-primary">این سال</a>
-        <a href="{% url 'panel:income_report' %}" class="btn btn-secondary">ریست</a>
+        <a href="?filter=today {% if selected_staff %}&staff={{ selected_staff }}{% endif %}
+        {% if selected_method %}&method={{ selected_method }}{% endif %}
+        {% if request.GET.start_date %}&start_date={{ request.GET.start_date }}{% endif %}
+        {% if request.GET.end_date %}&end_date={{ request.GET.end_date }}{% endif %}"
+        class="btn {% if filter_type == 'today' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+            امروز
+        </a>
+
+        <a href="?filter=week {% if selected_staff %}&staff={{ selected_staff }}{% endif %}
+        {% if selected_method %}&method={{ selected_method }}{% endif %}
+        {% if request.GET.start_date %}&start_date={{ request.GET.start_date }}{% endif %}
+        {% if request.GET.end_date %}&end_date={{ request.GET.end_date }}{% endif %}"
+        class="btn {% if filter_type == 'week' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+            این هفته
+        </a>
+
+        <a href="?filter=month {% if selected_staff %}&staff={{ selected_staff }}{% endif %}
+        {% if selected_method %}&method={{ selected_method }}{% endif %}
+        {% if request.GET.start_date %}&start_date={{ request.GET.start_date }}{% endif %}
+        {% if request.GET.end_date %}&end_date={{ request.GET.end_date }}{% endif %}"
+        class="btn {% if filter_type == 'month' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+            این ماه
+        </a>
+
+        <a href="?filter=year {% if selected_staff %}&staff={{ selected_staff }}{% endif %}
+        {% if selected_method %}&method={{ selected_method }}{% endif %}
+        {% if request.GET.start_date %}&start_date={{ request.GET.start_date }}{% endif %}
+        {% if request.GET.end_date %}&end_date={{ request.GET.end_date }}{% endif %}"
+        class="btn {% if filter_type == 'year' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+            این سال
+        </a>
+
+        <a href="{% url 'panel:income_report' %}" class="btn btn-secondary">
+            ریست
+        </a>
     </div>
+
 
 
     <!-- فیلتر تاریخ -->
