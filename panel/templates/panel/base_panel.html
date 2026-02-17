@@ -419,8 +419,8 @@
        💲  گزارش درآمد
     </a>
 
-    <a href="{% url 'panel:staff_plan' s.id %}"
-    class="{% if request.resolver_match.url_name == 'staff_plan' %}active{% endif %}">
+    <a 
+    class="{% if request.resolver_match.url_name == 'staff_plan' %}active{% endif %}" href="{% url 'panel:staff_plan' s.id %}">
     برنامه کاری
     </a>
 
