@@ -2452,20 +2452,30 @@ from booking.models import Staff, Appointment
 from django.utils import timezone
 
 @panel_access_required
-def staff_plan(request, staff_id):
-    staff = get_object_or_404(Staff, id=staff_id)
+def staff_plan(request):
 
+    staffs = Staff.objects.filter(is_active=True)
+
+    staff_id = request.GET.get("staff")
+
+    staff = None
+    appointments = None
     today = timezone.localdate()
 
-    appointments = Appointment.objects.filter(
-        staff=staff,
-        appointment_date=today
-    ).order_by('start_time')
+    if staff_id:
+        staff = get_object_or_404(Staff, id=staff_id)
+
+        appointments = Appointment.objects.filter(
+            staff=staff,
+            appointment_date=today
+        ).order_by('start_time')
 
     context = {
+        "staffs": staffs,
         "staff": staff,
         "appointments": appointments,
         "today": today,
+        "selected_staff": staff_id,
     }
 
     return render(request, "panel/staff_plan.html", context)
