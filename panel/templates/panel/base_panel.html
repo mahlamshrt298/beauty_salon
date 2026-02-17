@@ -420,7 +420,7 @@
     </a>
 
     <a href="{% url 'panel:staff_plan' s.id %}"
-    class="btn btn-sm btn-outline-primary">
+    class="{% if request.resolver_match.url_name == 'staff_plan' %}active{% endif %}">
     برنامه کاری
     </a>
 
