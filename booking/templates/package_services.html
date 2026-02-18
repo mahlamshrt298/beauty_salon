@@ -68,7 +68,8 @@
 
 
                     {% if booking.service.image %}
-                        <img src="{{ booking.service.image.url }}"
+                        <!-- src="{{ booking.service.image.url }}" -->
+                        <img src="{% static booking.service.image %}"
                              class="card-img-top"
                              alt="{{ booking.service.name }}">
                     {% endif %}

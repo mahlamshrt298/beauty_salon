@@ -261,10 +261,11 @@
                         <!-- عکس خدمت (کوچک‌تر) -->
                         <div class="flex-shrink-0 mb-2 mb-md-0 me-md-3">
                             {% if appt.service and appt.service.image %}
-                                <img src="{{ appt.service.image.url }}"
-                                    alt="{{ appt.service.name }}"
-                                    class="rounded-2"
-                                    style="width: 60px; height: 60px; object-fit: cover;">
+                              <!-- src="{{ appt.service.image.url }}" -->  
+                              <img src="{% static appt.service.image %}"
+                                      alt="{{ appt.service.name }}"
+                                      class="rounded-2"
+                                      style="width: 60px; height: 60px; object-fit: cover;">
                             {% else %}
                                 <img src="{% static 'images/beauty_salon.png' %}"
                                     alt="تصویر پیش‌فرض خدمت"

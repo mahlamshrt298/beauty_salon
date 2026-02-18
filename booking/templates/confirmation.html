@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load humanize %}
+{% load static %}
 
 {% block title %}تایید رزرو{% endblock %}
 
@@ -19,7 +20,8 @@
         <!-- ✅ اضافه کردن عکس خدمت در بالای تاییدیه -->
         {% if appointment.service.image %}
         <div class="text-center mb-3">
-            <img src="{{ appointment.service.image.url }}" 
+            <!-- src="{{ appointment.service.image.url }}" -->
+            <img src="{% static appointment.service.image %}" 
                 alt="{{ appointment.service.name }}"
                 class="img-fluid rounded shadow-sm"
                 style="max-height: 180px; object-fit: contain; background: #f8f9fa; padding: 8px;">
