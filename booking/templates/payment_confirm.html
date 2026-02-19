@@ -31,8 +31,7 @@
         <!-- ✅ اضافه کردن عکس خدمت در بالای خلاصه -->
         {% if service.image %}
         <div class="text-center mb-3">
-            <!-- img src="{{ service.image.url }} -->
-            <img src="{% static service.image %}" 
+            <img src="{{ service.image.url }}" 
                 alt="{{ service.name }}"
                 class="img-fluid rounded shadow-sm"
                 style="max-height: 200px; object-fit: contain; background: #f8f9fa; padding: 8px;">

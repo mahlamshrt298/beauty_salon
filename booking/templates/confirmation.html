@@ -20,8 +20,7 @@
         <!-- ✅ اضافه کردن عکس خدمت در بالای تاییدیه -->
         {% if appointment.service.image %}
         <div class="text-center mb-3">
-            <!-- src="{{ appointment.service.image.url }}" -->
-            <img src="{% static appointment.service.image %}" 
+            <img src="{{ appointment.service.image.url }}" 
                 alt="{{ appointment.service.name }}"
                 class="img-fluid rounded shadow-sm"
                 style="max-height: 180px; object-fit: contain; background: #f8f9fa; padding: 8px;">

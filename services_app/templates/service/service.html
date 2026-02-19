@@ -319,7 +319,7 @@ const categoriesData = {
                         price: "{{ service.price|intcomma }}",
 
                         // {{ service.image.url }} 
-                        imageUrl: "{% if service.image %}{% static service.image %}{% else %}{% static 'images/default-service.jpg' %}{% endif %}",
+                        imageUrl: "{% if service.image %}{{ service.image.url }}{% else %}{% static 'images/default-service.jpg' %}{% endif %}",
                         // 👇 اضافه کردن عکس‌های مرتبط
                         relatedImages: [
                             {% for image in service.get_related_images %}
