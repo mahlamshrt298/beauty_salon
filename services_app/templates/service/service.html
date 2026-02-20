@@ -224,67 +224,7 @@
 
 </div>
 
-<script>
-// تابع تبدیل عدد به حروف فارسی
-function numberToWords(num) {
-    const units = ['', 'یک', 'دو', 'سه', 'چهار', 'پنج', 'شش', 'هفت', 'هشت', 'نه'];
-    const tens = ['', 'ده', 'بیست', 'سی', 'چهل', 'پنجاه', 'شصت', 'هفتاد', 'هشتاد', 'نود'];
-    const teens = ['ده', 'یازده', 'دوازده', 'سیزده', 'چهارده', 'پانزده', 'شانزده', 'هفده', 'هجده', 'نوزده'];
-    const hundreds = ['', 'صد', 'دویست', 'سیصد', 'چهارصد', 'پانصد', 'ششصد', 'هفتصد', 'هشتصد', 'نهصد'];
-    const bigs = ['', 'هزار', 'میلیون', 'میلیارد'];
-    
-    if (num === 0) return 'صفر';
-    
-    function convertThreeDigits(n) {
-        if (n === 0) return '';
-        
-        let result = '';
-        
-        // صدگان
-        const h = Math.floor(n / 100);
-        if (h > 0) {
-            result += hundreds[h] + ' و ';
-        }
-        
-        // دهگان و یکان
-        const t = n % 100;
-        if (t >= 10 && t < 20) {
-            result += teens[t - 10];
-        } else {
-            const ten = Math.floor(t / 10);
-            const unit = t % 10;
-            if (ten > 0) {
-                result += tens[ten];
-                if (unit > 0) result += ' و ';
-            }
-            if (unit > 0) {
-                result += units[unit];
-            }
-        }
-        
-        return result.replace(/ و $/, '');
-    }
-    
-    let result = '';
-    let i = 0;
-    
-    while (num > 0) {
-        const threeDigits = num % 1000;
-        if (threeDigits > 0) {
-            const part = convertThreeDigits(threeDigits);
-            if (i > 0 && part) {
-                result = part + ' ' + bigs[i] + ' و ' + result;
-            } else {
-                result = part + (i > 0 ? ' ' + bigs[i] : '') + (result ? ' و ' + result : '');
-            }
-        }
-        num = Math.floor(num / 1000);
-        i++;
-    }
-    
-    return result.trim().replace(/ و $/, '');
-}
-</script>
+
 
 <script>
 // --- جاوااسکریپت بدون تغییر ---
@@ -317,6 +257,7 @@ const categoriesData = {
                         duration: "{{ service.duration_minutes|escapejs }}",
                         description: "{{ service.description|truncatewords:10|escapejs }}",
                         price: "{{ service.price|intcomma }}",
+                        price_words: "{{ service.price_in_words }}",
 
                         // {{ service.image.url }} 
                         imageUrl: "{% if service.image %}{{ service.image.url }}{% else %}{% static 'images/default-service.jpg' %}{% endif %}",
@@ -461,7 +402,17 @@ function renderServices(services) {
 
                 <div class="service-info flex-grow-1 d-flex flex-column">
                     <h5 class="text-center w-100">${service.name}</h5>
-                    <p class="text-muted mb-2">زمان: ${service.duration} دقیقه | قیمت: ${service.price} تومان</p>
+                    <p class="text-muted mb-1">
+                    زمان: ${service.duration} دقیقه
+                    </p>
+
+                    <p class="mb-0">
+                    قیمت: ${service.price} تومان
+                    </p>
+
+                    <p class="text-muted small">
+                    (${service.price_words} تومان)
+                    </p>
                     <div class="mt-auto text-center">
                         <a href="#" class="btn-read" data-service-slug="${service.slug}" data-bs-toggle="modal" data-bs-target="#serviceModal">
                             جزئیات →
@@ -505,10 +456,6 @@ document.getElementById('serviceModal').addEventListener('show.bs.modal', functi
 
     const modalContent = document.getElementById('modalContent');
 
-    // ✅ تبدیل قیمت به حروف
-    const priceNum = parseInt(serviceData.price.toString().replace(/,/g, ''));
-    const priceWords = numberToWords(priceNum);
-
     let html = `
         <div class="row mb-4">
             <div class="col-12">
@@ -530,7 +477,7 @@ document.getElementById('serviceModal').addEventListener('show.bs.modal', functi
                 <div>
                     <p class="mb-1"><strong>قیمت:</strong> ${serviceData.price} تومان</p>
                     <p class="mb-1 text-muted" style="font-size: 0.85rem;">
-                        (${priceWords} تومان)
+                        (${serviceData.price_words} تومان)
                     </p>
                     <p class="mb-1"><strong>زمان:</strong> ${serviceData.duration} دقیقه</p>
                 </div>
@@ -609,13 +556,6 @@ document.getElementById('serviceModal').addEventListener('show.bs.modal', functi
 </script>
 
 <script>
-// اضافه کردن تابع تبدیل به حروف
-function getWordsPrice(price) {
-    const num = parseInt(price.toString().replace(/,/g, ''));
-    if (isNaN(num)) return '';
-    return numberToWords(num) + ' تومان';
-}
-
 document.addEventListener('DOMContentLoaded', function () {
   document.querySelectorAll('.open-package-modal').forEach(card => {
     card.addEventListener('click', function () {
