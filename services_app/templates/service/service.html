@@ -707,11 +707,23 @@ document.addEventListener('DOMContentLoaded', function () {
                 data-bs-dismiss="modal"></button>
 
         <!-- دکمه‌ها -->
-        <button id="zoomInBtn" class="btn btn-light position-absolute top-50 start-0 translate-middle-y ms-3">+</button>
-        <button id="zoomOutBtn" class="btn btn-light position-absolute top-50 start-0 translate-middle-y ms-5">−</button>
+        <!-- دکمه قبلی -->
+        <button id="prevImage"
+                class="btn btn-light position-absolute top-50 start-0 translate-middle-y ms-3 d-none">
+            ‹
+        </button>
 
-        <button id="prevImage" class="btn btn-light position-absolute top-50 start-0 translate-middle-y ms-5 d-none">‹</button>
-        <button id="nextImage" class="btn btn-light position-absolute top-50 end-0 translate-middle-y me-5 d-none">›</button>
+        <!-- دکمه بعدی -->
+        <button id="nextImage"
+                class="btn btn-light position-absolute top-50 end-0 translate-middle-y me-3 d-none">
+            ›
+        </button>
+
+        <!-- کنترل زوم -->
+        <div class="position-absolute top-0 end-0 m-4 d-flex flex-column gap-2">
+            <button id="zoomInBtn" class="btn btn-light">+</button>
+            <button id="zoomOutBtn" class="btn btn-light">−</button>
+        </div>
 
         <div class="zoom-container">
           <img id="zoomedImage"
