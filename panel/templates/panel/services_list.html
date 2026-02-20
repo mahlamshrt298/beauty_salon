@@ -224,7 +224,12 @@
                     </td>
 
 
-                    <td>{{ service.price|intcomma }} تومان</td>
+                    <td>
+                        <strong>{{ service.price|intcomma }} تومان</strong>
+                        <div class="text-muted small mt-1">
+                            {{ service.price_in_words }} تومان
+                        </div>
+                    </td>
                     
                     <td>
                         {% if service.is_active %}

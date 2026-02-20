@@ -3,6 +3,69 @@ from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
 from django.templatetags.static import static
 
+def number_to_persian_words(number):
+    ones = [
+        "", "یک", "دو", "سه", "چهار", "پنج", "شش",
+        "هفت", "هشت", "نه", "ده", "یازده", "دوازده",
+        "سیزده", "چهارده", "پانزده", "شانزده",
+        "هفده", "هجده", "نوزده"
+    ]
+
+    tens = [
+        "", "", "بیست", "سی", "چهل",
+        "پنجاه", "شصت", "هفتاد",
+        "هشتاد", "نود"
+    ]
+
+    hundreds = [
+        "", "صد", "دویست", "سیصد",
+        "چهارصد", "پانصد", "ششصد",
+        "هفتصد", "هشتصد", "نهصد"
+    ]
+
+    thousands = ["", "هزار", "میلیون", "میلیارد"]
+
+    if number == 0:
+        return "صفر"
+
+    words = []
+
+    def three_digit_to_words(n):
+        result = []
+        h = n // 100
+        t = (n % 100) // 10
+        o = n % 10
+
+        if h:
+            result.append(hundreds[h])
+
+        if t > 1:
+            result.append(tens[t])
+            if o:
+                result.append(ones[o])
+        elif t == 1:
+            result.append(ones[n % 100])
+        elif o:
+            result.append(ones[o])
+
+        return " و ".join(result)
+
+    parts = []
+    i = 0
+
+    while number > 0:
+        n = number % 1000
+        if n:
+            word = three_digit_to_words(n)
+            if thousands[i]:
+                word += f" {thousands[i]}"
+            parts.append(word)
+        number //= 1000
+        i += 1
+
+    return " و ".join(reversed(parts))
+
+
 # Create your models here.
 
 #دسته‌بندی‌های خدمات
@@ -85,6 +148,9 @@ class Service(models.Model):
     class Meta:
         verbose_name = _("خدمت")
         verbose_name_plural = _("خدمات")
+
+    def price_in_words(self):
+        return number_to_persian_words(self.price)
 
     def approved_reviews(self):
         """برگرداندن نظرات تأیید شده مرتبط با این خدمت"""
