@@ -172,4 +172,32 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    const categorySelect = document.getElementById('id_category');
+    const subCategorySelect = document.getElementById('id_subcategory');
+
+    categorySelect.addEventListener('change', function () {
+
+        const categoryId = this.value;
+
+        fetch(`/ajax/load-subcategories/?category_id=${categoryId}`)
+            .then(response => response.json())
+            .then(data => {
+
+                subCategorySelect.innerHTML = '<option value="">---------</option>';
+
+                data.forEach(function (item) {
+                    const option = document.createElement('option');
+                    option.value = item.id;
+                    option.textContent = item.name;
+                    subCategorySelect.appendChild(option);
+                });
+            });
+    });
+
+});
+</script>
+
 {% endblock %}

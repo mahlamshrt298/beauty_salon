@@ -530,6 +530,15 @@ def tomorrow_appointments(request):
 
 # مدیریت خدمات
 # -----------------------------
+
+from django.http import JsonResponse
+
+@login_required
+def load_subcategories(request):
+    category_id = request.GET.get('category_id')
+    subcategories = Subcategory.objects.filter(category_id=category_id).values('id', 'name')
+    return JsonResponse(list(subcategories), safe=False)
+
 @login_required
 @panel_access_required
 def services_list(request):
