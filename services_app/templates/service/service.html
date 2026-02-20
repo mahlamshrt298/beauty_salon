@@ -720,11 +720,16 @@ document.addEventListener('DOMContentLoaded', function () {
         </button>
 
         <!-- کنترل زوم -->
-        <div class="position-absolute end-0 d-flex flex-column gap-2"
-            style="top: 70px; right: 20px;">
+        <!-- کنترل زوم - کوچک‌تر و محدود به مودال عکس -->
+        <div class="position-absolute end-0 d-flex flex-column gap-1 zoom-controls"
+            style="top: 70px; right: 20px; z-index: 10;">
 
-            <button id="zoomInBtn" class="btn btn-light">+</button>
-            <button id="zoomOutBtn" class="btn btn-light">−</button>
+            <button id="zoomInBtn" class="btn btn-light btn-sm p-1" style="width: 28px; height: 28px; font-size: 0.85rem;">
+                <i class="fas fa-plus"></i>
+            </button>
+            <button id="zoomOutBtn" class="btn btn-light btn-sm p-1" style="width: 28px; height: 28px; font-size: 0.85rem;">
+                <i class="fas fa-minus"></i>
+            </button>
         </div>
 
         <div class="zoom-container">
