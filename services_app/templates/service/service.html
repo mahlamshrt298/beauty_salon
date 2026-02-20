@@ -513,7 +513,7 @@ document.getElementById('serviceModal').addEventListener('show.bs.modal', functi
         <div class="row mb-4">
             <div class="col-12">
                 <img src="${serviceData.imageUrl}" alt="${serviceData.name}"
-                     class="w-100"
+                     class="zoomable-image w-100"
                      style="max-height: 300px; object-fit: contain; border-radius: 12px;">
             </div>
         </div>
@@ -550,7 +550,7 @@ document.getElementById('serviceModal').addEventListener('show.bs.modal', functi
         serviceData.relatedImages.forEach(imgUrl => {
             html += `
                 <div class="col-6 col-md-4">
-                    <img src="${imgUrl}" class="w-100 rounded"
+                    <img src="${imgUrl}" class="w-100 rounded zoomable-image"
                         style="height:150px;
        width:100%;
        object-fit:contain;
@@ -599,6 +599,9 @@ document.getElementById('serviceModal').addEventListener('show.bs.modal', functi
             </div>
         `;
     }
+
+    window.currentGalleryImages = [serviceData.imageUrl, ...serviceData.relatedImages];
+    window.currentImageIndex = 0;
 
     modalContent.innerHTML = html;
 });
@@ -692,5 +695,206 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 
+<!-- Advanced Image Viewer Modal -->
+<div class="modal fade" id="imageZoomModal" tabindex="-1">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-content bg-dark">
+
+      <div class="modal-body position-relative text-center overflow-hidden">
+
+        <button type="button"
+                class="btn-close btn-close-white position-absolute top-0 end-0 m-3"
+                data-bs-dismiss="modal"></button>
+
+        <!-- دکمه‌ها -->
+        <button id="zoomInBtn" class="btn btn-light position-absolute top-50 start-0 translate-middle-y ms-3">+</button>
+        <button id="zoomOutBtn" class="btn btn-light position-absolute top-50 start-0 translate-middle-y ms-5">−</button>
+
+        <button id="prevImage" class="btn btn-light position-absolute top-50 start-0 translate-middle-y ms-5 d-none">‹</button>
+        <button id="nextImage" class="btn btn-light position-absolute top-50 end-0 translate-middle-y me-5 d-none">›</button>
+
+        <div class="zoom-container">
+          <img id="zoomedImage"
+               src=""
+               style="max-height: 85vh; cursor: grab; transition: transform 0.2s ease;">
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+
+let scale = 1;
+let posX = 0;
+let posY = 0;
+let isDragging = false;
+let startX, startY;
+
+const zoomedImage = document.getElementById('zoomedImage');
+const zoomModalEl = document.getElementById('imageZoomModal');
+
+function updateTransform() {
+    zoomedImage.style.transform =
+        `translate(${posX}px, ${posY}px) scale(${scale})`;
+}
+
+// باز شدن مودال
+document.addEventListener('click', function (e) {
+
+    if (e.target.classList.contains('zoomable-image')) {
+
+        const imageUrl = e.target.src;
+        zoomedImage.src = imageUrl;
+
+        if (window.currentGalleryImages) {
+            window.currentImageIndex =
+                window.currentGalleryImages.indexOf(imageUrl);
+        }
+
+        scale = 1;
+        posX = 0;
+        posY = 0;
+        updateTransform();
+
+        const zoomModal = new bootstrap.Modal(zoomModalEl, {
+            backdrop: false
+        });
+        zoomModal.show();
+
+        updateNavigation();
+    }
+});
+
+
+// =======================
+// 1️⃣ Mouse Wheel Zoom
+// =======================
+zoomedImage.addEventListener('wheel', function (e) {
+    e.preventDefault();
+    scale += e.deltaY < 0 ? 0.1 : -0.1;
+    scale = Math.min(Math.max(1, scale), 4);
+    updateTransform();
+});
+
+
+// =======================
+// 2️⃣ Double Click Zoom
+// =======================
+zoomedImage.addEventListener('dblclick', function () {
+    scale = scale === 1 ? 2 : 1;
+    posX = 0;
+    posY = 0;
+    updateTransform();
+});
+
+
+// =======================
+// 3️⃣ Drag
+// =======================
+zoomedImage.addEventListener('mousedown', function (e) {
+    if (scale <= 1) return;
+    isDragging = true;
+    startX = e.clientX - posX;
+    startY = e.clientY - posY;
+    zoomedImage.style.cursor = "grabbing";
+});
+
+document.addEventListener('mousemove', function (e) {
+    if (!isDragging) return;
+    posX = e.clientX - startX;
+    posY = e.clientY - startY;
+    updateTransform();
+});
+
+document.addEventListener('mouseup', function () {
+    isDragging = false;
+    zoomedImage.style.cursor = "grab";
+});
+
+
+// =======================
+// 4️⃣ Buttons + −
+// =======================
+document.getElementById('zoomInBtn').onclick = function () {
+    scale += 0.2;
+    updateTransform();
+};
+
+document.getElementById('zoomOutBtn').onclick = function () {
+    scale -= 0.2;
+    scale = Math.max(1, scale);
+    updateTransform();
+};
+
+
+// =======================
+// 5️⃣ Gallery Navigation
+// =======================
+function updateNavigation() {
+    const hasGallery =
+        window.currentGalleryImages &&
+        window.currentGalleryImages.length > 1;
+
+    document.getElementById('prevImage')
+        .classList.toggle('d-none', !hasGallery);
+
+    document.getElementById('nextImage')
+        .classList.toggle('d-none', !hasGallery);
+}
+
+document.getElementById('prevImage').onclick = function () {
+    if (!window.currentGalleryImages) return;
+    window.currentImageIndex =
+        (window.currentImageIndex - 1 +
+         window.currentGalleryImages.length) %
+        window.currentGalleryImages.length;
+
+    zoomedImage.src =
+        window.currentGalleryImages[window.currentImageIndex];
+
+    scale = 1;
+    posX = posY = 0;
+    updateTransform();
+};
+
+document.getElementById('nextImage').onclick = function () {
+    if (!window.currentGalleryImages) return;
+    window.currentImageIndex =
+        (window.currentImageIndex + 1) %
+        window.currentGalleryImages.length;
+
+    zoomedImage.src =
+        window.currentGalleryImages[window.currentImageIndex];
+
+    scale = 1;
+    posX = posY = 0;
+    updateTransform();
+};
+
+
+// =======================
+// 6️⃣ Swipe Mobile
+// =======================
+let touchStartX = 0;
+
+zoomedImage.addEventListener('touchstart', function (e) {
+    touchStartX = e.changedTouches[0].screenX;
+});
+
+zoomedImage.addEventListener('touchend', function (e) {
+    let diff = e.changedTouches[0].screenX - touchStartX;
+
+    if (Math.abs(diff) > 50) {
+        if (diff > 0) {
+            document.getElementById('prevImage').click();
+        } else {
+            document.getElementById('nextImage').click();
+        }
+    }
+});
+
+</script>
 
 {% endblock %}
