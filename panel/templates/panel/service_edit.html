@@ -182,7 +182,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const categoryId = this.value;
 
-        fetch(`/ajax/load-subcategories/?category_id=${categoryId}`)
+        fetch("{% url 'panel:ajax_load_subcategories' %}?category_id=" + categoryId)
             .then(response => response.json())
             .then(data => {
 
