@@ -25,7 +25,7 @@ class ServiceForm(forms.ModelForm):
         initial=0,
         widget=forms.Select(attrs={'class': 'form-select form-select-sm w-auto d-inline-block'})
     )
-    
+
     class Meta:
         model = Service
         fields = [
@@ -38,7 +38,18 @@ class ServiceForm(forms.ModelForm):
             "image",
            
         ]
-    
+        
+    def clean(self):
+        cleaned_data = super().clean()
+
+        hours = int(cleaned_data.get('duration_hours') or 0)
+        minutes = int(cleaned_data.get('duration_extra_minutes') or 0)
+
+        if hours == 0 and minutes == 0:
+            raise forms.ValidationError("مدت زمان خدمت نمی‌تواند صفر باشد.")
+
+        return cleaned_data
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 

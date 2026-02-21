@@ -14,8 +14,44 @@
                 اطلاعات اصلی خدمت
             </div>
             <div class="card-body">
-                {{ form|crispy }}
-             </div>
+
+                {{ form.name|as_crispy_field }}
+                {{ form.description|as_crispy_field }}
+                {{ form.price|as_crispy_field }}
+                {{ form.is_active|as_crispy_field }}
+                {{ form.category|as_crispy_field }}
+                {{ form.subcategory|as_crispy_field }}
+                {{ form.image|as_crispy_field }}
+
+                <!-- 🔥 مدت زمان انجام خدمت -->
+                <div class="mb-3">
+                    <label class="form-label fw-bold d-flex align-items-center gap-2">
+                        <i class="bi bi-clock-history text-primary fs-5"></i>
+                        مدت زمان انجام خدمت
+                    </label>
+
+                    <div class="row align-items-center">
+
+                        <div class="col-auto">
+                            {{ form.duration_hours }}
+                        </div>
+
+                        <div class="col-auto">
+                            <span>ساعت</span>
+                        </div>
+
+                        <div class="col-auto">
+                            {{ form.duration_extra_minutes }}
+                        </div>
+
+                        <div class="col-auto">
+                            <span>دقیقه</span>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
         </div>
 
         <div class="card mb-4">
@@ -196,6 +232,25 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
             });
     });
+
+});
+</script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+
+    const hourSelect = document.getElementById("id_duration_hours");
+    const minuteSelect = document.getElementById("id_duration_extra_minutes");
+
+    if (hourSelect && minuteSelect) {
+
+        hourSelect.addEventListener("change", function() {
+            if (parseInt(this.value) > 0) {
+                minuteSelect.value = "0";
+            }
+        });
+
+    }
 
 });
 </script>
