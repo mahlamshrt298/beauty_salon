@@ -66,7 +66,19 @@
                                         <tr>
                                             <td>{{ cat.name }}</td>
                                             <td>{{ cat.subcategories.count }}</td>
-                                            <td>
+                                            <td class="d-flex gap-2">
+
+                                                <!-- دکمه ویرایش -->
+                                                <button type="button"
+                                                    class="btn btn-primary btn-sm edit-category-btn"
+                                                    data-id="{{ cat.id }}"
+                                                    data-name="{{ cat.name }}"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#editCategoryModal">
+                                                ویرایش
+                                            </button>
+
+
                                                 {% if cat.subcategories.exists %}
                                                     <button class="btn btn-secondary btn-sm" disabled>
                                                         غیرقابل حذف
@@ -80,7 +92,9 @@
                                                         </button>
                                                     </form>
                                                 {% endif %}
+
                                             </td>
+
                                         </tr>
                                         {% endfor %}
                                     </tbody>
@@ -117,7 +131,20 @@
                                             <td>{{ sub.name }}</td>
                                             <td>{{ sub.category.name }}</td>
                                             <td>{{ sub.services.count }}</td>
-                                            <td>
+                                            <td class="d-flex gap-2">
+
+                                                <!-- دکمه ویرایش -->
+                                                <button type="button"
+                                                    class="btn btn-primary btn-sm edit-subcategory-btn"
+                                                    data-id="{{ sub.id }}"
+                                                    data-name="{{ sub.name }}"
+                                                    data-category="{{ sub.category.id }}"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#editSubcategoryModal">
+                                                ویرایش
+                                            </button>
+
+
                                                 {% if sub.services.exists %}
                                                     <button class="btn btn-secondary btn-sm" disabled>
                                                         غیرقابل حذف
@@ -131,7 +158,9 @@
                                                         </button>
                                                     </form>
                                                 {% endif %}
+
                                             </td>
+
                                         </tr>
                                         {% endfor %}
                                     </tbody>
@@ -350,5 +379,100 @@
     {% endif %}
 
 </div>
+
+<div class="modal fade" id="editCategoryModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="post" id="editCategoryForm">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title">ویرایش دسته</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="text"
+                 name="name"
+                 id="editCategoryName"
+                 class="form-control"
+                 required>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-success">ذخیره</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+
+<div class="modal fade" id="editSubcategoryModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="post" id="editSubcategoryForm">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title">ویرایش زیردسته</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+
+          <input type="text"
+                 name="name"
+                 id="editSubcategoryName"
+                 class="form-control mb-3"
+                 required>
+
+          <select name="category"
+                  id="editSubcategoryCategory"
+                  class="form-select">
+              {% for cat in categories %}
+                  <option value="{{ cat.id }}">{{ cat.name }}</option>
+              {% endfor %}
+          </select>
+
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-success">ذخیره</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+
+    // دسته
+    document.querySelectorAll(".edit-category-btn").forEach(btn => {
+        btn.addEventListener("click", function() {
+            const id = this.dataset.id;
+            const name = this.dataset.name;
+
+            document.getElementById("editCategoryName").value = name;
+
+            document.getElementById("editCategoryForm").action =
+                "{% url 'panel:category_edit' 0 %}".replace("0", id);
+        });
+    });
+
+    // زیردسته
+    document.querySelectorAll(".edit-subcategory-btn").forEach(btn => {
+        btn.addEventListener("click", function() {
+            const id = this.dataset.id;
+            const name = this.dataset.name;
+            const category = this.dataset.category;
+
+            document.getElementById("editSubcategoryName").value = name;
+            document.getElementById("editSubcategoryCategory").value = category;
+
+            document.getElementById("editSubcategoryForm").action =
+                "{% url 'panel:subcategory_edit' 0 %}".replace("0", id);
+        });
+    });
+
+});
+</script>
+
 
 {% endblock %}

@@ -32,6 +32,9 @@ urlpatterns = [
         name="service_toggle_status"
     ),
 
+    path("category/edit/<int:id>/", views.category_edit, name="category_edit"),
+    path("subcategory/edit/<int:id>/", views.subcategory_edit, name="subcategory_edit"),
+
     path('ajax/load-subcategories/', views.load_subcategories, name='ajax_load_subcategories'),
 
     # مدیریت منشی‌ها

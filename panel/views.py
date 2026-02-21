@@ -682,6 +682,49 @@ def subcategory_add(request):
         "categories": categories
     })
 
+@login_required
+@panel_access_required
+def category_edit(request, id):
+    category = get_object_or_404(Category, id=id)
+
+    if request.method == "POST":
+        name = request.POST.get("name")
+
+        if name:
+            category.name = name
+            category.slug = ""  # برای ساخت اسلاگ جدید
+            category.save()
+            messages.success(request, "دسته با موفقیت ویرایش شد.", extra_tags="panel")
+            return redirect("panel:services_list")
+
+    return render(request, "panel/category_edit.html", {
+        "category": category
+    })
+
+@login_required
+@panel_access_required
+def subcategory_edit(request, id):
+    subcategory = get_object_or_404(Subcategory, id=id)
+    categories = Category.objects.all()
+
+    if request.method == "POST":
+        name = request.POST.get("name")
+        category_id = request.POST.get("category")
+
+        if name and category_id:
+            subcategory.name = name
+            subcategory.category_id = category_id
+            subcategory.slug = ""
+            subcategory.save()
+            messages.success(request, "زیردسته با موفقیت ویرایش شد.", extra_tags="panel")
+            return redirect("panel:services_list")
+
+    return render(request, "panel/subcategory_edit.html", {
+        "subcategory": subcategory,
+        "categories": categories
+    })
+
+
 @require_POST
 @login_required
 @panel_access_required
