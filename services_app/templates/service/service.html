@@ -479,7 +479,21 @@ document.getElementById('serviceModal').addEventListener('show.bs.modal', functi
                     <p class="mb-1 text-muted" style="font-size: 0.85rem;">
                         (${serviceData.price_words} تومان)
                     </p>
+
+                    {% if settings.global_price_note %}
+                        <small class="text-muted d-block">
+                            {{ settings.global_price_note }}
+                        </small>
+                    {% endif %}
+
                     <p class="mb-1"><strong>زمان:</strong> ${serviceData.duration} دقیقه</p>
+                
+                    {% if settings.global_duration_note %}
+                        <small class="text-muted d-block">
+                            {{ settings.global_duration_note }}
+                        </small>
+                    {% endif %}
+
                 </div>
                 <a href="/booking/reserve/?service=${serviceData.slug}" class="btn btn-gold">
                     <i class="fas fa-calendar-check"></i> رزرو نوبت

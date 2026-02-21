@@ -20,6 +20,7 @@ from core.models import SalonSettings
 from core.models import PackageBooking
 from django.db.models import Q
 from services_app.models import number_to_persian_words
+from core.models import SalonSettings
 
 MAX_ACTIVE_APPOINTMENTS_PER_USER = 5
 
@@ -662,6 +663,8 @@ def payment_confirm(request):
         request.POST["final_submit"] = "1"
 
 
+    settings = SalonSettings.objects.first()
+
     # 1️⃣ اعمال کد تخفیف
     if "apply_discount" in request.POST:
 
@@ -708,6 +711,7 @@ def payment_confirm(request):
             'selected_staff': selected_staff,
             'staff_label': staff_label,
             'discounted_price_words': discounted_price_words,
+            'settings': settings,
         }
         return render(request, "payment_confirm.html", context)
     
@@ -717,6 +721,11 @@ def payment_confirm(request):
         # 🔥 فقط اینجا نوبت ساخته شود
         #             
         payment_method = request.POST.get('payment_method', 'cash')
+
+        # 🚨 جلوگیری از تقلب در صورت غیرفعال بودن پرداخت آنلاین
+        if payment_method == "online" and not settings.enable_online_payment:
+            messages.error(request, "پرداخت آنلاین در حال حاضر غیرفعال است.", extra_tags="front")
+            return redirect("reserve")
 
         if end_time is None:
             # محاسبه دوباره end_time
@@ -918,7 +927,7 @@ def payment_confirm(request):
         'selected_staff': selected_staff,
         'staff_label': staff_label,
         'discounted_price_words': discounted_price_words,
-
+        'settings': settings,
     }
     return render(request, 'payment_confirm.html', context)
 

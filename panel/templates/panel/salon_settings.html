@@ -53,6 +53,32 @@
                             </div>
                         </div>
 
+                        <div class="card mb-3">
+                            <div class="card-header bg-info text-white">
+                                <h5 class="mb-0">💳 تنظیمات پرداخت آنلاین</h5>
+                            </div>
+                            <div class="card-body">
+
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input"
+                                        type="checkbox"
+                                        name="enable_online_payment"
+                                        id="enable_online_payment"
+                                        {% if settings.enable_online_payment %}checked{% endif %}
+                                        {% if is_read_only %}disabled{% endif %}>
+                                        
+                                    <label class="form-check-label" for="enable_online_payment">
+                                        فعال بودن پرداخت آنلاین
+                                    </label>
+                                </div>
+
+                                <small class="text-muted d-block mt-2">
+                                    در صورت غیرفعال بودن، گزینه پرداخت آنلاین در صفحه رزرو نمایش داده نخواهد شد.
+                                </small>
+
+                            </div>
+                        </div>
+
                         <!-- وقت ناهار سالن -->
                         <div class="card mb-3">
                             <div class="card-header bg-warning">
@@ -83,6 +109,35 @@
                                         </div>
                                     </div>
                                 </div>
+                            </div>
+                        </div>
+
+                        <div class="card mb-3">
+                            <div class="card-header bg-secondary text-white">
+                                <h5 class="mb-0">📝 توضیحات سراسری خدمات</h5>
+                            </div>
+                            <div class="card-body">
+
+                                <div class="mb-3">
+                                    <label class="form-label">توضیح سراسری مدت زمان خدمات</label>
+                                    <input type="text"
+                                        name="global_duration_note"
+                                        class="form-control"
+                                        value="{{ settings.global_duration_note|default:'' }}"
+                                        placeholder="مثلاً: مدت زمان اعلامی تقریبی است."
+                                        {% if is_read_only %}disabled{% endif %}>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">توضیح سراسری قیمت خدمات</label>
+                                    <input type="text"
+                                        name="global_price_note"
+                                        class="form-control"
+                                        value="{{ settings.global_price_note|default:'' }}"
+                                        placeholder="مثلاً: قیمت اعلام‌شده حداقل مبلغ است."
+                                        {% if is_read_only %}disabled{% endif %}>
+                                </div>
+
                             </div>
                         </div>
 

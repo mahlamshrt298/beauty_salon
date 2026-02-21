@@ -30,9 +30,24 @@ class SalonSettings(models.Model):
     # تنظیمات روزهای تعطیل هفتگی
     weekend_days = models.JSONField(default=list, verbose_name="روزهای تعطیل هفتگی")
     # مثال: ["جمعه", "شنبه"]
-    
+    enable_online_payment = models.BooleanField(
+        default=False,
+        verbose_name="فعال بودن پرداخت آنلاین"
+    )
 
     booking_interval = models.IntegerField(default=15)
+
+    global_duration_note = models.CharField(
+        max_length=255,
+        blank=True,
+        verbose_name="توضیح سراسری مدت زمان"
+    )
+
+    global_price_note = models.CharField(
+        max_length=255,
+        blank=True,
+        verbose_name="توضیح سراسری قیمت"
+    )
 
     class Meta:
         verbose_name = "تنظیمات سالن"

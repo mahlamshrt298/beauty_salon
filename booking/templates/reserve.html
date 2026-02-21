@@ -247,6 +247,18 @@
                         <span class="text-muted" style="font-size: 0.85rem;">
                             (${s.price_words} تومان)
                         </span>
+
+                        {% if settings.global_duration_note %}
+                        <small class="text-muted d-block">
+                            {{ settings.global_duration_note }}
+                        </small>
+                        {% endif %}
+
+                        {% if settings.global_price_note %}
+                        <small class="text-muted d-block">
+                            {{ settings.global_price_note }}
+                        </small>
+                        {% endif %}
                     </p>
                         <div class="mt-auto text-center">
                             <button class="btn btn-primary mt-2 select-service-btn" 

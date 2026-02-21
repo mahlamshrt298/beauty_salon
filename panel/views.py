@@ -2063,6 +2063,10 @@ def salon_settings(request):
         settings.salon_lunch_start = request.POST.get('salon_lunch_start', '13:00')
         settings.salon_lunch_end = request.POST.get('salon_lunch_end','14:00')
         settings.whatsapp = request.POST.get('whatsapp', '').strip()
+        settings.enable_online_payment = request.POST.get('enable_online_payment') == 'on'
+        settings.global_duration_note = request.POST.get('global_duration_note', '').strip()
+        settings.global_price_note = request.POST.get('global_price_note', '').strip()
+
         settings.save()
         messages.success(request, "تنظیمات ذخیره شد", extra_tags="panel")
         return redirect('panel:salon_settings')
