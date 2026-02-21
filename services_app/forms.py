@@ -75,7 +75,14 @@ class ServiceForm(forms.ModelForm):
         # وقتی در حالت ویرایش هستیم
         elif self.instance.pk:
             self.fields['subcategory'].queryset = self.instance.category.subcategories.all()
-    
+        
+         # ✅ تغییر لیبل قیمت
+        self.fields['price'].label = "حداقل قیمت (تومان)"
+
+        # ✅ اضافه کردن راهنما زیر فیلد
+        self.fields['price'].help_text = "قیمت اعلامی حداقل هزینه خدمت است و ممکن است بسته به شرایط افزایش یابد."
+
+
     def save(self, commit=True):
         instance = super().save(commit=False)
 

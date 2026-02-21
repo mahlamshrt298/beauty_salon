@@ -61,6 +61,17 @@
 
     <p class="text-muted">لطفاً یکی از خدمات پکیج را انتخاب کنید:</p>
 
+    {% if settings.global_duration_note or settings.global_price_note %}
+        <div class="alert alert-light border small text-muted py-2">
+            {% if settings.global_duration_note %}
+                ⏱ {{ settings.global_duration_note }} <br>
+            {% endif %}
+            {% if settings.global_price_note %}
+                💰 {{ settings.global_price_note }}
+            {% endif %}
+        </div>
+    {% endif %}
+
     <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-5 g-3">
         {% for booking in bookings %}
             <div class="col mb-4">
