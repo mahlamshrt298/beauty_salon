@@ -2,21 +2,30 @@ from django import forms
 from .models import Service, ServiceImage, Subcategory
 
 class ServiceForm(forms.ModelForm):
-    duration_hours = forms.IntegerField(
+    HOUR_CHOICES = [(i, str(i)) for i in range(0, 13)]
+    MINUTE_CHOICES = [
+        (0, "00"),
+        (15, "15"),
+        (30, "30"),
+        (45, "45"),
+    ]
+
+    duration_hours = forms.ChoiceField(
         label="ساعت",
+        choices=HOUR_CHOICES,
         required=False,
-        min_value=0,
-        initial=0
+        initial=0,
+        widget=forms.Select(attrs={'class': 'form-select form-select-sm w-auto d-inline-block'})
     )
 
-    duration_extra_minutes = forms.IntegerField(
+    duration_extra_minutes = forms.ChoiceField(
         label="دقیقه",
+        choices=MINUTE_CHOICES,
         required=False,
-        min_value=0,
-        max_value=59,
-        initial=0
+        initial=0,
+        widget=forms.Select(attrs={'class': 'form-select form-select-sm w-auto d-inline-block'})
     )
-
+    
     class Meta:
         model = Service
         fields = [
