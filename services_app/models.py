@@ -140,6 +140,19 @@ class Service(models.Model):
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='services', verbose_name=_("دسته اصلی"))
     
     @property
+    def duration_display(self):
+        hours = self.duration_minutes // 60
+        minutes = self.duration_minutes % 60
+
+        if hours and minutes:
+            return f"{hours} ساعت و {minutes} دقیقه"
+        elif hours:
+            return f"{hours} ساعت"
+        else:
+            return f"{minutes} دقیقه"
+
+
+    @property
     def image_url(self):
         if self.image:
             return self.image.url

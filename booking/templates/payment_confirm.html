@@ -49,6 +49,10 @@
             <span class="text-success fw-bold price-amount" data-price="{{ service.price }}">
                 {{ service.price|intcomma }} تومان
             </span>
+            <small class="text-muted d-block mt-1">
+                ({{ service.price_in_words }} تومان)
+            </small>
+
         </p>
         
         {% if discounted_price %}
@@ -57,6 +61,9 @@
                 قیمت نهایی: 
                 <span class="fw-bold discounted-price" data-price="{{ discounted_price }}">
                     {{ discounted_price|intcomma }} تومان
+                    <small class="d-block text-muted">
+                        ({{ discounted_price_words }} تومان)
+                    </small>
                 </span>
             </p>
         {% endif %}
@@ -112,97 +119,6 @@
 {% endblock %}
 
 {% block scripts %}
-
-<!-- ✅ تابع تبدیل عدد به حروف فارسی -->
-<script>
-function numberToWords(num) {
-    const units = ['', 'یک', 'دو', 'سه', 'چهار', 'پنج', 'شش', 'هفت', 'هشت', 'نه'];
-    const tens = ['', 'ده', 'بیست', 'سی', 'چهل', 'پنجاه', 'شصت', 'هفتاد', 'هشتاد', 'نود'];
-    const teens = ['ده', 'یازده', 'دوازده', 'سیزده', 'چهارده', 'پانزده', 'شانزده', 'هفده', 'هجده', 'نوزده'];
-    const hundreds = ['', 'صد', 'دویست', 'سیصد', 'چهارصد', 'پانصد', 'ششصد', 'هفتصد', 'هشتصد', 'نهصد'];
-    const bigs = ['', 'هزار', 'میلیون', 'میلیارد'];
-    
-    if (num === 0) return 'صفر';
-    
-    function convertThreeDigits(n) {
-        if (n === 0) return '';
-        
-        let result = '';
-        
-        const h = Math.floor(n / 100);
-        if (h > 0) {
-            result += hundreds[h] + ' و ';
-        }
-        
-        const t = n % 100;
-        if (t >= 10 && t < 20) {
-            result += teens[t - 10];
-        } else {
-            const ten = Math.floor(t / 10);
-            const unit = t % 10;
-            if (ten > 0) {
-                result += tens[ten];
-                if (unit > 0) result += ' و ';
-            }
-            if (unit > 0) {
-                result += units[unit];
-            }
-        }
-        
-        return result.replace(/ و $/, '');
-    }
-    
-    let result = '';
-    let i = 0;
-    
-    while (num > 0) {
-        const threeDigits = num % 1000;
-        if (threeDigits > 0) {
-            const part = convertThreeDigits(threeDigits);
-            if (i > 0 && part) {
-                result = part + ' ' + bigs[i] + ' و ' + result;
-            } else {
-                result = part + (i > 0 ? ' ' + bigs[i] : '') + (result ? ' و ' + result : '');
-            }
-        }
-        num = Math.floor(num / 1000);
-        i++;
-    }
-    
-    return result.trim().replace(/ و $/, '');
-}
-
-// ✅ نمایش قیمت به حروف در صفحه
-document.addEventListener('DOMContentLoaded', function() {
-    // قیمت اصلی
-    const priceElement = document.querySelector('.price-amount');
-    if (priceElement) {
-        const priceNum = parseInt(priceElement.dataset.price);
-        if (!isNaN(priceNum)) {
-            const priceWords = numberToWords(priceNum);
-            const small = document.createElement('small');
-            small.className = 'text-muted d-block mt-1';
-            small.style.fontSize = '0.85rem';
-            small.textContent = `(${priceWords} تومان)`;
-            priceElement.parentNode.appendChild(small);
-        }
-    }
-    
-    // قیمت تخفیف‌خورده
-    const discountElement = document.querySelector('.discounted-price');
-    if (discountElement) {
-        const discountNum = parseInt(discountElement.dataset.price);
-        if (!isNaN(discountNum)) {
-            const discountWords = numberToWords(discountNum);
-            const small = document.createElement('small');
-            small.className = 'text-muted d-block mt-1';
-            small.style.fontSize = '0.85rem';
-            small.textContent = `(${discountWords} تومان)`;
-            discountElement.parentNode.appendChild(small);
-        }
-    }
-});
-</script>
 
 <script src="{% static 'js/booking-flow.js' %}"></script>
 

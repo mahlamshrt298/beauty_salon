@@ -11,6 +11,7 @@ from booking.models import PackagePayment
 from core.models import PackageBooking
 from django.contrib.auth.decorators import login_required, user_passes_test
 from core.models import SalonSettings
+from services_app.models import number_to_persian_words
 
 def about(request):
     # ✅ دریافت پرسنل‌های فعال و قابل نمایش در صفحه درباره ما
@@ -68,6 +69,15 @@ def home(request):
       # ← اینجا مشخص می‌کنه که صفحه فعلی "home" هست
     # پکیج‌های فعال
     active_packages = Package.objects.filter(is_active=True ,  show_on_homepage=True )
+
+    for package in active_packages:
+        if package.original_price:
+            package.original_price_words = number_to_persian_words(int(package.original_price))
+        else:
+            package.original_price_words = None
+
+        package.discounted_price_words = number_to_persian_words(int(package.discounted_price))
+
 
     # اضافه کردن زمان باقی‌مانده به هر پکیج
     for package in active_packages:

@@ -249,7 +249,7 @@
           <small class="text-muted">آخرین وضعیت نوبت‌ها</small>
         </div>
         <div class="card-body">
-          {% if appointments.object_list %}
+          {% if appointments and appointments.object_list %}
             <div class="list-group">
               {% for appt in appointments %}
                 <!-- جایگزینی این بخش -->
@@ -326,9 +326,11 @@
                                     
                                     <div class="d-flex justify-content-between mt-1 fw-bold align-items-center">
                                         <span>هزینه نهایی: {{ appt.payment_info.amount|floatformat:"0"|intcomma }} تومان</span>
-                                        <span class="price-words text-muted small" 
-                                              style="font-size: 0.85rem; direction: ltr; text-align: left;"
-                                              data-price="{{ appt.payment_info.amount|floatformat:'0' }}"></span>
+                                        {% if appt.payment_info.amount_in_words %}
+                                            <div class="text-muted small mt-1" style="font-size: 0.85rem; direction: ltr; text-align: left;">
+                                                ({{ appt.payment_info.amount_in_words }} تومان)
+                                            </div>
+                                        {% endif %}
                                     </div>
                                 </div>
                                 {% endif %}
@@ -444,7 +446,7 @@
         </div>
 
         <div class="card-body">
-          {% if user_reviews %}
+          {% if user_reviews and user_reviews.object_list %}
             <div class="list-group">
 
               {% for review in user_reviews %}
@@ -570,82 +572,6 @@
 <!-- JS: پیش‌نمایش عکس و تعاملات کوچک -->
 {% block scripts %}
 {{ block.super }}
-
-<!-- ✅ تابع تبدیل عدد به حروف فارسی -->
-<script>
-function numberToWords(num) {
-    const units = ['', 'یک', 'دو', 'سه', 'چهار', 'پنج', 'شش', 'هفت', 'هشت', 'نه'];
-    const tens = ['', 'ده', 'بیست', 'سی', 'چهل', 'پنجاه', 'شصت', 'هفتاد', 'هشتاد', 'نود'];
-    const teens = ['ده', 'یازده', 'دوازده', 'سیزده', 'چهارده', 'پانزده', 'شانزده', 'هفده', 'هجده', 'نوزده'];
-    const hundreds = ['', 'صد', 'دویست', 'سیصد', 'چهارصد', 'پانصد', 'ششصد', 'هفتصد', 'هشتصد', 'نهصد'];
-    const bigs = ['', 'هزار', 'میلیون', 'میلیارد'];
-    
-    if (num === 0) return 'صفر';
-    
-    function convertThreeDigits(n) {
-        if (n === 0) return '';
-        
-        let result = '';
-        
-        const h = Math.floor(n / 100);
-        if (h > 0) {
-            result += hundreds[h] + ' و ';
-        }
-        
-        const t = n % 100;
-        if (t >= 10 && t < 20) {
-            result += teens[t - 10];
-        } else {
-            const ten = Math.floor(t / 10);
-            const unit = t % 10;
-            if (ten > 0) {
-                result += tens[ten];
-                if (unit > 0) result += ' و ';
-            }
-            if (unit > 0) {
-                result += units[unit];
-            }
-        }
-        
-        return result.replace(/ و $/, '');
-    }
-    
-    let result = '';
-    let i = 0;
-    
-    while (num > 0) {
-        const threeDigits = num % 1000;
-        if (threeDigits > 0) {
-            const part = convertThreeDigits(threeDigits);
-            if (i > 0 && part) {
-                result = part + ' ' + bigs[i] + ' و ' + result;
-            } else {
-                result = part + (i > 0 ? ' ' + bigs[i] : '') + (result ? ' و ' + result : '');
-            }
-        }
-        num = Math.floor(num / 1000);
-        i++;
-    }
-    
-    return result.trim().replace(/ و $/, '');
-}
-
-<!-- ✅ نمایش قیمت نهایی به حروف در کارت‌های نوبت (نسخه بهینه‌شده) -->
-document.addEventListener('DOMContentLoaded', function() {
-    // فقط برای المان‌های price-words در صفحه پروفایل
-    document.querySelectorAll('.price-words').forEach(element => {
-        const priceStr = element.dataset.price;
-        if (!priceStr) return;
-        
-        const priceNum = parseInt(priceStr.replace(/,/g, ''));
-        if (isNaN(priceNum)) return;
-        
-        // تبدیل به حروف فارسی
-        const words = numberToWords(priceNum);
-        element.textContent = `(${words} تومان)`;
-    });
-});
-</script>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {

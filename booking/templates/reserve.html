@@ -66,67 +66,6 @@
 {% endblock content %}
 
 {% block scripts %}
-<script>
-// تابع تبدیل عدد به حروف فارسی
-function numberToWords(num) {
-    const units = ['', 'یک', 'دو', 'سه', 'چهار', 'پنج', 'شش', 'هفت', 'هشت', 'نه'];
-    const tens = ['', 'ده', 'بیست', 'سی', 'چهل', 'پنجاه', 'شصت', 'هفتاد', 'هشتاد', 'نود'];
-    const teens = ['ده', 'یازده', 'دوازده', 'سیزده', 'چهارده', 'پانزده', 'شانزده', 'هفده', 'هجده', 'نوزده'];
-    const hundreds = ['', 'صد', 'دویست', 'سیصد', 'چهارصد', 'پانصد', 'ششصد', 'هفتصد', 'هشتصد', 'نهصد'];
-    const bigs = ['', 'هزار', 'میلیون', 'میلیارد'];
-    
-    if (num === 0) return 'صفر';
-    
-    function convertThreeDigits(n) {
-        if (n === 0) return '';
-        
-        let result = '';
-        
-        // صدگان
-        const h = Math.floor(n / 100);
-        if (h > 0) {
-            result += hundreds[h] + ' و ';
-        }
-        
-        // دهگان و یکان
-        const t = n % 100;
-        if (t >= 10 && t < 20) {
-            result += teens[t - 10];
-        } else {
-            const ten = Math.floor(t / 10);
-            const unit = t % 10;
-            if (ten > 0) {
-                result += tens[ten];
-                if (unit > 0) result += ' و ';
-            }
-            if (unit > 0) {
-                result += units[unit];
-            }
-        }
-        
-        return result.replace(/ و $/, '');
-    }
-    
-    let result = '';
-    let i = 0;
-    
-    while (num > 0) {
-        const threeDigits = num % 1000;
-        if (threeDigits > 0) {
-            const part = convertThreeDigits(threeDigits);
-            if (i > 0 && part) {
-                result = part + ' ' + bigs[i] + ' و ' + result;
-            } else {
-                result = part + (i > 0 ? ' ' + bigs[i] : '') + (result ? ' و ' + result : '');
-            }
-        }
-        num = Math.floor(num / 1000);
-        i++;
-    }
-    
-    return result.trim().replace(/ و $/, '');
-}
-</script>
 
 <script>
     const DEFAULT_SERVICE_IMAGE = "{% static 'images/default-service.jpg' %}";
@@ -147,9 +86,10 @@ function numberToWords(num) {
                         {
                             id: {{ s.id }},
                             name: "{{ s.name|escapejs }}",
-                            duration: "{{ s.duration_minutes }}",
+                            duration: "{{ s.duration_display }}",
                             description: "{{ s.description|truncatewords:10|escapejs }}",
                             price: "{{ s.price|intcomma }}",
+                            price_words: "{{ s.price_in_words }}",
 
                             imageUrl: "{% if s.image %}{{ s.image.url }}{% else %}{{ DEFAULT_SERVICE_IMAGE }}{% endif %}",
                         }{% if not forloop.last %},{% endif %}
@@ -288,8 +228,6 @@ function numberToWords(num) {
 
         let html = `<div class="row g-3">`;
         services.forEach(s => {
-            // ✅ تبدیل قیمت به حروف
-            const priceWords = numberToWords(parseInt(s.price.replace(/,/g, '')));
             
             html += `
             <div class="col-12">
@@ -305,9 +243,9 @@ function numberToWords(num) {
 
                     <div class="service-info flex-grow-1 d-flex flex-column">
                         <h5>${s.name}</h5>
-                        <p class="text-muted">زمان: ${s.duration} دقیقه | قیمت: ${s.price} تومان <br>
+                        <p class="text-muted">زمان: ${s.duration}  | قیمت: ${s.price} تومان <br>
                         <span class="text-muted" style="font-size: 0.85rem;">
-                            (${priceWords} تومان)
+                            (${s.price_words} تومان)
                         </span>
                     </p>
                         <div class="mt-auto text-center">

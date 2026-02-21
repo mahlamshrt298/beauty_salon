@@ -19,6 +19,8 @@ from booking.models import Holiday
 from core.models import SalonSettings
 from core.models import PackageBooking
 from django.db.models import Q
+from services_app.models import number_to_persian_words
+
 MAX_ACTIVE_APPOINTMENTS_PER_USER = 5
 
 def get_available_staff(service, date, start_time, end_time):
@@ -612,6 +614,8 @@ def payment_confirm(request):
     selected_staff = None
     staff_label = "فرقی ندارد (اولین پرسنل آزاد)"
 
+    discounted_price_words = number_to_persian_words(discounted_price) if discounted_price else None
+
     # نام روز هفته به فارسی
     weekday_fa = date_jalali.strftime("%A")
 
@@ -703,6 +707,7 @@ def payment_confirm(request):
             'step_width': step_width,
             'selected_staff': selected_staff,
             'staff_label': staff_label,
+            'discounted_price_words': discounted_price_words,
         }
         return render(request, "payment_confirm.html", context)
     
@@ -912,6 +917,7 @@ def payment_confirm(request):
         'step_width': step_width,
         'selected_staff': selected_staff,
         'staff_label': staff_label,
+        'discounted_price_words': discounted_price_words,
 
     }
     return render(request, 'payment_confirm.html', context)
@@ -944,7 +950,8 @@ def confirmation(request, tracking_code):
     # ✅ محاسبه اطلاعات تخفیف
     original_price = appointment.service.price if appointment.service else 0
     final_price = payment.amount if payment else original_price
-    
+    final_price_words = number_to_persian_words(final_price)
+
     discount_percent = None
     discount_amount = 0
     
@@ -972,6 +979,7 @@ def confirmation(request, tracking_code):
         "from_package": from_package,
         "package_completed": package_completed,
         "package": package,
+        "final_price_words": final_price_words,
     }
     return render(request,'confirmation.html',context)
 

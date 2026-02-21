@@ -387,8 +387,8 @@ if (homepageCheckbox && homepageHidden) {
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    const originalPriceInput = document.getElementById('original_price');
-    const discountedPriceInput = document.getElementById('discounted_price');
+    const originalPriceInput = document.getElementById('id_original_price');
+    const discountedPriceInput = document.getElementById('id_discounted_price');
     const discountBadgeInput = document.getElementById('discount_badge');
 
     let badgeManuallyEdited = false;
@@ -469,6 +469,10 @@ $(document).ready(function () {
 <script>
 // تابع تبدیل عدد به حروف فارسی
 function numberToPersianWords(num) {
+    num = parseInt(num);
+    if (isNaN(num) || num <= 0) return '';
+
+    
     const units = ['', 'یک', 'دو', 'سه', 'چهار', 'پنج', 'شش', 'هفت', 'هشت', 'نه'];
     const tens = ['', 'ده', 'بیست', 'سی', 'چهل', 'پنجاه', 'شصت', 'هفتاد', 'هشتاد', 'نود'];
     const teens = ['ده', 'یازده', 'دوازده', 'سیزده', 'چهارده', 'پانزده', 'شانزده', 'هفده', 'هجده', 'نوزده'];

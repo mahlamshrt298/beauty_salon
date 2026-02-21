@@ -29,6 +29,7 @@ from django.core.paginator import Paginator
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login
 from core.models import PackageBooking
+from services_app.models import number_to_persian_words
 
 class MyPasswordChangeView(PasswordChangeView):
     template_name = "password_change.html"       # قالب شما
@@ -219,7 +220,6 @@ def profile(request):
                         profile.birthday = new_gregorian_date
                         
                 except ValueError:
-                    profile.save()
                     messages.error(
                         request,
                         "تاریخ تولد نامعتبر است.",
@@ -278,14 +278,19 @@ def profile(request):
 
 
             if payment:
+                amount = int(payment.amount)
+
                 appt.payment_info = {
-                    'amount': payment.amount,
+                    'amount': amount,
+                    'amount_in_words': number_to_persian_words(amount),  # 👈 اضافه شد
                     'method': payment.payment_method,
                     'method_display': payment.get_payment_method_display(),
                     'original_price': appt.service.price,
-                    'discount_amount': appt.service.price - payment.amount if payment.amount < appt.service.price else 0,
-                    'discount_percent': round(((appt.service.price - payment.amount) / appt.service.price) * 100, 0) if payment.amount < appt.service.price else 0,
+                    'original_price_in_words': number_to_persian_words(int(appt.service.price)),  # 👈 اختیاری ولی حرفه‌ای
+                    'discount_amount': appt.service.price - amount if amount < appt.service.price else 0,
+                    'discount_percent': round(((appt.service.price - amount) / appt.service.price) * 100, 0) if amount < appt.service.price else 0,
                 }
+
 
                 
             else:

@@ -234,6 +234,10 @@
               data-description="{{ package.description|escapejs }}"
               data-original="{{ package.original_price|default:'' }}"
               data-discounted="{{ package.discounted_price }}"
+              data-discounted-words="{{ package.discounted_price_words }}"
+              data-original-words="{{ package.original_price_words }}"
+
+              
               data-badge="{{ package.discount_badge|default:'' }}"
               data-services="{% for s in package.service.all %}{{ s.name }}{% if not forloop.last %}, {% endif %}{% endfor %}"
               data-image="{{ package.image_url }}"
@@ -446,48 +450,6 @@
 
 <script>
 
-function numberToPersianWords(num) {
-  const yekan = ["", "یک", "دو", "سه", "چهار", "پنج", "شش", "هفت", "هشت", "نه"];
-  const dahgan = ["", "", "بیست", "سی", "چهل", "پنجاه", "شصت", "هفتاد", "هشتاد", "نود"];
-  const dahTo19 = ["ده", "یازده", "دوازده", "سیزده", "چهارده", "پانزده",
-                   "شانزده", "هفده", "هجده", "نوزده"];
-  const sadgan = ["", "صد", "دویست", "سیصد", "چهارصد",
-                  "پانصد", "ششصد", "هفتصد", "هشتصد", "نهصد"];
-
-  function threeDigitToWord(n) {
-    let str = "";
-    let hundred = Math.floor(n / 100);
-    let rest = n % 100;
-    let ten = Math.floor(rest / 10);
-    let one = rest % 10;
-
-    if (hundred) str += sadgan[hundred] + " و ";
-
-    if (rest >= 10 && rest < 20) {
-      str += dahTo19[rest - 10];
-    } else {
-      if (ten) str += dahgan[ten] + (one ? " و " : "");
-      if (one) str += yekan[one];
-    }
-
-    return str.trim().replace(/ و $/, "");
-  }
-
-  if (num === 0) return "صفر";
-
-  let result = "";
-  let millions = Math.floor(num / 1000000);
-  let thousands = Math.floor((num % 1000000) / 1000);
-  let hundreds = num % 1000;
-
-  if (millions) result += threeDigitToWord(millions) + " میلیون ";
-  if (thousands) result += threeDigitToWord(thousands) + " هزار ";
-  if (hundreds) result += threeDigitToWord(hundreds);
-
-  return result.trim();
-}
-
-
 document.addEventListener('DOMContentLoaded', function () {
   document.querySelectorAll('.open-package-modal').forEach(card => {
     card.addEventListener('click', function () {
@@ -519,7 +481,8 @@ document.addEventListener('DOMContentLoaded', function () {
           </strong>
 
           <div class="text-muted mt-2" style="font-size:14px;">
-            (${numberToPersianWords(Number(this.dataset.discounted))} تومان)
+            (${this.dataset.discountedWords} تومان)
+
           </div>
 
 

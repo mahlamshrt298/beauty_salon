@@ -74,6 +74,9 @@
                 <strong>{% if discount_percent %}هزینه نهایی{% else %}هزینه{% endif %}:</strong> 
                 <span class="{% if discount_percent %}text-success fw-bold fs-5{% else %}text-muted{% endif %}">
                     {{ final_price|floatformat:"0"|intcomma }} تومان
+                    <small class="d-block text-muted mt-1">
+                        ({{ final_price_words }} تومان)
+                    </small>
                 </span>
             </li>
 
@@ -165,120 +168,6 @@
 function closeReminderPopup() {
     document.getElementById("reminder-modal").style.display = "none";
 }
-</script>
-
-<!-- ✅ تابع تبدیل عدد به حروف فارسی -->
-<script>
-function numberToWords(num) {
-    const units = ['', 'یک', 'دو', 'سه', 'چهار', 'پنج', 'شش', 'هفت', 'هشت', 'نه'];
-    const tens = ['', 'ده', 'بیست', 'سی', 'چهل', 'پنجاه', 'شصت', 'هفتاد', 'هشتاد', 'نود'];
-    const teens = ['ده', 'یازده', 'دوازده', 'سیزده', 'چهارده', 'پانزده', 'شانزده', 'هفده', 'هجده', 'نوزده'];
-    const hundreds = ['', 'صد', 'دویست', 'سیصد', 'چهارصد', 'پانصد', 'ششصد', 'هفتصد', 'هشتصد', 'نهصد'];
-    const bigs = ['', 'هزار', 'میلیون', 'میلیارد'];
-    
-    if (num === 0) return 'صفر';
-    
-    function convertThreeDigits(n) {
-        if (n === 0) return '';
-        
-        let result = '';
-        
-        const h = Math.floor(n / 100);
-        if (h > 0) {
-            result += hundreds[h] + ' و ';
-        }
-        
-        const t = n % 100;
-        if (t >= 10 && t < 20) {
-            result += teens[t - 10];
-        } else {
-            const ten = Math.floor(t / 10);
-            const unit = t % 10;
-            if (ten > 0) {
-                result += tens[ten];
-                if (unit > 0) result += ' و ';
-            }
-            if (unit > 0) {
-                result += units[unit];
-            }
-        }
-        
-        return result.replace(/ و $/, '');
-    }
-    
-    let result = '';
-    let i = 0;
-    
-    while (num > 0) {
-        const threeDigits = num % 1000;
-        if (threeDigits > 0) {
-            const part = convertThreeDigits(threeDigits);
-            if (i > 0 && part) {
-                result = part + ' ' + bigs[i] + ' و ' + result;
-            } else {
-                result = part + (i > 0 ? ' ' + bigs[i] : '') + (result ? ' و ' + result : '');
-            }
-        }
-        num = Math.floor(num / 1000);
-        i++;
-    }
-    
-    return result.trim().replace(/ و $/, '');
-}
-
-// ✅ نمایش قیمت به حروف در صفحه
-document.addEventListener('DOMContentLoaded', function() {
-    // هزینه اصلی
-    const originalPriceItem = document.querySelector('[data-type="original-price"]');
-    if (originalPriceItem) {
-        const match = originalPriceItem.textContent.match(/([\d,]+)\s*تومان/);
-        if (match) {
-            const num = parseInt(match[1].replace(/,/g, ''));
-            if (!isNaN(num)) {
-                const words = numberToWords(num);
-                const small = document.createElement('small');
-                small.className = 'text-muted d-block mt-1';
-                small.style.fontSize = '0.85rem';
-                small.textContent = `(${words} تومان)`;
-                originalPriceItem.appendChild(small);
-            }
-        }
-    }
-    
-    // مبلغ تخفیف
-    const discountItem = document.querySelector('[data-type="discount-amount"]');
-    if (discountItem) {
-        const match = discountItem.textContent.match(/معادل\s*([\d,]+)\s*تومان/);
-        if (match) {
-            const num = parseInt(match[1].replace(/,/g, ''));
-            if (!isNaN(num)) {
-                const words = numberToWords(num);
-                const small = document.createElement('small');
-                small.className = 'text-muted d-block mt-1';
-                small.style.fontSize = '0.85rem';
-                small.textContent = `(${words} تومان)`;
-                discountItem.appendChild(small);
-            }
-        }
-    }
-    
-    // هزینه نهایی
-    const finalPriceItem = document.querySelector('[data-type="final-price"]');
-    if (finalPriceItem) {
-        const match = finalPriceItem.textContent.match(/([\d,]+)\s*تومان/);
-        if (match) {
-            const num = parseInt(match[1].replace(/,/g, ''));
-            if (!isNaN(num)) {
-                const words = numberToWords(num);
-                const small = document.createElement('small');
-                small.className = 'text-muted d-block mt-1';
-                small.style.fontSize = '0.85rem';
-                small.textContent = `(${words} تومان)`;
-                finalPriceItem.appendChild(small);
-            }
-        }
-    }
-});
 </script>
 
 {% endblock %}
