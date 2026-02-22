@@ -31,7 +31,7 @@
                 <button class="btn btn-outline-danger w-100"
                         data-bs-toggle="collapse"
                         data-bs-target="#dangerZone">
-                    ⚠️ مدیریت حذف دسته‌ها و زیردسته‌ها
+                    ⚠️ مدیریت حذف و ویرایش دسته‌ها و زیردسته‌ها
                 </button>
             </div>
 
@@ -70,24 +70,24 @@
 
                                                 <!-- دکمه ویرایش -->
                                                 <button type="button"
-                                                    class="btn btn-primary btn-sm edit-category-btn"
+                                                    class="btn btn-primary  edit-category-btn"
                                                     data-id="{{ cat.id }}"
                                                     data-name="{{ cat.name }}"
                                                     data-bs-toggle="modal"
                                                     data-bs-target="#editCategoryModal">
                                                 ویرایش
-                                            </button>
+                                                </button>
 
 
                                                 {% if cat.subcategories.exists %}
-                                                    <button class="btn btn-secondary btn-sm" disabled>
+                                                    <button class="btn btn-secondary " disabled>
                                                         غیرقابل حذف
                                                     </button>
                                                 {% else %}
                                                     <form method="post"
                                                         action="{% url 'panel:service_delete_category' cat.id %}">
                                                         {% csrf_token %}
-                                                        <button class="btn btn-danger btn-sm">
+                                                        <button class="btn btn-danger ">
                                                             حذف
                                                         </button>
                                                     </form>
@@ -135,25 +135,25 @@
 
                                                 <!-- دکمه ویرایش -->
                                                 <button type="button"
-                                                    class="btn btn-primary btn-sm edit-subcategory-btn"
+                                                    class="btn btn-primary  edit-subcategory-btn"
                                                     data-id="{{ sub.id }}"
                                                     data-name="{{ sub.name }}"
                                                     data-category="{{ sub.category.id }}"
                                                     data-bs-toggle="modal"
                                                     data-bs-target="#editSubcategoryModal">
                                                 ویرایش
-                                            </button>
+                                                </button>
 
 
                                                 {% if sub.services.exists %}
-                                                    <button class="btn btn-secondary btn-sm" disabled>
+                                                    <button class="btn btn-secondary " disabled>
                                                         غیرقابل حذف
                                                     </button>
                                                 {% else %}
                                                     <form method="post"
                                                         action="{% url 'panel:service_delete_subcategory' sub.id %}">
                                                         {% csrf_token %}
-                                                        <button class="btn btn-danger btn-sm">
+                                                        <button class="btn btn-danger ">
                                                             حذف
                                                         </button>
                                                     </form>
