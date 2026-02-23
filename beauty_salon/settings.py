@@ -18,7 +18,7 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 env = environ.Env(SECRET_KEY = str,)
-#environ.Env.read_env(os.path.join(BASE_DIR , '.env'))
+environ.Env.read_env(os.path.join(BASE_DIR , '.env'))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
@@ -53,7 +53,6 @@ INSTALLED_APPS = [
     'reviews_app.apps.ReviewsAppConfig',
     'services_app',
     'accounts.apps.AccountsConfig',
-    'accounts.templatetags',
     'panel',
     'jalali_date',
     'django_jalali',
@@ -182,7 +181,7 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 
 EMAIL_HOST_USER = env("EMAIL_HOST_USER")
-EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD")
+EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD" , default="")
 DEFAULT_FROM_EMAIL = 'Beauty Salon <mahlamashrooti@gmail.com>'
 
 

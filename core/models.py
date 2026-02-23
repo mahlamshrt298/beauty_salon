@@ -1,8 +1,6 @@
 from django.db import models
-from django.contrib.auth.models import User   # برای مدیریت کاربران (اختیاری)
-from services_app.models import Service
 from django.utils import timezone
-from django.templatetags.static import static
+from django.conf import settings
 
 # Create your models here.
 # ⚙️ تنظیمات سالن (تنها یک رکورد معمولاً)
@@ -73,7 +71,7 @@ class Package(models.Model):
     
     # اضافه کردن ارتباط با خدمت
     service = models.ManyToManyField(
-        Service, 
+        'services_app.Service', 
         verbose_name="خدمت مرتبط",
         related_name="packages",
        
@@ -117,6 +115,8 @@ class Package(models.Model):
 
     @property
     def image_url(self):
+        from django.templatetags.static import static
+
         if self.image:
             return self.image.url
         return static('images/package.jpg')
@@ -149,8 +149,8 @@ class Package(models.Model):
 
 #مدل واسط برای رزرو خدمات پکیج  
 class PackageBooking(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     package = models.ForeignKey(Package, on_delete=models.CASCADE)
-    service = models.ForeignKey(Service, on_delete=models.CASCADE)
+    service = models.ForeignKey('services_app.Service', on_delete=models.CASCADE)
     is_completed = models.BooleanField(default=False)
 
