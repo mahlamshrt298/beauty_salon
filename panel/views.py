@@ -544,6 +544,8 @@ def load_subcategories(request):
 def services_list(request):
     category_id = request.GET.get("category")
     subcategory_id = request.GET.get("subcategory")
+    danger_category_id = request.GET.get("danger_category")
+
     services = Service.objects.all()
     
     if category_id:
@@ -558,15 +560,28 @@ def services_list(request):
     page_obj = paginator.get_page(page_number)
 
     categories = ServiceCategory.objects.all()
-    subcategories = Subcategory.objects.filter(
-        category_id=category_id
-    ) if category_id else Subcategory.objects.none()
-    
+
+    # 🔹 برای فیلتر پایین صفحه
+    if category_id:
+        subcategories = Subcategory.objects.filter(category_id=category_id)
+    else:
+        subcategories = Subcategory.objects.none()
+
+    # 🔹 برای کارت مدیریت زیردسته‌ها
+    if danger_category_id:
+        danger_subcategories = Subcategory.objects.filter(category_id=danger_category_id)
+    else:
+        danger_subcategories = Subcategory.objects.none()
+
+
     return render(request, "panel/services_list.html", {"services": page_obj,
             "categories": categories,
             "subcategories": subcategories,
             "selected_category": category_id,
-            "selected_subcategory": subcategory_id,})
+            "selected_subcategory": subcategory_id,
+            "danger_subcategories": danger_subcategories,
+            "selected_danger_category": danger_category_id,
+            })
 
 @login_required
 @panel_access_required
@@ -685,7 +700,7 @@ def subcategory_add(request):
 @login_required
 @panel_access_required
 def category_edit(request, id):
-    category = get_object_or_404(Category, id=id)
+    category = get_object_or_404(ServiceCategory, id=id)
 
     if request.method == "POST":
         name = request.POST.get("name")
@@ -705,7 +720,7 @@ def category_edit(request, id):
 @panel_access_required
 def subcategory_edit(request, id):
     subcategory = get_object_or_404(Subcategory, id=id)
-    categories = Category.objects.all()
+    categories = ServiceCategory.objects.all()
 
     if request.method == "POST":
         name = request.POST.get("name")
