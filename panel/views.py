@@ -2121,7 +2121,6 @@ def salon_settings(request):
         settings.has_salon_lunch_break = request.POST.get('has_salon_lunch_break') == 'on'
         settings.salon_lunch_start = request.POST.get('salon_lunch_start', '13:00')
         settings.salon_lunch_end = request.POST.get('salon_lunch_end','14:00')
-        settings.whatsapp = request.POST.get('whatsapp', '').strip()
         settings.enable_online_payment = request.POST.get('enable_online_payment') == 'on'
         settings.global_duration_note = request.POST.get('global_duration_note', '').strip()
         settings.global_price_note = request.POST.get('global_price_note', '').strip()
@@ -2136,6 +2135,15 @@ def salon_settings(request):
 
         settings.phone = phone
 
+        whatsapp = request.POST.get('whatsapp', '').strip()
+
+        if whatsapp:
+            whatsapp_pattern = r'^989\d{9}$'
+            if not re.match(whatsapp_pattern, whatsapp):
+                messages.error(request, "شماره واتساپ باید به صورت 989xxxxxxxxx باشد", extra_tags="panel")
+                return redirect('panel:salon_settings')
+
+        settings.whatsapp = whatsapp
 
         settings.save()
         messages.success(request, "تنظیمات ذخیره شد", extra_tags="panel")

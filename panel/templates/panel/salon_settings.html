@@ -40,9 +40,17 @@
 
                             <div class="col-12 col-md-6">
                                 <label class="form-label">شماره واتس‌اپ</label>
-                                <input type="text" name="whatsapp" class="form-control" 
+                                <input type="tel"
+                                    name="whatsapp"
+                                    class="form-control"
+                                    pattern="^98?9\d{9}$"
+                                    maxlength="12"
+                                    inputmode="numeric"
                                     placeholder="مثال: 989123456789"
-                                    value="{{ settings.whatsapp|default:'' }}" {% if is_read_only %}disabled{% endif %}>
+                                    title="فرمت صحیح: 989123456789 (بدون +)"
+                                    value="{{ settings.whatsapp|default:'' }}"
+                                    {% if is_read_only %}disabled{% endif %}>
+
                                 <small class="text-muted d-block mt-1">
                                     ✅ فرمت صحیح: کد کشور + شماره (بدون +) - مثال: 989123456789
                                 </small>

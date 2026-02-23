@@ -23,7 +23,13 @@ class SalonSettings(models.Model):
         blank=True, 
         null=True, 
         verbose_name="شماره واتس‌اپ",
-        help_text="مثال: 989123456789 (بدون + و با کد کشور)"
+        help_text="مثال: 989123456789 (بدون + و با کد کشور)",
+        validators=[
+        RegexValidator(
+            regex=r'^989\d{9}$',
+            message="شماره واتساپ باید به صورت 989xxxxxxxxx باشد"
+        )
+        ]
     )
     open_time = models.TimeField(default="09:00")
     close_time = models.TimeField(default="18:00")
