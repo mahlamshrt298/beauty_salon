@@ -545,6 +545,8 @@ def services_list(request):
     category_id = request.GET.get("category")
     subcategory_id = request.GET.get("subcategory")
     danger_category_id = request.GET.get("danger_category")
+    if danger_category_id in ["", "None", None]:
+        danger_category_id = None
 
     services = Service.objects.all()
     
@@ -570,7 +572,7 @@ def services_list(request):
         subcategories = Subcategory.objects.none()
 
     # 🔹 برای کارت مدیریت زیردسته‌ها
-    if danger_category_id:
+    if danger_category_id and danger_category_id.isdigit():
         danger_subcategories = Subcategory.objects.filter(category_id=danger_category_id).annotate(service_count=Count("services"))
     else:
         danger_subcategories = Subcategory.objects.none()
@@ -714,8 +716,10 @@ def category_edit(request, id):
             messages.success(request, "دسته با موفقیت ویرایش شد.", extra_tags="panel")
             danger_category = request.POST.get("danger_category")
 
-            if danger_category:
-                return redirect(f"{reverse('panel:services_list')}?danger_category={danger_category}")
+            if danger_category and danger_category.isdigit():
+                return redirect(
+                    f"{reverse('panel:services_list')}?danger_category={danger_category}"
+                )
 
             return redirect("panel:services_list")
 
@@ -741,8 +745,10 @@ def subcategory_edit(request, id):
             messages.success(request, "زیردسته با موفقیت ویرایش شد.", extra_tags="panel")
             danger_category = request.POST.get("danger_category")
 
-            if danger_category:
-                return redirect(f"{reverse('panel:services_list')}?danger_category={danger_category}")
+            if danger_category and danger_category.isdigit():
+                return redirect(
+                    f"{reverse('panel:services_list')}?danger_category={danger_category}"
+                )
 
             return redirect("panel:services_list")
 
