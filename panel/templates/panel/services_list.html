@@ -65,7 +65,7 @@
                                         {% for cat in categories %}
                                         <tr>
                                             <td>{{ cat.name }}</td>
-                                            <td>{{ cat.subcategories.count }}</td>
+                                            <td>{{ cat.sub_count }}</td>
                                             <td class="d-flex gap-2">
 
                                                 <!-- دکمه ویرایش -->
@@ -145,7 +145,7 @@
                                         <tr>
                                             <td class="text-center">{{ sub.name }}</td>
                                             <td class="text-center">{{ sub.category.name }}</td>
-                                            <td class="text-center">{{ sub.services.count }}</td>
+                                            <td class="text-center">{{ sub.services_count }}</td>
                                             <td class="d-flex gap-2">
 
                                                 <!-- دکمه ویرایش -->

@@ -559,7 +559,9 @@ def services_list(request):
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
-    categories = ServiceCategory.objects.all()
+    categories = ServiceCategory.objects.annotate(
+        sub_count=Count("subcategories")
+    )
 
     # 🔹 برای فیلتر پایین صفحه
     if category_id:
@@ -569,7 +571,7 @@ def services_list(request):
 
     # 🔹 برای کارت مدیریت زیردسته‌ها
     if danger_category_id:
-        danger_subcategories = Subcategory.objects.filter(category_id=danger_category_id)
+        danger_subcategories = Subcategory.objects.filter(category_id=danger_category_id).annotate(service_count=Count("services"))
     else:
         danger_subcategories = Subcategory.objects.none()
 
