@@ -1,13 +1,22 @@
 from django.db import models
 from django.utils import timezone
 from django.conf import settings
+from django.core.validators import RegexValidator
 
 # Create your models here.
 # ⚙️ تنظیمات سالن (تنها یک رکورد معمولاً)
 class SalonSettings(models.Model):
     salon_name = models.CharField(max_length=100)
     address = models.CharField(max_length=255)
-    phone = models.CharField(max_length=20)
+    phone = models.CharField(
+        max_length=11,
+        validators=[
+            RegexValidator(
+                regex=r'^(09\d{9}|0\d{10})$',
+                message="شماره معتبر وارد کنید (موبایل یا تلفن ثابت)"
+            )
+        ]
+    )
     instagram = models.CharField(max_length=100, blank=True, null=True)
     whatsapp = models.CharField(
         max_length=20, 

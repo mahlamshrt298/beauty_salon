@@ -2116,7 +2116,6 @@ def salon_settings(request):
             return redirect('panel:salon_settings')
 
         settings.salon_name = request.POST.get('salon_name', '')
-        settings.phone = request.POST.get('phone', '')
         settings.open_time = request.POST.get('open_time', '09:00')
         settings.close_time = request.POST.get('close_time', '18:00')
         settings.has_salon_lunch_break = request.POST.get('has_salon_lunch_break') == 'on'
@@ -2126,6 +2125,17 @@ def salon_settings(request):
         settings.enable_online_payment = request.POST.get('enable_online_payment') == 'on'
         settings.global_duration_note = request.POST.get('global_duration_note', '').strip()
         settings.global_price_note = request.POST.get('global_price_note', '').strip()
+
+        phone = request.POST.get('phone', '').strip()
+
+        pattern = r'^(09\d{9}|0\d{10})$'
+
+        if not re.match(pattern, phone):
+            messages.error(request, "شماره تماس معتبر نیست", extra_tags="panel")
+            return redirect('panel:salon_settings')
+
+        settings.phone = phone
+
 
         settings.save()
         messages.success(request, "تنظیمات ذخیره شد", extra_tags="panel")
