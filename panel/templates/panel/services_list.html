@@ -79,7 +79,7 @@
                                                 </button>
 
 
-                                                {% if cat.subcategories.exists %}
+                                                {% if cat.sub_count > 0 %}
                                                     <button class="btn btn-secondary " disabled>
                                                         غیرقابل حذف
                                                     </button>
@@ -145,8 +145,8 @@
                                         <tr>
                                             <td class="text-center">{{ sub.name }}</td>
                                             <td class="text-center">{{ sub.category.name }}</td>
-                                            <td class="text-center">{{ sub.services_count }}</td>
-                                            <td class="d-flex gap-2">
+                                            <td class="text-center">{{ sub.service_count }}</td>
+                                            <td class="d-flex gap-2 align-items-center">
 
                                                 <!-- دکمه ویرایش -->
                                                 <button type="button"
@@ -160,7 +160,7 @@
                                                 </button>
 
 
-                                                {% if sub.services.exists %}
+                                                {% if sub.service_count > 0 %}
                                                     <button class="btn btn-secondary " disabled>
                                                         غیرقابل حذف
                                                     </button>
