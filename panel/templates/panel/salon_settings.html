@@ -149,12 +149,12 @@
                                     برای ویرایش تنظیمات، لطفاً با حساب <span class="text-danger">مالک سالن</span> وارد شوید.
                                 </div>
                             {% else %}
-                                <a href="{% url 'panel:dashboard' %}" class="btn btn-outline-secondary">
-                                    <i class="fas fa-times"></i> انصراف
-                                </a>
                                 <button type="submit" class="btn btn-primary">
                                     <i class="fas fa-save"></i> ذخیره تنظیمات
                                 </button>
+                                <a href="{% url 'panel:dashboard' %}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-times"></i> انصراف
+                                </a>
                                 
                             {% endif %}
                         </div>
