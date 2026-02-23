@@ -100,8 +100,8 @@ class ServiceForm(forms.ModelForm):
     def save(self, commit=True):
         instance = super().save(commit=False)
 
-        hours = self.cleaned_data.get('duration_hours') or 0
-        minutes = self.cleaned_data.get('duration_extra_minutes') or 0
+        hours = int(self.cleaned_data.get('duration_hours') or 0 )
+        minutes = int(self.cleaned_data.get('duration_extra_minutes') or 0 )
 
         instance.duration_minutes = (hours * 60) + minutes
 
