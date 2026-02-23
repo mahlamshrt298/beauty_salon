@@ -131,7 +131,7 @@ class Service(models.Model):
     description = models.TextField(blank=True, null=True,verbose_name=_("توضیحات"))
     # مدت زمان انجام خدمت 
     duration_minutes = models.IntegerField(default=30,verbose_name=_("مدت زمان (دقیقه)"))
-    price = models.PositiveIntegerField(verbose_name=_("قیمت (تومان)"))
+    price = models.PositiveBigIntegerField(verbose_name=_("قیمت (تومان)"))
     # وضعیت فعال/غیرفعال بودن خدمت
     is_active = models.BooleanField(default=True,verbose_name=_("فعال است"))
     subcategory = models.ForeignKey(Subcategory, on_delete=models.SET_NULL, null=True, blank=True, related_name='services', verbose_name=_("زیردسته"))

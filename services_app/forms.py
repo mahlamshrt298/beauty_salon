@@ -50,6 +50,15 @@ class ServiceForm(forms.ModelForm):
 
         return cleaned_data
 
+    def clean_price(self):
+        price = self.cleaned_data.get('price')
+
+        if price and price > 10_000_000_000:
+            raise forms.ValidationError("قیمت بیش از حد مجاز است.")
+
+        return price
+
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -76,6 +85,11 @@ class ServiceForm(forms.ModelForm):
         elif self.instance.pk:
             self.fields['subcategory'].queryset = self.instance.category.subcategories.all()
         
+        self.fields['price'].widget.attrs.update({
+            'class': 'form-control',
+            'max': '10000000000'
+        })
+
          # ✅ تغییر لیبل قیمت
         self.fields['price'].label = "حداقل قیمت (تومان)"
 
