@@ -399,6 +399,8 @@
   <div class="modal-dialog">
     <div class="modal-content">
       <form method="post" id="editCategoryForm">
+        <input type="hidden" name="danger_category" value="{{ selected_danger_category }}">
+
         {% csrf_token %}
         <div class="modal-header">
           <h5 class="modal-title">ویرایش دسته</h5>
@@ -424,6 +426,8 @@
   <div class="modal-dialog">
     <div class="modal-content">
       <form method="post" id="editSubcategoryForm">
+        <input type="hidden" name="danger_category" value="{{ selected_danger_category }}">
+
         {% csrf_token %}
         <div class="modal-header">
           <h5 class="modal-title">ویرایش زیردسته</h5>

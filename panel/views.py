@@ -712,9 +712,11 @@ def category_edit(request, id):
             category.slug = ""  # برای ساخت اسلاگ جدید
             category.save()
             messages.success(request, "دسته با موفقیت ویرایش شد.", extra_tags="panel")
-            next_url = request.META.get("HTTP_REFERER")
-            if next_url:
-                return redirect(next_url)
+            danger_category = request.POST.get("danger_category")
+
+            if danger_category:
+                return redirect(f"{reverse('panel:services_list')}?danger_category={danger_category}")
+
             return redirect("panel:services_list")
 
     return render(request, "panel/category_edit.html", {
@@ -737,9 +739,11 @@ def subcategory_edit(request, id):
             subcategory.slug = ""
             subcategory.save()
             messages.success(request, "زیردسته با موفقیت ویرایش شد.", extra_tags="panel")
-            next_url = request.META.get("HTTP_REFERER")
-            if next_url:
-                return redirect(next_url)
+            danger_category = request.POST.get("danger_category")
+
+            if danger_category:
+                return redirect(f"{reverse('panel:services_list')}?danger_category={danger_category}")
+
             return redirect("panel:services_list")
 
     return render(request, "panel/subcategory_edit.html", {
