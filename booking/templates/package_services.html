@@ -100,6 +100,10 @@
                         <p class="small">
                             ⏱ {{ booking.service.duration_display }} <br>
                             💰 {{ booking.service.price|intcomma }} تومان
+                        
+                            <span class="text-muted" style="font-size: 0.8rem;">
+                                ({{ booking.service.price_in_words }} تومان)
+                            </span>
                         </p>
 
                         <div class="mt-auto">
