@@ -70,16 +70,7 @@
                         <div id="selected-services-list" class="mb-3">
                             <label class="form-label">خدمات انتخاب شده:</label>
                             <div class="d-flex flex-wrap gap-2">
-                                {% if package and package.service.exists %}
-                                    {% for service in package.service.all %}
-                                    <span class="badge bg-info text-dark" data-service-id="{{ service.id }}">
-                                        {{ service.name }} ({{ service.subcategory.category.name }})
-                                        <button type="button" class="btn-remove-service ms-1" data-service-id="{{ service.id }}">
-                                            <i class="fas fa-times"></i>
-                                        </button>
-                                    </span>
-                                    {% endfor %}
-                                {% endif %}
+                                
                             </div>
                         </div>
 
