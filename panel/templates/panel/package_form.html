@@ -26,14 +26,16 @@
                         </div>
 
                         <!-- گروه‌های انتخاب خدمت -->
-                        <!-- select پنهان برای ذخیره همه خدمات -->
                         <select name="services[]" id="all-services" class="d-none" multiple>
-                            {% if package and package.service.exists %}
+                            {% if package %}
                                 {% for service in package.service.all %}
-                                <option value="{{ service.id }}" selected></option>
+                                    <option value="{{ service.id }}" selected>
+                                        {{ service.name }}
+                                    </option>
                                 {% endfor %}
                             {% endif %}
                         </select>
+
 
                         <!-- گروه‌های انتخاب خدمت -->
                         <div id="service-groups-container">
@@ -216,7 +218,7 @@
                         </div>
 
                         <div class="d-flex gap-2">
-                            <button type="submit" class="btn btn-primary">
+                            <button type="submit" class="btn btn-primary" id="saveBtn">
                                 <i class="fas fa-save"></i>
                                 ذخیره
                             </button>
@@ -558,6 +560,43 @@ function displayPriceInWords(inputId, displayId) {
     // اولین بار هم چک کن
     updateDisplay();
 }
+</script>
+
+<script>
+document.querySelector('form').addEventListener('submit', function () {
+    const btn = document.getElementById('saveBtn');
+    if (btn) {
+        btn.disabled = true;
+        btn.innerText = 'در حال ذخیره...';
+    }
+});
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const allServicesSelect = document.getElementById('all-services');
+    const selectedServicesList = document.getElementById('selected-services-list').querySelector('.d-flex');
+
+    if (allServicesSelect) {
+        Array.from(allServicesSelect.options).forEach(option => {
+            const badge = document.createElement('span');
+            badge.className = 'badge bg-info text-dark';
+            badge.setAttribute('data-service-id', option.value);
+            badge.innerHTML = `
+                ${option.textContent}
+                <button type="button" class="btn-remove-service ms-1" data-service-id="${option.value}">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            selectedServicesList.appendChild(badge);
+
+            badge.querySelector('.btn-remove-service').addEventListener('click', function () {
+                option.remove();
+                badge.remove();
+            });
+        });
+    }
+});
 </script>
 
 {% endblock %}
