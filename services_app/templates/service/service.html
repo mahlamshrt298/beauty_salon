@@ -255,7 +255,7 @@ const categoriesData = {
                         name: "{{ service.name|escapejs }}",
                         slug: "{{ service.slug }}",
                         duration: "{{ service.duration_display|escapejs }}",
-                        description: "{{ service.description|truncatewords:10|escapejs }}",
+                        description: "{{ service.description|linebreaksbr|escapejs }}",
                         price: "{{ service.price|intcomma }}",
                         price_words: "{{ service.price_in_words }}",
 
