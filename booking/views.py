@@ -1234,14 +1234,14 @@ def select_date_from_package(request, package_id):
     total_services = bookings.count()
     completed_services = bookings.filter(is_completed=True).count()
 
-    settings = SalonSettings.object.first()
+    salon_settings = SalonSettings.objects.first()
 
     request.session['package_id'] = package.id 
 
     return render(request, "package_services.html", {
         "package": package,
         "bookings": bookings,
-        "settings" : settings,
+        "salon_settings" : salon_settings,
         "total_services": total_services,
         "completed_services": completed_services,
     })
