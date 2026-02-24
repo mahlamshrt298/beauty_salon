@@ -37,7 +37,8 @@
         </div>
 
         <!-- بخش collapse -->
-        <div id="dangerZone" class="collapse mb-4">
+        <div id="dangerZone"
+            class="collapse mb-4 {% if selected_danger_category %}show{% endif %}">
             <div class="row">
 
                 <!-- حذف دسته -->
@@ -493,20 +494,5 @@ document.addEventListener("DOMContentLoaded", function() {
 });
 </script>
 
-<script>
-document.addEventListener("DOMContentLoaded", function() {
-
-    const urlParams = new URLSearchParams(window.location.search);
-    const dangerCategory = urlParams.get("danger_category");
-
-    if (dangerCategory && /^\d+$/.test(dangerCategory)) {
-        new bootstrap.Collapse(
-            document.getElementById('dangerZone'),
-            { toggle: true }
-        );
-    }
-
-});
-</script>
 
 {% endblock %}
