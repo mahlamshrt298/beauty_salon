@@ -493,15 +493,20 @@ document.addEventListener("DOMContentLoaded", function() {
 });
 </script>
 
-{% if selected_danger_category %}
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
-        var dangerZone = new bootstrap.Collapse(
+document.addEventListener("DOMContentLoaded", function() {
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const dangerCategory = urlParams.get("danger_category");
+
+    if (dangerCategory && /^\d+$/.test(dangerCategory)) {
+        new bootstrap.Collapse(
             document.getElementById('dangerZone'),
             { toggle: true }
         );
-    });
+    }
+
+});
 </script>
-{% endif %}
 
 {% endblock %}
