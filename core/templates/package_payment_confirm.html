@@ -116,12 +116,15 @@
             </label>
           </div>
 
+          {% if salon_settings.enable_online_payment %}
           <div class="form-check">
-            <input class="form-check-input" type="radio" name="payment_method" value="online" id="online">
-            <label class="form-check-label" for="online">
-              پرداخت آنلاین (به‌زودی)
-            </label>
+              <input class="form-check-input" type="radio" name="payment_method" value="online" id="online">
+              <label class="form-check-label" for="online">
+                  پرداخت آنلاین
+              </label>
           </div>
+          {% endif %}
+
         </div>
 
         <hr>

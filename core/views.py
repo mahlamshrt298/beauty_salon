@@ -12,6 +12,8 @@ from core.models import PackageBooking
 from django.contrib.auth.decorators import login_required, user_passes_test
 from core.models import SalonSettings
 from services_app.models import number_to_persian_words
+from core.models import SalonSettings
+from django.contrib import messages
 
 def about(request):
     # ✅ دریافت پرسنل‌های فعال و قابل نمایش در صفحه درباره ما
@@ -131,8 +133,14 @@ def home(request):
 def package_payment_confirm(request, package_id):
     package = get_object_or_404(Package, id=package_id, is_active=True)
 
+    salon_settings = SalonSettings.objects.first()
+    online_enabled = salon_settings.enable_online_payment if salon_settings else False
+
     if request.method == "POST":
         payment_method = request.POST.get("payment_method", "online")
+        if payment_method == "online" and not online_enabled:
+            messages.error(request, "پرداخت آنلاین در حال حاضر فعال نیست.")
+            return redirect("package_payment_confirm", package_id=package.id)
 
         PackagePayment.objects.create(
             user=request.user,
@@ -156,5 +164,6 @@ def package_payment_confirm(request, package_id):
         return redirect('select_date_from_package', package_id=package.id)
 
     return render(request, 'package_payment_confirm.html', {
-        'package': package
+        'package': package,
+        'salon_settings': salon_settings,
     })
