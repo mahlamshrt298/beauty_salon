@@ -448,8 +448,9 @@ $(document).ready(function () {
 
         const fullJalali = dateEn + ' ' + timeEn;
 
-        // اصلاح فرمت برای روز/ماه تک رقمی
-        const m = moment(fullJalali, 'jYYYY/jM/jD HH:mm', 'fa', true);
+        const cleanDate = dateEn.replace(/^j/, ''); // حذف j اول
+
+        const m = moment(cleanDate + ' ' + timeEn, 'jYYYY/jMM/jDD HH:mm', true);
 
         if (!m.isValid()) {
             console.log("INVALID DATE", fullJalali);
