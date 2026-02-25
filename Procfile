@@ -1,0 +1,1 @@
+web: gunicorn beauty_salon.wsgi:application --bind 0.0.0.0:$PORT
