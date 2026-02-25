@@ -2237,12 +2237,12 @@ def package_add(request):
         if package.is_active:
            # send_package_notification(package)
             pass
-        
+
          # ارتباط با خدمت
         service_ids = request.POST.getlist('services[]')
 
         if service_ids:
-            services = Service.objects.filter(id=service_ids)
+            services = Service.objects.filter(id__in=service_ids)
             package.service.set(services)
 
         messages.success(request, "پکیج با موفقیت اضافه شد", extra_tags="panel")
