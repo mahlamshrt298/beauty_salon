@@ -2277,6 +2277,7 @@ def package_edit(request, pk):
     package = get_object_or_404(Package, pk=pk)
     categories = ServiceCategory.objects.all()  # دریافت تمام دسته‌بندی‌ها
 
+    print("START_TIME_POST:", request.POST.get('start_time'))
     if request.method == 'POST':
         title = request.POST.get('title', '').strip()
         if not title:

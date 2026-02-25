@@ -437,7 +437,7 @@ $(document).ready(function () {
         }
 
         const fullJalali = $dateInput.val() + ' ' + $timeInput.val();
-        const m = moment(fullJalali, 'jYYYY/jMM/jDD HH:mm', true); // 👈 strict
+        const m = moment(fullJalali, 'YYYY/MM/DD HH:mm', true); // 👈 strict
 
         if (!m.isValid()) {
             $miladiInput.val('');
