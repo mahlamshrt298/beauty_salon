@@ -2206,7 +2206,7 @@ def package_add(request):
        
         if 'is_limited_time' in request.POST:
             package.is_limited_time = True
-            package.duration_days = request.POST.get('duration_days', 3)
+            package.duration_days = int(request.POST.get('duration_days', 3))
 
             start_time_str = request.POST.get('start_time')
 
@@ -2296,7 +2296,7 @@ def package_edit(request, pk):
 
         if 'is_limited_time' in request.POST:
             package.is_limited_time = True
-            package.duration_days = request.POST.get('duration_days', 3)
+            package.duration_days = int(request.POST.get('duration_days', 3))
 
             start_time_str = request.POST.get('start_time')
 
