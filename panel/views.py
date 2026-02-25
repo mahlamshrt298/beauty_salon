@@ -2212,7 +2212,10 @@ def package_add(request):
 
             if not start_time_str:
                 messages.error(request, "لطفاً زمان شروع تخفیف را انتخاب کنید", extra_tags="panel")
-                return redirect('panel:package_edit', pk=pk)  # در add هم مناسبش رو بزن
+                return render(request, 'panel/package_form.html', {
+                    'categories': categories,
+                    'action': 'add'
+                })
 
             try:
                 start_time = timezone.make_aware(
@@ -2220,12 +2223,18 @@ def package_add(request):
                 )
             except ValueError:
                 messages.error(request, "فرمت تاریخ نامعتبر است", extra_tags="panel")
-                return redirect('panel:package_edit', pk=pk)
+                return render(request, 'panel/package_form.html', {
+                    'categories': categories,
+                    'action': 'add'
+                })
 
             # ❗ جلوگیری از تاریخ گذشته
             if start_time < timezone.now():
                 messages.error(request, "زمان شروع تخفیف نمی‌تواند در گذشته باشد", extra_tags="panel")
-                return redirect('panel:package_edit', pk=pk)
+                return render(request, 'panel/package_form.html', {
+                    'categories': categories,
+                    'action': 'add'
+                })
 
             package.start_time = start_time
         else:
@@ -2292,7 +2301,11 @@ def package_edit(request, pk):
 
             if not start_time_str:
                 messages.error(request, "لطفاً زمان شروع تخفیف را انتخاب کنید", extra_tags="panel")
-                return redirect('panel:package_edit', pk=pk)  # در add هم مناسبش رو بزن
+                return render(request, 'panel/package_form.html', {
+                    'package': package,
+                    'categories': categories,
+                    'action': 'edit'
+                })
 
             try:
                 start_time = timezone.make_aware(
@@ -2300,18 +2313,25 @@ def package_edit(request, pk):
                 )
             except ValueError:
                 messages.error(request, "فرمت تاریخ نامعتبر است", extra_tags="panel")
-                return redirect('panel:package_edit', pk=pk)
+                return render(request, 'panel/package_form.html', {
+                    'package': package,
+                    'categories': categories,
+                    'action': 'edit'
+                })
 
-            # ❗ جلوگیری از تاریخ گذشته
             if start_time < timezone.now():
                 messages.error(request, "زمان شروع تخفیف نمی‌تواند در گذشته باشد", extra_tags="panel")
-                return redirect('panel:package_edit', pk=pk)
+                return render(request, 'panel/package_form.html', {
+                    'package': package,
+                    'categories': categories,
+                    'action': 'edit'
+                })
 
             package.start_time = start_time
         else:
             package.is_limited_time = False
             package.start_time = None
-            
+                    
         # ذخیره عکس جدید
         if 'image' in request.FILES:
             package.image = request.FILES['image']
