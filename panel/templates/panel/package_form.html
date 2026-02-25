@@ -450,7 +450,7 @@ $(document).ready(function () {
         const fullJalali = dateEn + ' ' + timeEn;
 
         // چون داری jalali-moment استفاده می‌کنی باید jYYYY باشه
-        const m = moment.from(fullJalali, 'fa', 'jYYYY/jMM/jDD HH:mm', true);
+        const m = moment(fullJalali, 'jYYYY/jMM/jDD HH:mm', 'fa', true);
 
         if (!m.isValid()) {
             console.log("INVALID DATE");
