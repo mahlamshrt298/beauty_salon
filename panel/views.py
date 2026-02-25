@@ -2235,8 +2235,9 @@ def package_add(request):
                 
         # ✅ فقط اگر پکیج فعاله اعلان بفرست
         if package.is_active:
-            send_package_notification(package)
-
+           # send_package_notification(package)
+            pass
+        
          # ارتباط با خدمت
         service_ids = request.POST.getlist('services[]')
 
