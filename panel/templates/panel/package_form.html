@@ -430,23 +430,39 @@ $(document).ready(function () {
     }
 
 
+    function toEnglishDigits(str) {
+        return str.replace(/[۰-۹]/g, function(d) {
+            return '0123456789'['۰۱۲۳۴۵۶۷۸۹'.indexOf(d)];
+        });
+    }
+
     function syncToMiladi() {
+
         if (!$dateInput.val() || !$timeInput.val()) {
             $miladiInput.val('');
             return;
         }
 
-        const fullJalali = $dateInput.val() + ' ' + $timeInput.val();
-        const m = moment(fullJalali, 'YYYY/MM/DD HH:mm', true); // 👈 strict
+        // تبدیل اعداد فارسی به انگلیسی
+        const dateEn = toEnglishDigits($dateInput.val());
+        const timeEn = toEnglishDigits($timeInput.val());
+
+        const fullJalali = dateEn + ' ' + timeEn;
+
+        // چون داری jalali-moment استفاده می‌کنی باید jYYYY باشه
+        const m = moment(fullJalali, 'jYYYY/jMM/jDD HH:mm', true);
 
         if (!m.isValid()) {
+            console.log("INVALID DATE");
             $miladiInput.val('');
             return;
         }
 
+        // تبدیل به میلادی استاندارد برای Django
         $miladiInput.val(m.format('YYYY-MM-DDTHH:mm'));
-    }
 
+        console.log("MILADI:", $miladiInput.val());
+    }
 
     // تقویم شمسی (فقط تاریخ)
     $dateInput.persianDatepicker({
