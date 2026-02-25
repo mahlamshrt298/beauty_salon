@@ -554,16 +554,6 @@ function displayPriceInWords(inputId, displayId) {
 </script>
 
 <script>
-document.querySelector('form').addEventListener('submit', function () {
-    const btn = document.getElementById('saveBtn');
-    if (btn) {
-        btn.disabled = true;
-        btn.innerText = 'در حال ذخیره...';
-    }
-});
-</script>
-
-<script>
 document.addEventListener('DOMContentLoaded', function() {
     const allServicesSelect = document.getElementById('all-services');
     const selectedServicesList = document.getElementById('selected-services-list').querySelector('.d-flex');

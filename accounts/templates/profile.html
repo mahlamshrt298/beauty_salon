@@ -698,18 +698,22 @@ document.addEventListener('click', function(e){
 
 function bindReviewForm(){
   const form = document.getElementById('reviewForm');
+  const submitBtn = form.querySelector("button[type='submit']");
   form.addEventListener('submit', function(ev){
-
+    ev.preventDefault();
     const rating = document.getElementById('ratingInput').value;
 
     if(!rating){
-      ev.preventDefault();
+      
       document.getElementById('reviewMsg').innerText =
         "لطفاً قبل از ثبت نظر، امتیاز ستاره‌ای را انتخاب کنید ⭐";
       return;
     }
 
-    ev.preventDefault();
+    submitBtn.disabled = true;
+    submitBtn.innerHTML =
+        '<i class="fas fa-spinner fa-spin me-2"></i>در حال ثبت...';
+
     const appointmentId = form.dataset.appointment;
     const data = new FormData(form);
     fetch(`{% url 'accounts:ajax_add_review' 0 %}`.replace('/0/','/'+appointmentId+'/'),{
@@ -723,10 +727,21 @@ function bindReviewForm(){
         location.reload();   // یا بروز رسانی لیست نظرات به دلخواه
       }else if(d.error){
         alert(d.error);
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = "ثبت نظر";
       }else{
         document.getElementById('reviewMsg').innerHTML =
           Object.values(d.errors).join('<br>');
+
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = "ثبت نظر";
       }
+
+    })
+    .catch(()=>{
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = "ثبت نظر";
+      alert("خطا در ارتباط با سرور");
     });
   });
 }
