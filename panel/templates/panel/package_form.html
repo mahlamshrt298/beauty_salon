@@ -170,7 +170,10 @@
                                                     value="">
                                             </div>
 
-                                            <input type="hidden" name="start_time" id="start_time_miladi">
+                                            <input type="hidden" 
+                                            name="start_time" 
+                                            id="start_time_miladi"
+                                            value="{{ package.start_time|date:'Y-m-d\\TH:i' }}">
 
                                             <small class="text-muted">
                                                 تاریخ را از تقویم و ساعت را جداگانه انتخاب کنید
@@ -419,7 +422,7 @@ $(document).ready(function () {
 
     // اگر مقدار قبلی داریم (ویرایش)
     if ($miladiInput.val()) {
-        const m = moment($miladiInput.val(), 'YYYY-MM-DDTHH:mm');
+        const m = moment($miladiInput.val(), 'YYYY-MM-DDTHH:mm', true);
         if (m.isValid()) {
             $dateInput.val(m.format('jYYYY/jMM/jDD'));
             $timeInput.val(m.format('HH:mm'));

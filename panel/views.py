@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import User, Group
+from urllib3 import request
 from booking.models import Appointment,Staff
 from services_app.models import ( Service ,PopularService, ServiceImage, Category as ServiceCategory, Subcategory,)
 from django.db.models import Q , Count
@@ -2202,28 +2203,35 @@ def package_add(request):
         package.is_active = 'is_active' in request.POST
         
         # ✅ این بخش جدید را اضافه کنید
+       
         if 'is_limited_time' in request.POST:
             package.is_limited_time = True
             package.duration_days = request.POST.get('duration_days', 3)
-            
-            # دریافت زمان شروع از فرم
+
             start_time_str = request.POST.get('start_time')
 
-            if start_time_str:
-                try:
-                    package.start_time = timezone.make_aware(
-                        datetime.strptime(start_time_str, '%Y-%m-%dT%H:%M')
-                    )
-                except ValueError:
-                    # اگر مقدار نامعتبر بود (مثلاً Invalid date)
-                    package.start_time = timezone.now()
-            else:
-                package.start_time = timezone.now()
-                
+            if not start_time_str:
+                messages.error(request, "لطفاً زمان شروع تخفیف را انتخاب کنید", extra_tags="panel")
+                return redirect('panel:package_edit', pk=pk)  # در add هم مناسبش رو بزن
+
+            try:
+                start_time = timezone.make_aware(
+                    datetime.strptime(start_time_str, '%Y-%m-%dT%H:%M')
+                )
+            except ValueError:
+                messages.error(request, "فرمت تاریخ نامعتبر است", extra_tags="panel")
+                return redirect('panel:package_edit', pk=pk)
+
+            # ❗ جلوگیری از تاریخ گذشته
+            if start_time < timezone.now():
+                messages.error(request, "زمان شروع تخفیف نمی‌تواند در گذشته باشد", extra_tags="panel")
+                return redirect('panel:package_edit', pk=pk)
+
+            package.start_time = start_time
         else:
             package.is_limited_time = False
             package.start_time = None
-        
+            
         # ذخیره عکس
         if 'image' in request.FILES:
             package.image = request.FILES['image']
@@ -2275,28 +2283,35 @@ def package_edit(request, pk):
         package.is_active = 'is_active' in request.POST
         
         # ✅ این بخش جدید را اضافه کنید
+
         if 'is_limited_time' in request.POST:
             package.is_limited_time = True
             package.duration_days = request.POST.get('duration_days', 3)
-            
-            # دریافت زمان شروع از فرم
+
             start_time_str = request.POST.get('start_time')
 
-            if start_time_str:
-                try:
-                    package.start_time = timezone.make_aware(
-                        datetime.strptime(start_time_str, '%Y-%m-%dT%H:%M')
-                    )
-                except ValueError:
-                    # اگر مقدار نامعتبر بود (مثلاً Invalid date)
-                    package.start_time = timezone.now()
-            else:
-                package.start_time = timezone.now()
-                
+            if not start_time_str:
+                messages.error(request, "لطفاً زمان شروع تخفیف را انتخاب کنید", extra_tags="panel")
+                return redirect('panel:package_edit', pk=pk)  # در add هم مناسبش رو بزن
+
+            try:
+                start_time = timezone.make_aware(
+                    datetime.strptime(start_time_str, '%Y-%m-%dT%H:%M')
+                )
+            except ValueError:
+                messages.error(request, "فرمت تاریخ نامعتبر است", extra_tags="panel")
+                return redirect('panel:package_edit', pk=pk)
+
+            # ❗ جلوگیری از تاریخ گذشته
+            if start_time < timezone.now():
+                messages.error(request, "زمان شروع تخفیف نمی‌تواند در گذشته باشد", extra_tags="panel")
+                return redirect('panel:package_edit', pk=pk)
+
+            package.start_time = start_time
         else:
             package.is_limited_time = False
             package.start_time = None
-
+            
         # ذخیره عکس جدید
         if 'image' in request.FILES:
             package.image = request.FILES['image']
