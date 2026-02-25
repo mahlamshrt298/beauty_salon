@@ -2282,7 +2282,12 @@ def package_edit(request, pk):
         title = request.POST.get('title', '').strip()
         if not title:
             messages.error(request, "لطفاً عنوان پکیج را وارد کنید", extra_tags="panel")
-            return redirect('panel:package_edit', pk=pk)
+            return render(request, 'panel/package_form.html', {
+                'package': package,
+                'categories': categories,
+                'action': 'edit'
+            })
+
             
         package.title = title
         
@@ -2430,7 +2435,7 @@ User = get_user_model()
 def package_resend_notification(request, pk):
     package = get_object_or_404(Package, pk=pk)
 
-    send_package_notification(package)
+    #send_package_notification(package)
 
     messages.success(request, "اعلان و ایمیل مجدد ارسال شد ✅", extra_tags="panel")
     return redirect('panel:package_list')
