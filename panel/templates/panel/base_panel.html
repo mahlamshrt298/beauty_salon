@@ -487,6 +487,23 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 </script>
 
+<script>
+// Auto-dismiss messages after 5 seconds
+document.addEventListener("DOMContentLoaded", function() {
+    // انتخاب همه alert ها
+    const alerts = document.querySelectorAll('.alert');
+    
+    alerts.forEach(function(alert) {
+        // 5 ثانیه = 5000 میلی‌ثانیه
+        setTimeout(function() {
+            // ایجاد یک شی Alert از بوت‌استرپ
+            const bsAlert = new bootstrap.Alert(alert);
+            // بستن alert
+            bsAlert.close();
+        }, 7000); // 5000 = 5 ثانیه (میتونی به 6000 یا 7000 تغییر بدی)
+    });
+});
+</script>
 
 </body>
 </html>
