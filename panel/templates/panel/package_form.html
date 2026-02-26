@@ -422,17 +422,19 @@ $(document).ready(function () {
 
     // اگر مقدار قبلی داریم (ویرایش)
     if ($miladiInput.val()) {
-        const m = moment($miladiInput.val(), 'YYYY-MM-DDTHH:mm', true);
+        const m = moment($miladiInput.val(), 'YYYY-MM-DDTHH:mm');
         if (m.isValid()) {
             $dateInput.val(m.format('jYYYY/jMM/jDD'));
             $timeInput.val(m.format('HH:mm'));
         }
     }
 
-
     function toEnglishDigits(str) {
+        // تبدیل اعداد فارسی و عربی به انگلیسی
         return str.replace(/[۰-۹]/g, function(d) {
             return '0123456789'['۰۱۲۳۴۵۶۷۸۹'.indexOf(d)];
+        }).replace(/[٠-٩]/g, function(d) {
+            return '0123456789'['٠١٢٣٤٥٦٧٨٩'.indexOf(d)];
         });
     }
 
@@ -446,33 +448,49 @@ $(document).ready(function () {
         const dateEn = toEnglishDigits($dateInput.val());
         const timeEn = toEnglishDigits($timeInput.val());
 
-        const fullJalali = dateEn + ' ' + timeEn;
+        // حذف هرگونه j اضافی
+        const cleanDate = dateEn.replace(/j/gi, '').trim();
+        
+        // جدا کردن سال، ماه، روز
+        const parts = cleanDate.split('/');
+        if (parts.length !== 3) {
+            console.log("فرمت تاریخ اشتباه است:", cleanDate);
+            $miladiInput.val('');
+            return;
+        }
 
-        const cleanDate = dateEn.replace(/^j/, ''); // حذف j اول
-
-        const m = moment(cleanDate + ' ' + timeEn, 'jYYYY/jMM/jDD HH:mm', true);
-
+        const jalaliStr = `${parts[0]}/${parts[1]}/${parts[2]} ${timeEn}`;
+        
+        // استفاده از moment با فرمت مشخص
+        const m = moment(jalaliStr, 'jYYYY/jMM/jDD HH:mm');
+        
         if (!m.isValid()) {
-            console.log("INVALID DATE", fullJalali);
+            console.log("INVALID DATE:", jalaliStr);
             $miladiInput.val('');
             return;
         }
 
         $miladiInput.val(m.format('YYYY-MM-DDTHH:mm'));
-        console.log("MILADI:", $miladiInput.val());
+        console.log("✅ MILADI:", $miladiInput.val());
     }
 
-    // تقویم شمسی (فقط تاریخ)
+    // تقویم شمسی
     $dateInput.persianDatepicker({
         format: 'jYYYY/jMM/jDD',
         autoClose: true,
         calendarType: 'persian',
         persianDigit: true,
-        onSelect: syncToMiladi
+        onSelect: function() {
+            setTimeout(syncToMiladi, 10);
+        }
     });
 
     // تغییر ساعت
     $timeInput.on('change', syncToMiladi);
+    $timeInput.on('keyup', syncToMiladi);
+    
+    // اولین بار هم چک کن
+    setTimeout(syncToMiladi, 100);
 });
 </script>
 

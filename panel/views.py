@@ -2191,7 +2191,7 @@ def package_list(request):
 @login_required
 @panel_access_required
 def package_add(request):    
-    categories = ServiceCategory.objects.all()  # دریافت تمام دسته‌بندی‌ها
+    categories = ServiceCategory.objects.all()
 
     if request.method == 'POST':
         package = Package()
@@ -2202,8 +2202,7 @@ def package_add(request):
         package.discount_badge = request.POST.get('discount_badge', '')
         package.is_active = 'is_active' in request.POST
         
-        # ✅ این بخش جدید را اضافه کنید
-       
+        # مدیریت تخفیف موقت
         if 'is_limited_time' in request.POST:
             package.is_limited_time = True
             package.duration_days = int(request.POST.get('duration_days', 3))
@@ -2221,43 +2220,44 @@ def package_add(request):
                 start_time = timezone.make_aware(
                     datetime.strptime(start_time_str, '%Y-%m-%dT%H:%M')
                 )
-            except ValueError:
+
+                now = timezone.now()
+                
+                print(f"DEBUG - Start time: {start_time}, Now: {now}")
+                print(f"DEBUG - Is future: {start_time > now}")
+
+                if start_time <= now:
+                    messages.error(request, "زمان شروع تخفیف باید در آینده باشد", extra_tags="panel")
+                    return render(request, 'panel/package_form.html', {
+                        'categories': categories,
+                        'action': 'add'
+                    })
+
+                package.start_time = start_time
+
+            except ValueError as e:
+                print(f"ValueError: {e}, start_time_str: {start_time_str}")
                 messages.error(request, "فرمت تاریخ نامعتبر است", extra_tags="panel")
                 return render(request, 'panel/package_form.html', {
                     'categories': categories,
                     'action': 'add'
                 })
 
-            # ❗ جلوگیری از تاریخ گذشته
-            if start_time < timezone.now():
-                messages.error(request, "زمان شروع تخفیف نمی‌تواند در گذشته باشد", extra_tags="panel")
-                return render(request, 'panel/package_form.html', {
-                    'categories': categories,
-                    'action': 'add'
-                })
-
-            package.start_time = start_time
         else:
             package.is_limited_time = False
             package.start_time = None
             
-        # ذخیره عکس
+        # عکس
         if 'image' in request.FILES:
             package.image = request.FILES['image']
         
-        # در تابع package_add (بعد از package.is_active = ...)
+        # نمایش در سایت
         package.show_on_homepage = request.POST.get('show_on_homepage') == '1'
 
         package.save()
-                
-        # ✅ فقط اگر پکیج فعاله اعلان بفرست
-        if package.is_active:
-           # send_package_notification(package)
-            pass
-
-         # ارتباط با خدمت
+        
+        # ارتباط با خدمت
         service_ids = request.POST.getlist('services[]')
-
         if service_ids:
             services = Service.objects.filter(id__in=service_ids)
             package.service.set(services)
@@ -2270,14 +2270,14 @@ def package_add(request):
         'action': 'add'
     })
 
+
 # ویرایش پکیج
 @login_required
 @panel_access_required
 def package_edit(request, pk):
     package = get_object_or_404(Package, pk=pk)
-    categories = ServiceCategory.objects.all()  # دریافت تمام دسته‌بندی‌ها
+    categories = ServiceCategory.objects.all()
 
-    print("START_TIME_POST:", request.POST.get('start_time'))
     if request.method == 'POST':
         title = request.POST.get('title', '').strip()
         if not title:
@@ -2288,17 +2288,14 @@ def package_edit(request, pk):
                 'action': 'edit'
             })
 
-            
         package.title = title
-        
         package.description = request.POST.get('description')
         package.original_price = request.POST.get('original_price') or None
         package.discounted_price = request.POST.get('discounted_price')
         package.discount_badge = request.POST.get('discount_badge', '')
         package.is_active = 'is_active' in request.POST
         
-        # ✅ این بخش جدید را اضافه کنید
-
+        # مدیریت تخفیف موقت
         if 'is_limited_time' in request.POST:
             package.is_limited_time = True
             package.duration_days = int(request.POST.get('duration_days', 3))
@@ -2317,7 +2314,24 @@ def package_edit(request, pk):
                 start_time = timezone.make_aware(
                     datetime.strptime(start_time_str, '%Y-%m-%dT%H:%M')
                 )
-            except ValueError:
+                
+                now = timezone.now()
+                
+                print(f"DEBUG - Start time: {start_time}, Now: {now}")
+                print(f"DEBUG - Is future: {start_time > now}")
+
+                if start_time <= now:
+                    messages.error(request, "زمان شروع تخفیف باید در آینده باشد", extra_tags="panel")
+                    return render(request, 'panel/package_form.html', {
+                        'package': package,
+                        'categories': categories,
+                        'action': 'edit'
+                    })
+
+                package.start_time = start_time
+
+            except ValueError as e:
+                print(f"ValueError: {e}, start_time_str: {start_time_str}")
                 messages.error(request, "فرمت تاریخ نامعتبر است", extra_tags="panel")
                 return render(request, 'panel/package_form.html', {
                     'package': package,
@@ -2325,33 +2339,21 @@ def package_edit(request, pk):
                     'action': 'edit'
                 })
 
-            if start_time < timezone.now():
-                messages.error(request, "زمان شروع تخفیف نمی‌تواند در گذشته باشد", extra_tags="panel")
-                return render(request, 'panel/package_form.html', {
-                    'package': package,
-                    'categories': categories,
-                    'action': 'edit'
-                })
-
-            package.start_time = start_time
         else:
             package.is_limited_time = False
             package.start_time = None
                     
-        # ذخیره عکس جدید
+        # عکس جدید
         if 'image' in request.FILES:
             package.image = request.FILES['image']
         
-        # در تابع package_edit (بعد از package.is_active = ...)
+        # نمایش در سایت
         package.show_on_homepage = request.POST.get('show_on_homepage') == '1'
 
         package.save()
         
         # ارتباط با خدمت
         service_ids = request.POST.getlist('services[]')
-        
-        print(request.POST.getlist('services[]'))
-    
         if service_ids:
             services = Service.objects.filter(id__in=service_ids)
             package.service.set(services)
