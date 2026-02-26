@@ -153,33 +153,16 @@
                                                 value="{{ package.duration_days|default:'3' }}">
                                         </div>
 
+                                        
                                         <div class="col-md-6">
                                             <label class="form-label">زمان شروع تخفیف</label>
-
-                                            <div class="input-group">
-                                                <input type="text"
-                                                    id="start_time_jalali"
-                                                    class="form-control"
-                                                    placeholder="1403/02/15"
-                                                    autocomplete="off">
-
-                                                <input type="time"
-                                                    id="start_time_clock"
-                                                    class="form-control"
-                                                    style="max-width: 140px;"
-                                                    value="">
-                                            </div>
-
-                                            <input type="hidden" 
-                                            name="start_time" 
-                                            id="start_time_miladi"
-                                            value="{% if package.start_time %}{{ package.start_time|date:'Y-m-d\\TH:i' }}{% endif %}">
-
-                                            <small class="text-muted">
-                                                تاریخ را از تقویم و ساعت را جداگانه انتخاب کنید
-                                            </small>
+                                            <input type="datetime-local" 
+                                                name="start_time" 
+                                                id="start_time"
+                                                class="form-control"
+                                                value="{% if package.start_time %}{{ package.start_time|date:'Y-m-d\\TH:i' }}{% endif %}">
+                                            <small class="text-muted">تاریخ و ساعت را انتخاب کنید</small>
                                         </div>
-
 
                                     </div>
                                 </div>
