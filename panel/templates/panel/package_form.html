@@ -529,13 +529,13 @@ $(document).ready(function() {
         $('<input type="text" id="jalali_date" class="form-control mb-2" placeholder="تاریخ شمسی">').insertBefore('#start_time');
         $('<input type="time" id="jalali_time" class="form-control" value="12:00">').insertBefore('#start_time');
         
-        // متغیر برای تشخیص اولین بار
-        var isFirstLoad = true;
-        
         // ========== مقداردهی اولیه ==========
         var currentValue = $('#start_time').val();
         console.log("📅 مقدار اولیه از دیتابیس:", currentValue);
 
+        // اول تقویم رو غیرفعال کن
+        var datepickerEnabled = false;
+        
         if (currentValue && currentValue !== '') {
             try {
                 // تبدیل تاریخ میلادی به شمسی با moment
@@ -543,32 +543,51 @@ $(document).ready(function() {
                 if (m.isValid()) {
                     var jDate = m.format('jYYYY/jMM/jDD');
                     var jTime = m.format('HH:mm');
+                    
+                    // مقداردهی دستی inputها
                     $('#jalali_date').val(jDate);
                     $('#jalali_time').val(jTime);
+                    
                     console.log("✅ تاریخ شمسی ست شد:", jDate, jTime);
+                    
+                    // فعال کردن تقویم با مقدار درست
+                    $('#jalali_date').persianDatepicker({
+                        format: 'YYYY/MM/DD',
+                        autoClose: true,
+                        calendarType: 'persian',
+                        persianDigit: true,
+                        initialValue: false, // مقدار اولیه رو از input می‌گیره
+                        onSelect: function() {
+                            updateMiladiDate();
+                        }
+                    });
+                    
+                    datepickerEnabled = true;
                 }
             } catch(e) {
                 console.log("❌ خطا در تبدیل:", e);
             }
-        } else {
-            // اگه تاریخ نداشت، مقدار پیش‌فرض بذار
-            var now = moment();
-            $('#jalali_date').val(now.format('jYYYY/jMM/jDD'));
-            $('#jalali_time').val('12:00');
         }
         
-        // فعال کردن تقویم شمسی
-        $('#jalali_date').persianDatepicker({
-            format: 'YYYY/MM/DD',
-            autoClose: true,
-            calendarType: 'persian',
-            persianDigit: true,
-            onSelect: function() {
-                if (!isFirstLoad) {
+        // اگر تقویم فعال نشده بود (تاریخ نداشتیم)
+        if (!datepickerEnabled) {
+            var now = moment();
+            $('#jalali_date').val(now.format('jYYYY/jMM/jDD'));
+            
+            $('#jalali_date').persianDatepicker({
+                format: 'YYYY/MM/DD',
+                autoClose: true,
+                calendarType: 'persian',
+                persianDigit: true,
+                initialValue: false,
+                onSelect: function() {
                     updateMiladiDate();
                 }
-            }
-        });
+            });
+            
+            $('#jalali_time').val('12:00');
+            updateMiladiDate();
+        }
         
         function toEnglishDigits(str) {
             if (!str) return '';
@@ -586,11 +605,9 @@ $(document).ready(function() {
             var jalaliTime = $('#jalali_time').val() || '12:00';
             
             if (jalaliDate) {
-                // تبدیل اعداد فارسی به انگلیسی
                 var cleanDate = toEnglishDigits(jalaliDate);
                 var cleanTime = toEnglishDigits(jalaliTime);
                 
-                // ساخت تاریخ شمسی با moment
                 var jalaliStr = cleanDate + ' ' + cleanTime;
                 var m = moment(jalaliStr, 'jYYYY/jMM/jDD HH:mm');
                 
@@ -611,13 +628,7 @@ $(document).ready(function() {
             alert('مقدار start_time: ' + $('#start_time').val());
         });
         
-        // به‌روزرسانی با تغییر ساعت
         $('#jalali_time').on('change', updateMiladiDate);
-        
-        // اولین بار تموم شد
-        setTimeout(function() {
-            isFirstLoad = false;
-        }, 500);
     }
 });
 </script>
