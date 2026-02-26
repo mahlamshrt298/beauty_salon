@@ -324,20 +324,22 @@
 </nav>
 
 {% if messages %}
-  {% for message in messages %}
-    {% if "panel" in message.tags %}
-      <div class="alert 
-                  {% if message.level_tag == 'error' %}alert-danger
-                  {% elif message.level_tag == 'success' %}alert-success
-                  {% elif message.level_tag == 'warning' %}alert-warning
-                  {% else %}alert-info{% endif %}
-                  alert-dismissible fade show"
-                  role="alert">
-        {{ message }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-      </div>
-    {% endif %}
-  {% endfor %}
+  <div class="container mt-3">
+    {% for message in messages %}
+      {% if "panel" in message.tags %}
+        <div class="alert 
+          {% if 'error' in message.tags %}alert-danger
+          {% elif 'success' in message.tags %}alert-success
+          {% elif 'warning' in message.tags %}alert-warning
+          {% else %}alert-info{% endif %}
+          alert-dismissible fade show" 
+          role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      {% endif %}
+    {% endfor %}
+  </div>
 {% endif %}
 
 
