@@ -544,7 +544,8 @@ $(document).ready(function() {
                     $('#jalali_time').val(jTime);
                     console.log("✅ تاریخ شمسی ست شد:", jDate, jTime);
                     
-                    // نیازی به ست کردن دوباره start_time نیست، چون مقدارش قبلاً توی input هست
+                    // مهم: مقدار start_time رو دوباره ست کن با همون مقدار قبلی
+                    $('#start_time').val(currentValue);
                 }
             } catch(e) {
                 console.log("❌ خطا در تبدیل:", e);
@@ -554,7 +555,6 @@ $(document).ready(function() {
             var now = moment();
             $('#jalali_date').val(now.format('jYYYY/jMM/jDD'));
             $('#jalali_time').val('12:00');
-            // اگه تاریخ نداشت، یه مقدار پیش‌فرض برای start_time بذار
             updateMiladiDate();
         }
         
@@ -612,13 +612,9 @@ $(document).ready(function() {
         
         // به‌روزرسانی با تغییر ساعت
         $('#jalali_time').on('change', updateMiladiDate);
-        
-        // اولین بار اجرا کن
-        //setTimeout(updateMiladiDate, 200);
     }
 });
 </script>
-
 
 <style>
 #jalali_date {
