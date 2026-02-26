@@ -420,16 +420,10 @@ $(document).ready(function () {
     const $timeInput = $('#start_time_clock');
     const $miladiInput = $('#start_time_miladi');
 
-    // اگر مقدار قبلی داریم (ویرایش)
-    if ($miladiInput.val()) {
-        const m = moment($miladiInput.val(), 'YYYY-MM-DDTHH:mm');
-        if (m.isValid()) {
-            $dateInput.val(m.format('jYYYY/jMM/jDD'));
-            $timeInput.val(m.format('HH:mm'));
-        }
-    }
-
     function toEnglishDigits(str) {
+        if (!str) return '';
+        // اول حرف j رو حذف کن
+        str = str.replace(/j/gi, '');
         // تبدیل اعداد فارسی و عربی به انگلیسی
         return str.replace(/[۰-۹]/g, function(d) {
             return '0123456789'['۰۱۲۳۴۵۶۷۸۹'.indexOf(d)];
@@ -444,17 +438,14 @@ $(document).ready(function () {
             return;
         }
 
-        // تبدیل اعداد فارسی به انگلیسی
+        // تبدیل اعداد فارسی به انگلیسی و حذف j
         const dateEn = toEnglishDigits($dateInput.val());
         const timeEn = toEnglishDigits($timeInput.val());
 
-        // حذف هرگونه j اضافی
-        const cleanDate = dateEn.replace(/j/gi, '').trim();
-        
         // جدا کردن سال، ماه، روز
-        const parts = cleanDate.split('/');
+        const parts = dateEn.split('/');
         if (parts.length !== 3) {
-            console.log("فرمت تاریخ اشتباه است:", cleanDate);
+            console.log("فرمت تاریخ اشتباه است:", dateEn);
             $miladiInput.val('');
             return;
         }
@@ -472,6 +463,15 @@ $(document).ready(function () {
 
         $miladiInput.val(m.format('YYYY-MM-DDTHH:mm'));
         console.log("✅ MILADI:", $miladiInput.val());
+    }
+
+    // اگر مقدار قبلی داریم (ویرایش)
+    if ($miladiInput.val()) {
+        const m = moment($miladiInput.val(), 'YYYY-MM-DDTHH:mm');
+        if (m.isValid()) {
+            $dateInput.val(m.format('jYYYY/jMM/jDD'));
+            $timeInput.val(m.format('HH:mm'));
+        }
     }
 
     // تقویم شمسی
@@ -493,6 +493,7 @@ $(document).ready(function () {
     setTimeout(syncToMiladi, 100);
 });
 </script>
+
 
 <script>
 // تابع تبدیل عدد به حروف فارسی
