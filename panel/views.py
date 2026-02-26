@@ -2397,52 +2397,57 @@ def package_delete(request, pk):
 User = get_user_model()
 
 
-#def send_package_notification(package):
- #   users = User.objects.filter(is_active=True)
-#
- #   subject = f"🎁 یک پیشنهاد ویژه فقط برای شما | {package.title}"
-#
- #   message = f"""
-  #  سلام 🌸
-#
- #   یه خبر خوب برات داریم!
-#
- #   پکیج جدید «{package.title}» به مجموعه ما اضافه شده 👇  
-  #  ✨ ترکیبی از خدمات محبوب  
-   # 💎 با قیمتی ویژه و محدود
-#
- #   💰 قیمت پکیج: {package.discounted_price} تومان
-#
- #   اگر دنبال یه تغییر جذاب یا رسیدگی حرفه‌ای به خودتی،
-  #  این پکیج دقیقاً همونه که دنبالش بودی 😉
-#
- #   منتظرت هستیم 💖  
-  #  تیم سالن زیبایی
-   # """
+def send_package_notification(package):
+   
+    users = User.objects.filter(is_active=True)
+    
+    subject = f"🎁 یک پیشنهاد ویژه فقط برای شما | {package.title}"
+    
+    message = f"""
+سلام 🌸
 
+یه خبر خوب برات داریم!
 
-    # ---------- ارسال ایمیل ----------
-#    email_messages = []
- #   for user in users:
-  #      if user.email:
-   #         email_messages.append((
-    #            subject,
-     #           message,
-      #          settings.DEFAULT_FROM_EMAIL,
-       #         [user.email],
-        #    ))
+پکیج جدید «{package.title}» به مجموعه ما اضافه شده 👇  
+✨ ترکیبی از خدمات محبوب  
+💎 با قیمتی ویژه و محدود
 
-#    if email_messages:
- #       send_mass_mail(email_messages, fail_silently=True)
+💰 قیمت پکیج: {package.discounted_price} تومان
 
-#    for user in users:
- #       Notification.objects.create(
-  #          user=user,
-   #         type='promotion',          # از TYPE_CHOICES
-    #        channel='email',           # یا sms / whatsapp
-     #       message=f"🎁 پکیج جدید: {package.title} با قیمت ویژه منتشر شد",
-      #      status='sent'
-       # )
+اگر دنبال یه تغییر جذاب یا رسیدگی حرفه‌ای به خودتی،
+این پکیج دقیقاً همونه که دنبالش بودی 😉
+
+منتظرت هستیم 💖  
+تیم سالن زیبایی
+"""
+
+    # ارسال ایمیل
+    email_messages = []
+    for user in users:
+        if user.email:
+            email_messages.append((
+                subject,
+                message,
+                settings.DEFAULT_FROM_EMAIL,
+                [user.email],
+            ))
+
+    if email_messages:
+        send_mass_mail(email_messages, fail_silently=True)
+
+    # اگه مدل Notification داری
+    try:
+        for user in users:
+            Notification.objects.create(
+                user=user,
+                type='promotion',
+                channel='email',
+                message=f"🎁 پکیج جدید: {package.title} با قیمت ویژه منتشر شد",
+                status='sent'
+            )
+    except ImportError:
+        pass  # اگه مدل نبود، نادیده بگیر
+
 
 @require_POST
 @login_required
