@@ -529,16 +529,24 @@ $(document).ready(function() {
         $('<input type="text" id="jalali_date" class="form-control mb-2" placeholder="تاریخ شمسی">').insertBefore('#start_time');
         $('<input type="time" id="jalali_time" class="form-control" value="12:00">').insertBefore('#start_time');
         
-        // مقداردهی اولیه اگر تاریخ وجود داشت
+        // ========== مقداردهی اولیه ==========
         var currentValue = $('#start_time').val();
-        if (currentValue) {
+        console.log("📅 مقدار اولیه از دیتابیس:", currentValue);
+        
+        if (currentValue && currentValue !== '') {
             try {
+                // تبدیل تاریخ میلادی به شمسی با moment
                 var m = moment(currentValue, 'YYYY-MM-DDTHH:mm');
                 if (m.isValid()) {
-                    $('#jalali_date').val(m.format('jYYYY/jMM/jDD'));
-                    $('#jalali_time').val(m.format('HH:mm'));
+                    var jDate = m.format('jYYYY/jMM/jDD');
+                    var jTime = m.format('HH:mm');
+                    $('#jalali_date').val(jDate);
+                    $('#jalali_time').val(jTime);
+                    console.log("✅ تاریخ شمسی ست شد:", jDate, jTime);
                 }
-            } catch(e) {}
+            } catch(e) {
+                console.log("❌ خطا در تبدیل:", e);
+            }
         }
         
         // فعال کردن تقویم شمسی
@@ -572,40 +580,36 @@ $(document).ready(function() {
                 var cleanDate = toEnglishDigits(jalaliDate);
                 var cleanTime = toEnglishDigits(jalaliTime);
                 
-                // جدا کردن اجزا
-                var parts = cleanDate.split('/');
-                if (parts.length === 3) {
-                    var jYear = parseInt(parts[0]);
-                    var jMonth = parseInt(parts[1]);
-                    var jDay = parseInt(parts[2]);
-                    
-                    // ساخت تاریخ شمسی با دستور ساده
-                    var jalaliStr = jYear + '/' + jMonth + '/' + jDay + ' ' + cleanTime;
-                    var m = moment(jalaliStr, 'jYYYY/jM/jD HH:mm');
-                    
-                    if (m.isValid()) {
-                        var miladiDate = m.format('YYYY-MM-DDTHH:mm');
-                        $('#start_time').val(miladiDate);
-                        console.log("✅ تاریخ میلادی:", miladiDate);
-                    } else {
-                        console.log("❌ تاریخ نامعتبر:", jalaliStr);
-                    }
+                // ساخت تاریخ شمسی با moment
+                var jalaliStr = cleanDate + ' ' + cleanTime;
+                var m = moment(jalaliStr, 'jYYYY/jMM/jDD HH:mm');
+                
+                if (m.isValid()) {
+                    var miladiDate = m.format('YYYY-MM-DDTHH:mm');
+                    $('#start_time').val(miladiDate);
+                    console.log("✅ تاریخ میلادی:", miladiDate);
+                } else {
+                    console.log("❌ تاریخ نامعتبر:", jalaliStr);
                 }
             }
         }
         
+        // دکمه تست
         $('<button type="button" id="test_date" class="btn btn-sm btn-info mt-2">تست تاریخ</button>').insertAfter('#jalali_time');
         
         $('#test_date').click(function() {
             alert('مقدار start_time: ' + $('#start_time').val());
         });
         
+        // به‌روزرسانی با تغییر ساعت
         $('#jalali_time').on('change', updateMiladiDate);
         
-        setTimeout(updateMiladiDate, 100);
+        // اولین بار اجرا کن
+        setTimeout(updateMiladiDate, 200);
     }
 });
 </script>
+
 
 <style>
 #jalali_date {
