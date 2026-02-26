@@ -2243,8 +2243,8 @@ def package_add(request):
                 print(f"ValueError: {e}, start_time_str: {start_time_str}")
                 messages.error(request, "فرمت تاریخ نامعتبر است", extra_tags="panel")
                 return render(request, 'panel/package_form.html', {
-                    'categories': categories,
                     'package': package,
+                    'categories': categories,
                     'action': 'add'
                 })
 
@@ -2347,8 +2347,8 @@ def package_edit(request, pk):
                 print(f"❌ ValueError: {e}")
                 messages.error(request, "فرمت تاریخ نامعتبر است", extra_tags="panel")
                 return render(request, 'panel/package_form.html', {
-                    'categories': categories,
                     'package': package,
+                    'categories': categories,
                     'action': 'edit'
                 })
 
