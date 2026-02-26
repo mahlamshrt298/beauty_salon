@@ -2359,7 +2359,7 @@ def package_edit(request, pk):
             package.service.set(services)
         else:
             package.service.clear()
-            
+        print(f"📅 start_time در دیتابیس: {package.start_time}")
         messages.success(request, "پکیج با موفقیت ویرایش شد", extra_tags="panel")
         return redirect('panel:package_list')
     

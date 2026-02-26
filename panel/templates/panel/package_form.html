@@ -173,7 +173,7 @@
                                             <input type="hidden" 
                                             name="start_time" 
                                             id="start_time_miladi"
-                                            value="{{ package.start_time|date:'Y-m-d\\TH:i' }}">
+                                            value="{% if package.start_time %}{{ package.start_time|date:'Y-m-d\\TH:i' }}{% endif %}">
 
                                             <small class="text-muted">
                                                 تاریخ را از تقویم و ساعت را جداگانه انتخاب کنید
@@ -420,58 +420,63 @@ $(document).ready(function () {
     const $timeInput = $('#start_time_clock');
     const $miladiInput = $('#start_time_miladi');
 
+    // تابع تبدیل اعداد فارسی به انگلیسی
     function toEnglishDigits(str) {
         if (!str) return '';
-        // اول حرف j رو حذف کن
-        str = str.replace(/j/gi, '');
-        // تبدیل اعداد فارسی و عربی به انگلیسی
-        return str.replace(/[۰-۹]/g, function(d) {
-            return '0123456789'['۰۱۲۳۴۵۶۷۸۹'.indexOf(d)];
-        }).replace(/[٠-٩]/g, function(d) {
-            return '0123456789'['٠١٢٣٤٥٦٧٨٩'.indexOf(d)];
-        });
+        const persianNumbers = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
+        const arabicNumbers = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+        const englishNumbers = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+        
+        for (let i = 0; i < 10; i++) {
+            str = str.replace(new RegExp(persianNumbers[i], 'g'), englishNumbers[i]);
+            str = str.replace(new RegExp(arabicNumbers[i], 'g'), englishNumbers[i]);
+        }
+        return str;
     }
 
+    // تابع تبدیل شمسی به میلادی
     function syncToMiladi() {
         if (!$dateInput.val() || !$timeInput.val()) {
-            $miladiInput.val('');
             return;
         }
 
-        // تبدیل اعداد فارسی به انگلیسی و حذف j
         const dateEn = toEnglishDigits($dateInput.val());
         const timeEn = toEnglishDigits($timeInput.val());
-
-        // جدا کردن سال، ماه، روز
-        const parts = dateEn.split('/');
-        if (parts.length !== 3) {
-            console.log("فرمت تاریخ اشتباه است:", dateEn);
-            $miladiInput.val('');
-            return;
-        }
-
-        const jalaliStr = `${parts[0]}/${parts[1]}/${parts[2]} ${timeEn}`;
         
-        // استفاده از moment با فرمت مشخص
+        // حذف j اضافی
+        const cleanDate = dateEn.replace(/j/gi, '');
+        
+        // ساخت تاریخ شمسی
+        const jalaliStr = `${cleanDate} ${timeEn}`;
+        
+        // تبدیل به میلادی
         const m = moment(jalaliStr, 'jYYYY/jMM/jDD HH:mm');
         
-        if (!m.isValid()) {
-            console.log("INVALID DATE:", jalaliStr);
-            $miladiInput.val('');
-            return;
+        if (m.isValid()) {
+            $miladiInput.val(m.format('YYYY-MM-DDTHH:mm'));
+            console.log("✅ تاریخ میلادی:", $miladiInput.val());
+        } else {
+            console.log("❌ تاریخ نامعتبر:", jalaliStr);
         }
-
-        $miladiInput.val(m.format('YYYY-MM-DDTHH:mm'));
-        console.log("✅ MILADI:", $miladiInput.val());
     }
 
-    // اگر مقدار قبلی داریم (ویرایش)
+    // ** اگر مقدار میلادی داریم، نمایش بده **
     if ($miladiInput.val()) {
-        const m = moment($miladiInput.val(), 'YYYY-MM-DDTHH:mm');
+        const miladiValue = $miladiInput.val();
+        console.log("📅 مقدار میلادی ذخیره شده:", miladiValue);
+        
+        const m = moment(miladiValue, 'YYYY-MM-DDTHH:mm');
         if (m.isValid()) {
+            // تبدیل به شمسی
             $dateInput.val(m.format('jYYYY/jMM/jDD'));
             $timeInput.val(m.format('HH:mm'));
+            console.log("📅 نمایش در فرم:", $dateInput.val(), $timeInput.val());
         }
+    } else {
+        // مقدار پیش‌فرض (امروز)
+        const now = moment();
+        $dateInput.val(now.format('jYYYY/jMM/jDD'));
+        $timeInput.val(now.format('HH:mm'));
     }
 
     // تقویم شمسی
@@ -481,7 +486,7 @@ $(document).ready(function () {
         calendarType: 'persian',
         persianDigit: true,
         onSelect: function() {
-            setTimeout(syncToMiladi, 10);
+            syncToMiladi();
         }
     });
 
@@ -490,10 +495,9 @@ $(document).ready(function () {
     $timeInput.on('keyup', syncToMiladi);
     
     // اولین بار هم چک کن
-    setTimeout(syncToMiladi, 100);
+    syncToMiladi();
 });
 </script>
-
 
 <script>
 // تابع تبدیل عدد به حروف فارسی
