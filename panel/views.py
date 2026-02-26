@@ -2308,8 +2308,9 @@ def package_edit(request, pk):
             if not start_time_str:
                 messages.error(request, "لطفاً زمان شروع تخفیف را انتخاب کنید", extra_tags="panel")
                 return render(request, 'panel/package_form.html', {
+                    'package': package,      # اضافه کن
                     'categories': categories,
-                    'action': 'add'
+                    'action': 'edit'         # edit باشه
                 })
 
             try:
@@ -2332,8 +2333,9 @@ def package_edit(request, pk):
                     messages.error(request, "زمان شروع تخفیف باید در آینده باشد", extra_tags="panel")
                     print("🚨 ارور: تاریخ گذشته است")
                     return render(request, 'panel/package_form.html', {
+                        'package': package,  # 👈 این خط رو اضافه کن
                         'categories': categories,
-                        'action': 'add'
+                        'action': 'edit'     # 👈 'edit' باشه نه 'add'
                     })
 
                 package.start_time = start_time
