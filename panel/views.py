@@ -2455,7 +2455,7 @@ def send_package_notification(package):
 def package_resend_notification(request, pk):
     package = get_object_or_404(Package, pk=pk)
 
-    #send_package_notification(package)
+    send_package_notification(package)
 
     messages.success(request, "اعلان و ایمیل مجدد ارسال شد ✅", extra_tags="panel")
     return redirect('panel:package_list')
