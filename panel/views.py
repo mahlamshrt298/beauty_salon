@@ -2213,16 +2213,17 @@ def package_add(request):
             if not start_time_str:
                 messages.error(request, "لطفاً زمان شروع تخفیف را انتخاب کنید", extra_tags="panel")
                 return render(request, 'panel/package_form.html', {
+                    'package': package,
                     'categories': categories,
                     'action': 'add'
                 })
 
             try:
-                start_time = timezone.make_aware(
-                    datetime.strptime(start_time_str, '%Y-%m-%dT%H:%M')
-                )
+                naive_start = datetime.strptime(start_time_str, '%Y-%m-%dT%H:%M')
+                print(f"🟡 naive_start: {naive_start}")
 
                 tehran_tz = pytz.timezone('Asia/Tehran')
+                start_time = tehran_tz.localize(naive_start)
                 now = timezone.now().astimezone(tehran_tz)
                 
                 print(f"DEBUG - Start time: {start_time}, Now: {now}")
@@ -2231,6 +2232,7 @@ def package_add(request):
                 if start_time <= now:
                     messages.error(request, "زمان شروع تخفیف باید در آینده باشد", extra_tags="panel")
                     return render(request, 'panel/package_form.html', {
+                        'package': package,
                         'categories': categories,
                         'action': 'add'
                     })
@@ -2242,6 +2244,7 @@ def package_add(request):
                 messages.error(request, "فرمت تاریخ نامعتبر است", extra_tags="panel")
                 return render(request, 'panel/package_form.html', {
                     'categories': categories,
+                    'package': package,
                     'action': 'add'
                 })
 
@@ -2345,7 +2348,8 @@ def package_edit(request, pk):
                 messages.error(request, "فرمت تاریخ نامعتبر است", extra_tags="panel")
                 return render(request, 'panel/package_form.html', {
                     'categories': categories,
-                    'action': 'add'
+                    'package': package,
+                    'action': 'edit'
                 })
 
         else:
