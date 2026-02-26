@@ -13,6 +13,7 @@ from core.models import SalonSettings
 from accounts.models import Profile, Notification, DiscountCode
 from datetime import datetime, timedelta , date
 import jdatetime
+import pytz
 from blog_app.models import (Article, Category as BlogCategory,)
 import re
 from services_app.models import PopularService
@@ -2221,7 +2222,8 @@ def package_add(request):
                     datetime.strptime(start_time_str, '%Y-%m-%dT%H:%M')
                 )
 
-                now = timezone.now()
+                tehran_tz = pytz.timezone('Asia/Tehran')
+                now = timezone.now().astimezone(tehran_tz)
                 
                 print(f"DEBUG - Start time: {start_time}, Now: {now}")
                 print(f"DEBUG - Is future: {start_time > now}")
@@ -2315,8 +2317,9 @@ def package_edit(request, pk):
                     datetime.strptime(start_time_str, '%Y-%m-%dT%H:%M')
                 )
                 
-                now = timezone.now()
-                
+                tehran_tz = pytz.timezone('Asia/Tehran')
+                now = timezone.now().astimezone(tehran_tz)
+                                
                 print(f"DEBUG - Start time: {start_time}, Now: {now}")
                 print(f"DEBUG - Is future: {start_time > now}")
 
