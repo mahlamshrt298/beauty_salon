@@ -2303,43 +2303,46 @@ def package_edit(request, pk):
             package.duration_days = int(request.POST.get('duration_days', 3))
 
             start_time_str = request.POST.get('start_time')
+            print(f"🎯 start_time_str: '{start_time_str}'")
 
             if not start_time_str:
                 messages.error(request, "لطفاً زمان شروع تخفیف را انتخاب کنید", extra_tags="panel")
                 return render(request, 'panel/package_form.html', {
-                    'package': package,
                     'categories': categories,
-                    'action': 'edit'
+                    'action': 'add'
                 })
 
             try:
-                start_time = timezone.make_aware(
-                    datetime.strptime(start_time_str, '%Y-%m-%dT%H:%M')
-                )
+                # تبدیل به datetime
+                naive_start = datetime.strptime(start_time_str, '%Y-%m-%dT%H:%M')
+                print(f"🟡 naive_start: {naive_start}")
                 
+                # timezone تهران
                 tehran_tz = pytz.timezone('Asia/Tehran')
+                start_time = tehran_tz.localize(naive_start)
+                print(f"🟢 start_time: {start_time}")
+                
+                # now با timezone تهران
                 now = timezone.now().astimezone(tehran_tz)
-                                
-                print(f"DEBUG - Start time: {start_time}, Now: {now}")
-                print(f"DEBUG - Is future: {start_time > now}")
+                print(f"🔵 now: {now}")
+                
+                print(f"🟣 start_time <= now? {start_time <= now}")
 
                 if start_time <= now:
                     messages.error(request, "زمان شروع تخفیف باید در آینده باشد", extra_tags="panel")
                     return render(request, 'panel/package_form.html', {
-                        'package': package,
                         'categories': categories,
-                        'action': 'edit'
+                        'action': 'add'
                     })
 
                 package.start_time = start_time
 
             except ValueError as e:
-                print(f"ValueError: {e}, start_time_str: {start_time_str}")
+                print(f"❌ ValueError: {e}")
                 messages.error(request, "فرمت تاریخ نامعتبر است", extra_tags="panel")
                 return render(request, 'panel/package_form.html', {
-                    'package': package,
                     'categories': categories,
-                    'action': 'edit'
+                    'action': 'add'
                 })
 
         else:
