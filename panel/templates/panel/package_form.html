@@ -529,6 +529,9 @@ $(document).ready(function() {
         $('<input type="text" id="jalali_date" class="form-control mb-2" placeholder="تاریخ شمسی">').insertBefore('#start_time');
         $('<input type="time" id="jalali_time" class="form-control" value="12:00">').insertBefore('#start_time');
         
+        // متغیر برای تشخیص اولین بار
+        var isFirstLoad = true;
+        
         // ========== مقداردهی اولیه ==========
         var currentValue = $('#start_time').val();
         console.log("📅 مقدار اولیه از دیتابیس:", currentValue);
@@ -543,9 +546,6 @@ $(document).ready(function() {
                     $('#jalali_date').val(jDate);
                     $('#jalali_time').val(jTime);
                     console.log("✅ تاریخ شمسی ست شد:", jDate, jTime);
-                    
-                    // مهم: مقدار start_time رو دوباره ست کن با همون مقدار قبلی
-                    $('#start_time').val(currentValue);
                 }
             } catch(e) {
                 console.log("❌ خطا در تبدیل:", e);
@@ -555,7 +555,6 @@ $(document).ready(function() {
             var now = moment();
             $('#jalali_date').val(now.format('jYYYY/jMM/jDD'));
             $('#jalali_time').val('12:00');
-            updateMiladiDate();
         }
         
         // فعال کردن تقویم شمسی
@@ -565,7 +564,9 @@ $(document).ready(function() {
             calendarType: 'persian',
             persianDigit: true,
             onSelect: function() {
-                updateMiladiDate();
+                if (!isFirstLoad) {
+                    updateMiladiDate();
+                }
             }
         });
         
@@ -612,6 +613,11 @@ $(document).ready(function() {
         
         // به‌روزرسانی با تغییر ساعت
         $('#jalali_time').on('change', updateMiladiDate);
+        
+        // اولین بار تموم شد
+        setTimeout(function() {
+            isFirstLoad = false;
+        }, 500);
     }
 });
 </script>
