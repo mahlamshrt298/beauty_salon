@@ -324,24 +324,22 @@
 </nav>
 
 {% if messages %}
-  <div class="container mt-3">
-    {% for message in messages %}
-      {% if "panel" in message.tags %}
-        <div class="alert 
-          {% if 'error' in message.tags %}alert-danger
-          {% elif 'success' in message.tags %}alert-success
-          {% elif 'warning' in message.tags %}alert-warning
-          {% else %}alert-info{% endif %}
-          alert-dismissible fade show" 
-          role="alert">
-          {{ message }}
-          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-      {% endif %}
-    {% endfor %}
-  </div>
+    <div style="position: fixed; top: 80px; right: 20px; z-index: 9999; max-width: 400px;">
+        {% for message in messages %}
+            <div style="background: {% if 'error' in message.tags %}#f8d7da{% elif 'success' in message.tags %}#d4edda{% elif 'warning' in message.tags %}#fff3cd{% else %}#d1ecf1{% endif %}; 
+                        color: {% if 'error' in message.tags %}#721c24{% elif 'success' in message.tags %}#155724{% elif 'warning' in message.tags %}#856404{% else %}#0c5460{% endif %}; 
+                        padding: 15px; 
+                        margin-bottom: 10px; 
+                        border: 1px solid {% if 'error' in message.tags %}#f5c6cb{% elif 'success' in message.tags %}#c3e6cb{% elif 'warning' in message.tags %}#ffeeba{% else %}#bee5eb{% endif %}; 
+                        border-radius: 5px; 
+                        font-family: IRANSans, Tahoma, Arial; 
+                        box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+                {{ message }}
+                <button onclick="this.parentElement.style.display='none'" style="float: left; background: none; border: none; font-size: 20px; cursor: pointer;">&times;</button>
+            </div>
+        {% endfor %}
+    </div>
 {% endif %}
-
 
 <!-- سایدبار -->
 <div class="sidebar">

@@ -2330,8 +2330,8 @@ def package_edit(request, pk):
                 print(f"🟣 start_time <= now? {start_time <= now}")
 
                 if start_time <= now:
-                    messages.error(request, "زمان شروع تخفیف باید در آینده باشد", extra_tags="panel")
-                    print("🚨 ارور: تاریخ گذشته است")
+                    messages.add_message(request, messages.ERROR, "زمان شروع تخفیف باید در آینده باشد", extra_tags='panel')
+                    print("✅ پیام اضافه شد")
                     return render(request, 'panel/package_form.html', {
                         'package': package,  # 👈 این خط رو اضافه کن
                         'categories': categories,
