@@ -543,6 +543,8 @@ $(document).ready(function() {
                     $('#jalali_date').val(jDate);
                     $('#jalali_time').val(jTime);
                     console.log("✅ تاریخ شمسی ست شد:", jDate, jTime);
+                
+                    updateMiladiDate();
                 }
             } catch(e) {
                 console.log("❌ خطا در تبدیل:", e);
@@ -605,7 +607,7 @@ $(document).ready(function() {
         $('#jalali_time').on('change', updateMiladiDate);
         
         // اولین بار اجرا کن
-        setTimeout(updateMiladiDate, 200);
+        //setTimeout(updateMiladiDate, 200);
     }
 });
 </script>
