@@ -25,6 +25,24 @@
                                 value="{{ package.title|default:'' }}" required>
                         </div>
 
+
+                        <div class="mb-3">
+                            <label class="form-label">توضیحات <span class="text-danger">*</span></label>
+                            <textarea name="description" class="form-control" rows="3" required>{{ package.description|default:'' }}</textarea>
+                        </div>
+
+                        <!-- عکس پکیج -->
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <label class="form-label">عکس پکیج <span class="text-danger">*</span></label>
+                                <input type="file" name="image" class="form-control" 
+                                    {% if action == 'add' %}required{% endif %}>
+                                <div class="mt-2">
+                                    <img src="{{ package.image_url }}" width="150" class="img-thumbnail">
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- گروه‌های انتخاب خدمت -->
                         <select name="services[]" id="all-services" class="d-none" multiple>
                             {% if package %}
@@ -74,28 +92,6 @@
                             </div>
                         </div>
 
-
-                        <div class="mb-3">
-                            <label class="form-label">توضیحات <span class="text-danger">*</span></label>
-                            <textarea name="description" class="form-control" rows="3" required>{{ package.description|default:'' }}</textarea>
-                        </div>
-
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label class="form-label">عکس پکیج <span class="text-danger">*</span></label>
-                                <input type="file" name="image" class="form-control" 
-                                       {% if action == 'add' %}required{% endif %}>
-                                    <div class="mt-2">
-                                        <img src="{{ package.image_url }}" width="150" class="img-thumbnail">
-                                    </div>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">برچسب تخفیف (مثل: ۲۵٪ تخفیف)</label>
-                                <input type="text" name="discount_badge" id="discount_badge" class="form-control" 
-                                       value="{{ package.discount_badge|default:'' }}">
-                            </div>
-                        </div>
-
                         <div class="row mb-3">
                             <!-- قیمت اصلی -->
                             <div class="mb-3">
@@ -129,6 +125,14 @@
                                 displayPriceInWords('id_discounted_price', 'discounted_price_words');
                             });
                             </script>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <label class="form-label">برچسب تخفیف (مثل: ۲۵٪ تخفیف)</label>
+                                <input type="text" name="discount_badge" id="discount_badge" class="form-control" 
+                                       value="{{ package.discount_badge|default:'' }}">
+                            </div>
                         </div>
 
                         <div class="card mb-3">
