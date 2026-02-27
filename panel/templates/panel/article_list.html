@@ -21,7 +21,7 @@
 <div class="table-scroll">
     <table class="table">
         <tr>
-            <th>عنوان</th>
+            <th>مقاله</th>
             <th>دسته‌بندی</th>
             <th>نویسنده</th>
             <th>عملیات</th>
@@ -29,7 +29,18 @@
 
         {% for a in articles %}
         <tr>
-            <td class="text-center">{{ a.title }}</td>
+            <td class="text-center">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    {% if a.image %}
+                        <img src="{{ a.image.url }}" 
+                             alt="{{ a.title }}"
+                             style="width: 60px; height: 50px; object-fit: cover; border-radius: 5px;">
+                    {% else %}
+                        <span style="width: 60px; height: 50px; background: #f0f0f0; display: inline-block; border-radius: 5px;"></span>
+                    {% endif %}
+                    <span>{{ a.title }}</span>
+                </div>
+            </td>
             <td class="text-center">{{ a.category.name }}</td>
             <td class="text-center">{{ a.author }}</td>
             <td class="text-center">
