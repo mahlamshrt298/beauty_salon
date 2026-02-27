@@ -24,7 +24,7 @@ class Article(models.Model):
 # فیلد جدید برای رزرو
     for_reserve = models.ForeignKey(Service, on_delete=models.SET_NULL, null=True, blank=True, verbose_name="خدمت مرتبط برای رزرو")
 # برچسب‌ها برای جستجو و مقالات مرتبط
-    tags = models.CharField(max_length=200, blank=True, verbose_name="برچسب‌ها")
+    tags = models.CharField(max_length=500, blank=True, verbose_name="برچسب‌ها")
 
     show_on_home = models.BooleanField(
         default=False,
