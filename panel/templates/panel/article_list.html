@@ -29,7 +29,7 @@
 
         {% for a in articles %}
         <tr>
-            <td class="text-center">
+            <td >
                 <div style="display: flex; align-items: center; gap: 10px;">
                     {% if a.image %}
                         <img src="{{ a.image.url }}" 
@@ -41,6 +41,7 @@
                     <span>{{ a.title }}</span>
                 </div>
             </td>
+
             <td class="text-center">{{ a.category.name }}</td>
             <td class="text-center">{{ a.author }}</td>
             <td class="text-center">
