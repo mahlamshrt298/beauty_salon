@@ -2398,56 +2398,49 @@ User = get_user_model()
 
 
 def send_package_notification(package):
-   
-    users = User.objects.filter(is_active=True)
+    """ارسال ایمیل با پشتیبانی از هر دو روش"""
     
-    subject = f"🎁 یک پیشنهاد ویژه فقط برای شما | {package.title}"
+    users = User.objects.filter(is_active=True, email__isnull=False).exclude(email='')
+    
+    if not users.exists():
+        return
+    
+    subject = f"🎁 پیشنهاد ویژه: {package.title}"
     
     message = f"""
-سلام 🌸
-
-یه خبر خوب برات داریم!
-
-پکیج جدید «{package.title}» به مجموعه ما اضافه شده 👇  
-✨ ترکیبی از خدمات محبوب  
-💎 با قیمتی ویژه و محدود
-
-💰 قیمت پکیج: {package.discounted_price} تومان
-
-اگر دنبال یه تغییر جذاب یا رسیدگی حرفه‌ای به خودتی،
-این پکیج دقیقاً همونه که دنبالش بودی 😉
-
-منتظرت هستیم 💖  
-تیم سالن زیبایی
-"""
-
-    # ارسال ایمیل
-    email_messages = []
+    سلام 🌸
+    
+    یه خبر خوب برات داریم!
+    
+    پکیج جدید «{package.title}» به مجموعه ما اضافه شد.
+    
+    💰 قیمت: {package.discounted_price:,} تومان
+    
+    برای مشاهده و رزرو به سایت ما سر بزنید.
+    
+    با احترام
+    تیم سالن زیبایی
+    """
+    
+    success_count = 0
     for user in users:
-        if user.email:
-            email_messages.append((
+        try:
+            from django.core.mail import send_mail
+            send_mail(
                 subject,
                 message,
                 settings.DEFAULT_FROM_EMAIL,
                 [user.email],
-            ))
-
-    if email_messages:
-        send_mass_mail(email_messages, fail_silently=True)
-
-    # اگه مدل Notification داری
-    try:
-        for user in users:
-            Notification.objects.create(
-                user=user,
-                type='promotion',
-                channel='email',
-                message=f"🎁 پکیج جدید: {package.title} با قیمت ویژه منتشر شد",
-                status='sent'
+                fail_silently=False,  # True بذار تا کرش نکنه
             )
-    except ImportError:
-        pass  # اگه مدل نبود، نادیده بگیر
-
+            success_count += 1
+            print(f"✅ ایمیل به {user.email} ارسال شد")
+        except Exception as e:
+            print(f"❌ خطا در ارسال به {user.email}: {str(e)}")
+            continue
+    
+    print(f"📊 نتیجه: {success_count} از {len(users)} ایمیل ارسال شد")
+    
 
 @require_POST
 @login_required
