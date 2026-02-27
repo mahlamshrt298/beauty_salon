@@ -2501,3 +2501,93 @@ SERVICES PAGE MOBILE FIX
     color: #2c3e50;
     font-weight: 600;
 }
+
+
+/* استایل برای اسکرول افقی خدمات */
+.popular-services-wrapper {
+    position: relative;
+    max-width: 100%;
+}
+
+.services-scroll-container {
+    scrollbar-width: thin;
+    scrollbar-color: #D4AF37 #f0f0f0;
+}
+
+.services-scroll-container::-webkit-scrollbar {
+    height: 6px;
+}
+
+.services-scroll-container::-webkit-scrollbar-track {
+    background: #f0f0f0;
+    border-radius: 10px;
+}
+
+.services-scroll-container::-webkit-scrollbar-thumb {
+    background: #D4AF37;
+    border-radius: 10px;
+}
+
+.services-scroll-container::-webkit-scrollbar-thumb:hover {
+    background: #b8960f;
+}
+
+.scroll-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: white;
+    border: 1px solid #D4AF37;
+    color: #D4AF37;
+    font-size: 18px;
+    cursor: pointer;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.scroll-btn:hover {
+    background: #D4AF37;
+    color: white;
+    transform: translateY(-50%) scale(1.1);
+}
+
+.scroll-left {
+    left: -20px;
+}
+
+.scroll-right {
+    right: -20px;
+}
+
+/* نمایش دکمه‌ها فقط در دسکتاپ */
+@media (min-width: 768px) {
+    .scroll-btn {
+        display: flex !important;
+    }
+}
+
+@media (max-width: 767px) {
+    .scroll-btn {
+        display: none !important;
+    }
+}
+
+.service-card {
+    transition: transform 0.3s;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    overflow: hidden;
+    background: white;
+}
+
+.service-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+}

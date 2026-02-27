@@ -24,37 +24,57 @@
 
 
 
-    <!-- 4 خدمات پرطرفدار -->
+  <!-- 4 خدمات پرطرفدار با اسکرول افقی -->
   <div class="container mt-5">
     <h2 class="text-center mb-4">پرطرفدارترین خدمات ما</h2>
-
-    <div class="row g-4">
-      {% for service in popular_services %}
-        <div class="col-md-3">
-          <div class="service-card">
-
-            <img src="{{ service.image_url }}" 
-                alt="{{ service.title }}" 
-                class="card-img-top">
-
-            <div class="card-body">
-              <br>
-              <h5>{{ service.title }}</h5>
-              <p>{{ service.description }}</p>
-              <a href="{% url 'reserve' %}?category={{ service.category.slug }}"
-                class="btn btn-gold header-btn">
-                رزرو نوبت
-              </a>
-
+    
+    <div class="popular-services-wrapper" style="position: relative;">
+      <!-- دکمه اسکرول به چپ -->
+      <button class="scroll-btn scroll-left" onclick="scrollServices(-1)" style="display: none;">
+        <i class="fas fa-chevron-right"></i>
+      </button>
+      
+      <!-- کانتینر خدمات با اسکرول افقی -->
+      <div class="services-scroll-container" id="servicesScrollContainer" style="
+        overflow-x: auto;
+        overflow-y: hidden;
+        white-space: nowrap;
+        -webkit-overflow-scrolling: touch;
+        scroll-behavior: smooth;
+        padding: 10px 0;
+        margin: 0 -12px;
+      ">
+        <div class="d-inline-flex gap-4" style="padding: 0 12px;">
+          {% for service in popular_services %}
+            <div class="service-card" style="
+              width: 280px;
+              flex: 0 0 auto;
+              margin: 0;
+            ">
+              <img src="{{ service.image_url }}" 
+                  alt="{{ service.title }}" 
+                  class="card-img-top"
+                  style="width: 100%; height: 200px; object-fit: cover; border-radius: 8px 8px 0 0;">
+              <div class="card-body" style="padding: 15px;">
+                <br>
+                <h5>{{ service.title }}</h5>
+                <p>{{ service.description|truncatechars:60 }}</p>
+                <a href="{% url 'reserve' %}?category={{ service.category.slug }}"
+                  class="btn btn-gold header-btn">
+                  رزرو نوبت
+                </a>
+              </div>
             </div>
-
-          </div>
+          {% endfor %}
         </div>
-      {% endfor %}
+      </div>
+      
+      <!-- دکمه اسکرول به راست -->
+      <button class="scroll-btn scroll-right" onclick="scrollServices(1)" style="display: none;">
+        <i class="fas fa-chevron-left"></i>
+      </button>
     </div>
   </div>
-
-
 
     <!-- معرفی سالن -->
   <div class="container mt-5 mb-5">
@@ -521,5 +541,49 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 
+<script>
+function scrollServices(direction) {
+    const container = document.getElementById('servicesScrollContainer');
+    const scrollAmount = 300; // مقدار اسکرول به پیکسل
+    
+    if (direction === 1) {
+        container.scrollLeft += scrollAmount;
+    } else {
+        container.scrollLeft -= scrollAmount;
+    }
+}
+
+// نمایش/مخفی کردن دکمه‌ها بر اساس موقعیت اسکرول
+document.addEventListener('DOMContentLoaded', function() {
+    const container = document.getElementById('servicesScrollContainer');
+    const leftBtn = document.querySelector('.scroll-left');
+    const rightBtn = document.querySelector('.scroll-right');
+    
+    if (container && leftBtn && rightBtn) {
+        const checkScroll = () => {
+            // اگر به اول رسیدیم، دکمه چپ رو مخفی کن
+            if (container.scrollLeft <= 10) {
+                leftBtn.style.opacity = '0.5';
+                leftBtn.style.pointerEvents = 'none';
+            } else {
+                leftBtn.style.opacity = '1';
+                leftBtn.style.pointerEvents = 'auto';
+            }
+            
+            // اگر به آخر رسیدیم، دکمه راست رو مخفی کن
+            if (container.scrollLeft + container.clientWidth >= container.scrollWidth - 10) {
+                rightBtn.style.opacity = '0.5';
+                rightBtn.style.pointerEvents = 'none';
+            } else {
+                rightBtn.style.opacity = '1';
+                rightBtn.style.pointerEvents = 'auto';
+            }
+        };
+        
+        container.addEventListener('scroll', checkScroll);
+        checkScroll(); // بررسی اولیه
+    }
+});
+</script>
 
 {% endblock content %}
