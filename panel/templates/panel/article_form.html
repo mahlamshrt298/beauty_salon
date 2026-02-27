@@ -35,10 +35,28 @@
                 </select>
             </div>
 
-            <!-- تصویر -->
+            <!-- تصویر مقاله -->
             <div class="mb-3">
                 <label class="form-label">تصویر مقاله</label>
-                <input type="file" name="image" class="form-control">
+                <input type="file" name="image" class="form-control" accept="image/*">
+                
+                {% if article and article.image %}
+                <div class="mt-2 d-flex align-items-center gap-3">
+                    <img src="{{ article.image.url }}" 
+                        style="width: 100px; height: 70px; object-fit: cover;" 
+                        class="border rounded">
+                    <small class="text-muted">
+                        ✅ عکس فعلی: 
+                        <span class="text-primary">{{ article.image.name|cut:"blog/" }}</span>
+                        <br>
+                        <span class="text-warning">⚠️ اگر عکس جدیدی انتخاب کنید، این عکس جایگزین می‌شود.</span>
+                    </small>
+                </div>
+                {% endif %}
+
+                <div class="form-text mt-2">
+                    فرمت‌های مجاز: JPG, PNG, GIF
+                </div>
             </div>
 
             <!-- محتوا -->
