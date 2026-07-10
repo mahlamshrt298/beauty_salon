@@ -1,6 +1,6 @@
 from django.db import models
-from django.contrib.auth.models import User   # برای مدیریت کاربران (اختیاری)
-from services_app.models import Service  # ← ایمپورت از services_app
+from django.contrib.auth.models import User   
+from services_app.models import Service  
 import uuid
 from datetime import datetime, timedelta
 from django.utils import timezone
@@ -9,8 +9,10 @@ from hijri_converter import convert
 from core.models import PackageBooking
 from django.templatetags.static import static
 
-# 💇‍♀️ مدل پرسنل (آرایشگرها)
+#  مدل پرسنل (آرایشگرها)
+
 class Staff(models.Model):
+    #وضعیت کاری
     STATUS_CHOICES = [
         ("active", "فعال"),
         ("inactive", "غیرفعال"),
@@ -27,11 +29,14 @@ class Staff(models.Model):
         verbose_name="توضیحات کوتاه",
         help_text="توضیحات نمایشی در صفحه درباره ما (مثلاً: «با ۸ سال سابقه و گواهی بین‌المللی»)"
         )
+    
     work_days = models.JSONField(default=list, blank=True)   # مثال: ["شنبه","یکشنبه","دوشنبه"]
     work_start_time = models.TimeField(default="09:00")     # ساعت شروع
     work_end_time = models.TimeField(default="18:00")   # ساعت پایان
     is_active = models.BooleanField(default=True)        # وضعیت فعال/غیرفعال بودن پرسنل(هنوز هسیا نه)
     status = models.CharField(max_length=10,choices=STATUS_CHOICES,default="active")
+    
+    # هر نفر ممکنه چندتا سرویس مختلف بده، پس ManyToMany زدیم
     services = models.ManyToManyField(
         Service,
         related_name="staffs",
@@ -42,7 +47,7 @@ class Staff(models.Model):
         verbose_name="نمایش در صفحه درباره ما"
     )
 
-    # فیلدهای تایم ناهار
+    # فیلدهای تایم ناهار (واسه اینکه تو این بازه سیستم به کسی نوبت نده)
     has_lunch_break = models.BooleanField(default=True, verbose_name="تعطیل ناهار")
     lunch_start = models.TimeField(default='13:00', verbose_name="شروع ناهار")
     lunch_end = models.TimeField(default='14:00', verbose_name="پایان ناهار")
@@ -58,7 +63,7 @@ class Staff(models.Model):
         verbose_name_plural = "پرسنل‌ها"
 
     def __str__(self):
-        #نمایش  پرسنل در پنل ادمین
+        #نمایش  پرسنل در پنل ادمین جنگو
         return self.full_name
 
 # مدل تعطیلات
@@ -66,26 +71,30 @@ class Holiday(models.Model):
     HOLIDAY_TYPE_CHOICES = [
         ('solar', 'شمسی (ثابت)'),      # مثل نوروز
         ('lunar', 'قمری (متغیر)'),      # مثل عید فطر
-        ('custom', 'سفارشی'),
+        ('custom', 'سفارشی'),           # وقتایی که سالن به هر دلیلی تعطیله
     ]
     
     # فیلدهای جدید برای تعطیلات قمری
     hijri_month = models.IntegerField(null=True, blank=True, verbose_name="ماه قمری")
     hijri_day = models.IntegerField(null=True, blank=True, verbose_name="روز قمری")
     
-
+    #اصل تاریخ رو میلادی سیو میکنیم
     date = models.DateField(null=True, blank=True,verbose_name="تاریخ میلادی")
     jalali_date = models.CharField(max_length=10, verbose_name="تاریخ شمسی", blank=True)
     title = models.CharField(max_length=100, verbose_name="عنوان تعطیلی")
     description = models.TextField(blank=True, verbose_name="توضیحات")
     holiday_type = models.CharField(max_length=20, choices=HOLIDAY_TYPE_CHOICES, default='custom')
     is_active = models.BooleanField(default=True, verbose_name="فعال")
+    
+    # واسه وقتایی که سالن فقط نصف روز تعطیله
     is_half_day = models.BooleanField(default=False, verbose_name="نیم‌روز")
     half_day_period = models.CharField(max_length=10, choices=[('morning', 'صبح'), ('afternoon', 'عصر')], 
                                        blank=True, null=True, verbose_name="بازه نیم‌روز")
-    year = models.IntegerField(null=True, blank=True, verbose_name="سال میلادی مربوطه")  # برای فیلتر سریع
+    
+    year = models.IntegerField(null=True, blank=True, verbose_name="سال میلادی مربوطه") 
     
     class Meta:
+        #یونیک میگیریم که یه روز احیانا دوبار به عنوان تعطیلی ثبت نشه
         unique_together = [('hijri_month', 'hijri_day', 'year'), ('date',)]  # جلوگیری از تکرار
     
     def __str__(self):
@@ -95,7 +104,7 @@ class Holiday(models.Model):
          # اگر تعطیلی قمری باشد، تاریخ میلادی را محاسبه کن
         if self.holiday_type == 'lunar' and self.hijri_month and self.hijri_day and self.year:
             try:
-                # تبدیل تاریخ قمری به میلادی (تقریبی)
+                # تبدیل تاریخ قمری به میلادی 
                 hijri_date = convert.Hijri(self.year - 622, self.hijri_month, self.hijri_day)  # تخمین سال هجری
                 gregorian = hijri_date.to_gregorian()
                 self.date = gregorian
@@ -103,6 +112,7 @@ class Holiday(models.Model):
                 self.year = gregorian.year
             except Exception as e:
                 print(f"خطا در محاسبه تاریخ قمری: {e}")
+         
          # اگر تعطیلی شمسی باشد، تاریخ میلادی را از تاریخ شمسی محاسبه کن
         elif self.holiday_type == 'solar' and self.jalali_date:
             try:
@@ -115,8 +125,9 @@ class Holiday(models.Model):
         
         super().save(*args, **kwargs)
 
-# 📅 مدل نوبت‌ها
+#  مدل نوبت‌ها
 class Appointment(models.Model):
+    #وضعیت نوبت
     STATUS_CHOICES = [
         ('pending', 'در انتظار تایید'),
         ('confirmed', 'تایید شده'),
@@ -125,37 +136,47 @@ class Appointment(models.Model):
     ]
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
+    
     # سرویس انتخابی
     service = models.ForeignKey(Service, on_delete=models.SET_NULL,
     null=True,
     blank=True)
+    
     #پرسنلی که کار رو انجام خواهدداد
     staff = models.ForeignKey(Staff, on_delete=models.SET_NULL, null=True , blank=True,
         related_name="appointments",
         verbose_name="پرسنل")
+    
     # تاریخ نوبت
     appointment_date = models.DateField()
+    
     # ساعت شروع نوبت
     start_time = models.TimeField()
+    
     # ساعت پایان نوبت
     end_time = models.TimeField()
+    
     # وضعیت نوبت
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    
     # یادداشت‌های اضافی
     notes = models.TextField(blank=True, null=True)
+    
     #تاریخ ایجاد
     created_at = models.DateTimeField(auto_now_add=True)
 
+    #کد پیگیری
     tracking_code = models.CharField(max_length=20, unique=True, blank=True)
 
     jalali_date = models.CharField(max_length=20, blank=True)
 
-    # ✅ فیلد جدید برای جلوگیری از ارسال تکراری
+    # برای جلوگیری از ارسال تکراری
     reminder_sent = models.BooleanField(default=False, verbose_name="یادآوری ارسال شد")
 
-    # ✅ فیلد جدید برای شماره تماس موقع رزرو
+    # برای شماره تماس موقع رزرو
     phone = models.CharField(max_length=11, blank=True, null=True, verbose_name="شماره تماس")
 
+    # لینک به پکیج (اگه این نوبت بخشی از یه پکیج تخفیف‌دار بوده)
     package_booking = models.ForeignKey(
         PackageBooking,
         null=True,
@@ -176,6 +197,7 @@ class Appointment(models.Model):
         return self.appointment_date <  timezone.localdate() and self.status not in ('completed' , 'cancelled')
 
     def can_cancel_by_user(self):
+        #کاربر میتونه فقط بیشتر از 24 ساعت قبل از نوبت اون رو کنسل کنه و اگر کمتر از 24ساعت باشه نمیشه
         appt_datetime = datetime.combine(
             self.appointment_date,
             self.start_time
@@ -186,6 +208,7 @@ class Appointment(models.Model):
 
     @property
     def jalali_date_display(self):
+        #خروجی : تاریخ شمسی
         if not self.appointment_date:
             return ""
         return jdatetime.date.fromgregorian(
@@ -199,11 +222,11 @@ class Appointment(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        #نمایش در پنل ادمین
+        #نمایش در پنل ادمین جنگو
         return f"{self.user.username} - {self.service.name} ({self.appointment_date})"
 
 
-# 💳 مدل پرداخت‌ها
+#  مدل پرداخت‌ها
 class Payment(models.Model):
     #روش پرداخت
     PAYMENT_METHODS = [
@@ -211,45 +234,56 @@ class Payment(models.Model):
         ('cash', 'نقدی'),
         ('card', 'کارت‌خوان'),
     ]
+
     #وضعیت تراکنش
     STATUS_CHOICES = [
         ('pending', 'در انتظار'),
         ('success', 'موفق'),
         ('failed', 'ناموفق'),
     ]
+    
      # نوبت مرتبط (یک به یک)
     appointment = models.OneToOneField(Appointment, on_delete=models.CASCADE)
     #مبلغ
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     ## روش پرداخت
     payment_method = models.CharField(max_length=20, choices=PAYMENT_METHODS, default='online')
+    
     # شماره تراکنش (برای پرداخت آنلاین)
     transaction_id = models.CharField(max_length=100, blank=True, null=True)
+    
     # وضعیت پرداخت
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    
     #تاریخ و زمان
     paid_at = models.DateTimeField(blank=True, null=True)
 
     def __str__(self):
-        #مثل بالایی ها
+        #نمایش در پنل ادمین جنگو
         return f"پرداخت #{self.id} - {self.status}"
 
+#نوبت‌های رها شده
 class PendingAppointment(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     
+    #طرف تا کدوم مرحله اومده
     step = models.CharField(
         max_length=50,
         help_text="مرحله‌ای که کاربر در آن رها کرده"
     )
 
     last_activity = models.DateTimeField(auto_now=True)
+    
     created_at = models.DateTimeField(auto_now_add=True)
 
     is_completed = models.BooleanField(default=False)
+
     reminder_sent = models.BooleanField(default=False)
+    
     def __str__(self):
         return f"{self.user.username} - {self.step}"
 
+# پرداخت‌های پکیج‌ها
 class PackagePayment(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     package = models.ForeignKey('core.Package', on_delete=models.CASCADE)
@@ -259,6 +293,7 @@ class PackagePayment(models.Model):
         ('online', 'پرداخت آنلاین'),
         ('cash', 'نقدی'),
     ]
+    
     payment_method = models.CharField(max_length=20, choices=PAYMENT_METHODS)
     
     STATUS_CHOICES = [

@@ -1,17 +1,12 @@
 from django.db import models
-from django.contrib.auth.models import User   # برای مدیریت کاربران (اختیاری)
+from django.contrib.auth.models import User   
 from booking.models import Appointment
 from django.core.validators import MaxLengthValidator
 from core.utils.date_utils import calculate_age
 import jdatetime
-from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 
-# Create your models here.
-# 🔔 اعلان‌ها / یادآوری‌ها
 class Notification(models.Model):
-
-#برای مدیریت و ذخیره‌سازی تمامی اعلان‌ها و پیام‌های ارسالی به کاربران جهت یادآوری نوبت، تغییر وضعیت رزرو، ارسال پیشنهادات ویژه
 
     #انواع اعلان‌ها
     TYPE_CHOICES = [
@@ -48,7 +43,7 @@ class Notification(models.Model):
     #متن پیام
     message = models.TextField()
     
-  # جدید
+  
     discount = models.ForeignKey(
         'accounts.DiscountCode',      # نام اپ و مدل کد تخفیف
         on_delete=models.CASCADE,
@@ -69,6 +64,7 @@ class Notification(models.Model):
     
     @property
     def jalali_created_at(self):
+        # تبدیل تاریخ برای نمایش تو فرانت
         if not self.created_at:
             return ""
         return jdatetime.datetime.fromgregorian(
@@ -77,14 +73,24 @@ class Notification(models.Model):
 
     def __str__(self):
 
-        # نمایش خوانا و قابل فهم   در پنل ادمین و لاگ‌ها
+        # نمایش خوانا و قابل فهم   در پنل ادمین 
         return f"اعلان به {self.user.username} - {self.type} - {self.status}"
+    
+    class Meta:
+        indexes = [
+            models.Index(fields=["user", "is_read"]),
+            models.Index(fields=["user", "created_at"]),
+            models.Index(fields=["status"]),
+        ]
+        ordering = ["-created_at"]
 
 
 def validate_image_size(image):
+    #چک کردن حجم عکس قبل از آپلود
     max_size = 2 * 1024 * 1024  # 2MB
     if image.size > max_size:
         raise ValidationError("حجم تصویر نباید بیشتر از ۲ مگابایت باشد.")
+
 
 class Profile(models.Model):
     ROLE_CHOICES = (
@@ -115,6 +121,8 @@ class Profile(models.Model):
 
     birthday = models.DateField(null=True, blank=True)
     avatar = models.ImageField(upload_to="avatars/", null=True, blank=True , validators=[validate_image_size])
+    
+    #محدودیت تعداد دفعاتی که یوزر میتونه تاریخ تولدش رو عوض کنه
     birthday_change_count = models.PositiveSmallIntegerField(default=0)
 
 
@@ -126,8 +134,6 @@ class Profile(models.Model):
         if not getattr(self, '_already_saving', False):
             self._already_saving = True
             super().save(*args, **kwargs)
-            # فقط در صورت نیاز User.save() انجام شود
-            # self.user.save()  # می‌توانید این خط را حذف یا مدیریت کنید
             self._already_saving = False
         else:
             super().save(*args, **kwargs)
@@ -141,7 +147,8 @@ class DiscountCode(models.Model):
     code = models.CharField(max_length=20, unique=True)
     percent = models.PositiveIntegerField()
     expires_at = models.DateField()
-    notification_sent = models.BooleanField(default=False)  # فیلد جدید
+    notification_sent = models.BooleanField(default=False)  
+    notification_sent_at = models.DateTimeField(null=True, blank=True)
     discount_type = models.CharField(max_length=20, choices=[('percent','درصد'),('fixed','مبلغ ثابت')],default='percent')
     value          = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     min_purchase   = models.DecimalField(max_digits=10, decimal_places=2, default=0)
@@ -151,6 +158,15 @@ class DiscountCode(models.Model):
     )
     def __str__(self):
         return self.code
+    
+    @property
+    def jalali_notification_sent_at(self):
+        if not self.notification_sent_at:
+            return None
+        return jdatetime.datetime.fromgregorian(
+            datetime=self.notification_sent_at
+        ).strftime("%Y/%m/%d - %H:%M")
+
 
 class DiscountUsage(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -158,6 +174,7 @@ class DiscountUsage(models.Model):
     used_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
+        # جلوگیری از ثبت رکورد تکراری برای یک یوزر و یک کد مشخص در دیتابیس
         unique_together = ('user', 'discount')
 
     def __str__(self):

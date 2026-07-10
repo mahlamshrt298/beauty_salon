@@ -8,12 +8,14 @@
 
 {% block content %}
 
+<!-- چک می‌کنیم طرف بیشتر از سقف مجاز نوبت نگرفته باشه -->
 {% if user_active_appointments_count >= max_allowed %}
 <div class="alert alert-warning text-center">
     شما حداکثر {{ max_allowed }} نوبت فعال می‌توانید داشته باشید.
 </div>
 {% endif %}
 
+<!-- اگه کاربر از داشبوردِ یه پکیج اومده باشه اینجا، این الرت بهش یادآوری می‌کنه که تو جریان پکیجه -->
 {% if selected_package %}
 <div class="alert alert-warning text-center mt-3">
   شما در حال رزرو پکیج:
@@ -47,7 +49,7 @@
 
         <div class="card-body">
 
-            <!-- بخش اسکرول افقی دسته‌بندی‌ها -->
+            <!-- بخش اسکرول افقی دسته‌بندی‌های خدمات  -->
             <div class="d-flex gap-2 pb-3 category-scroll mt-3">
                 {% for category in categories %}
                 <button class="btn btn-outline-gold category-btn" data-slug="{{ category.slug }}">
@@ -56,6 +58,7 @@
                 {% endfor %}
             </div>
 
+            <!-- کانتینر خالی: زیردسته‌ها و خدمات مربوط به هر دسته، با جاوااسکریپت اینجا تزریق میشن -->
             <div id="subcategory-container" class="mt-4"></div>
 
         </div>
@@ -68,9 +71,10 @@
 {% block scripts %}
 
 <script>
+    // تنظیم یه عکس پیش‌فرض واسه خدماتی که ادمین یادش رفته عکس بذاره
     const DEFAULT_SERVICE_IMAGE = "{% static 'images/default-service.jpg' %}";
 
-    // داده‌های ساخته‌شده از Django
+    // شاه‌کلید این صفحه: دیتای بک‌اند رو می‌ریزیم تو یه آبجکت جاوااسکریپتی تا موقع سوییچ بین تب‌ها، نیازی به رفرش صفحه یا درخواست AJAX نباشه.
     const categoriesData = {
         {% for category in categories %}
         "{{ category.slug }}": {
@@ -105,17 +109,17 @@
 
 <script>
     
-    console.log("SCRIPT RAN")
-
+    // گرفتن دسته‌ای که کاربر احیاناً از صفحه اصلی انتخاب کرده بوده
     const preSelectedCategory = "{{ selected_category|default:'' }}";
 
     document.addEventListener('DOMContentLoaded', function () {
 
     // اگر دسته از قبل انتخاب شده بود (از صفحه خانه)
+    // اگه طرف با یه دسته خاص وارد این صفحه شده، همون اول لودش کن
     if (preSelectedCategory && categoriesData[preSelectedCategory]) {
         showCategory(preSelectedCategory);
 
-        // active کردن دکمه دسته
+        // تبِ همون دسته رو هم به حالت active دربیار
         document.querySelectorAll('.category-btn').forEach(btn => {
             if (btn.dataset.slug === preSelectedCategory) {
                 btn.classList.add('active');
@@ -123,17 +127,16 @@
         });
 
     } else {
-        // در غیر این صورت، اولین دسته
+        // وگرنه به صورت دیفالت، اولین دسته رو نشون بده که صفحه خالی نمونه
         const firstSlug = Object.keys(categoriesData)[0];
         if (firstSlug) showCategory(firstSlug);
     }
 
-    // کلیک دسته‌ها
+    // هندل کردن کلیک روی تب‌های دسته‌بندی
     document.querySelectorAll('.category-btn').forEach(btn => {
         btn.addEventListener('click', () => showCategory(btn.dataset.slug));
     });
 
-    // ✅ Event Delegation برای دکمه‌های انتخاب - فقط یک بار اضافه می‌شود
     document.addEventListener('click', function(e) {
         const btn = e.target.closest('.select-service-btn');
         if (!btn) return;
@@ -141,35 +144,46 @@
         e.preventDefault();
         e.stopPropagation();
         
-         // ✅ جلوگیری از beforeunload و پاپ‌آپ خروج
+        // اینجا به فایل booking-flow.js میگیم: "آقا این یه خروج مجازه، اون پاپ‌آپ هشدار خروج رو به کاربر نشون نده!"
         if (window.bookingExitGuard) {
             window.bookingExitGuard.popupShown = true;
         }
 
+        // ریدایرکت کاربر به مرحله ۲ (انتخاب تاریخ و ساعت) برای این خدمت خاص
         const serviceId = btn.getAttribute('data-id');
         window.location.href = `/booking/select-date/${serviceId}/`;
     });
 
+    // تابعی که با گرفتن اسلاگِ دسته، HTML مربوط به زیردسته‌هاشو می‌سازه و می‌ریزه تو صفحه
     function showCategory(slug) {
         const category = categoriesData[slug];
         if (!category) return;
 
-    // ✅ active کردن دکمه دسته
-    document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
-    document.querySelector(`.category-btn[data-slug="${slug}"]`)?.classList.add('active');
+        // آپدیت کردن استایل دکمه‌های تب (کدوم اکتیوه کدوم نیست)
+        document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+        document.querySelector(`.category-btn[data-slug="${slug}"]`)?.classList.add('active');
 
         let html = `<h3 class="mb-4">${category.name}</h3><div class="row">`;
 
+            // حلقه روی زیردسته‌ها
         category.subcategories.forEach(sub => {
             html += `
                 <div class="col-md-6 mb-3">
                     <div class="subcategory-card">
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <h4>${sub.name}</h4>
+                            <!-- دکمه باز و بسته کردن آکاردئون با آیکون‌های پلاس و ماینوس -->
                             <button class="btn btn-sm btn-outline-primary toggle-services" data-open="false">
-                                <i class="fas fa-plus"></i>
+                                <svg class="icon-plus" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                </svg>
+                                <svg class="icon-minus" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="display:none">
+                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                </svg>
                             </button>
                         </div>
+                        <!-- لیست خدمات که دیفالت مخفیه (d-none) -->
                         <div class="services-list d-none">
                             ${renderServices(sub.services)}
                         </div>
@@ -179,40 +193,46 @@
 
         html += `</div>`;
 
+        // تزریق HTML به DOM
         document.getElementById('subcategory-container').innerHTML = html;
 
+        // منطق باز و بسته شدن آکاردئون‌ها (فقط یه زیردسته تو هر لحظه باز باشه که صفحه شلوغ نشه)
         document.querySelectorAll('.toggle-services').forEach(btn => {
             btn.addEventListener('click', function () {
                  const card = this.closest('.subcategory-card');
                 const list = card.querySelector('.services-list');
                 const open = this.dataset.open === "true";
 
-                // ✅ بستن تمام زیردسته‌های دیگر
+                // اول همه آکاردئون‌های دیگه رو می‌بندیم
                 document.querySelectorAll('.subcategory-card').forEach(otherCard => {
-                    if (otherCard !== card) {
-                        const otherList = otherCard.querySelector('.services-list');
-                        const otherBtn = otherCard.querySelector('.toggle-services');
-                        if (otherList && !otherList.classList.contains('d-none')) {
-                            otherList.classList.add('d-none');
-                            otherBtn.querySelector('i').className = "fas fa-plus";
-                            otherBtn.dataset.open = "false";
-                        }
+                if (otherCard !== card) {
+                    const otherList = otherCard.querySelector('.services-list');
+                    const otherBtn = otherCard.querySelector('.toggle-services');
+                    if (otherList && !otherList.classList.contains('d-none')) {
+                        otherList.classList.add('d-none');
+                        otherBtn.querySelector('.icon-plus').style.display = 'inline';
+                        otherBtn.querySelector('.icon-minus').style.display = 'none';
+                        otherBtn.dataset.open = "false";
                     }
-                });
-
-
-                if (open) {
-                    list.classList.add('d-none');
-                    this.querySelector('i').className = "fas fa-plus";
-                    this.dataset.open = "false";
-                } else {
-                    list.classList.remove('d-none');
-                    this.querySelector('i').className = "fas fa-minus";
-                    this.dataset.open = "true";
                 }
             });
+
+            // حالا وضعیت کارتی که روش کلیک شده رو برعکس می‌کنیم (باز بود بسته شه، بسته بود باز شه)
+            if (open) {
+                list.classList.add('d-none');
+                this.querySelector('.icon-plus').style.display = 'inline';
+                this.querySelector('.icon-minus').style.display = 'none';
+                this.dataset.open = "false";
+            } else {
+                list.classList.remove('d-none');
+                this.querySelector('.icon-plus').style.display = 'none';
+                this.querySelector('.icon-minus').style.display = 'inline';
+                this.dataset.open = "true";
+            }
+
+            });
         });
-            // ✅ اگر دسته از قبل انتخاب شده بود، زیر‌دسته‌ها خودکار باز شوند
+        // اگه کاربر از صفحه قبل یه دسته رو انتخاب کرده بود، واسه راحتیش اولین زیردسته رو خودکار باز می‌کنیم
         if (slug === preSelectedCategory) {
             const firstToggle = document.querySelector('.toggle-services');
             if (firstToggle) {
@@ -222,7 +242,7 @@
     }
    
 
-
+    // تابعی که کارتِ خود خدمات رو رندر می‌کنه
     function renderServices(services) {
         if (!services.length) return `<p class="text-muted">هیچ خدمتی موجود نیست.</p>`;
 
@@ -232,14 +252,15 @@
             html += `
             <div class="col-12">
                 <div class="service-item d-flex align-items-center gap-3 p-3">
+                    <!-- عکس سرویس با object-fit:contain که دفرمه نشه -->
                     <img src="${s.imageUrl}" 
-     class="service-img"
-     style="width:300px;
-            height:170px;
-            object-fit:contain;
-            background:#f8f9fa;
-            padding:8px;
-            border-radius:12px;">
+                    class="service-img"
+                    style="width:300px;
+                            height:170px;
+                            object-fit:contain;
+                            background:#f8f9fa;
+                            padding:8px;
+                            border-radius:12px;">
 
                     <div class="service-info flex-grow-1 d-flex flex-column">
                         <h5>${s.name}</h5>
@@ -248,6 +269,7 @@
                             (${s.price_words} تومان)
                         </span>
 
+                        <!-- پیام‌های سراسری ادمین که از تنظیمات سایت میاد (مثل "زمان‌ها حدودی است") -->
                         {% if settings.global_duration_note %}
                         <small class="text-muted d-block">
                             {{ settings.global_duration_note }}
@@ -261,6 +283,7 @@
                         {% endif %}
                     </p>
                         <div class="mt-auto text-center">
+                            <!-- دکمه اصلی انتخاب خدمت با data-no-exit -->
                             <button class="btn btn-primary mt-2 select-service-btn" 
                                     data-id="${s.id}"
                                     data-no-exit>
@@ -275,6 +298,7 @@
         return html;
     }
 
+    // اگه یه خدمتی از قبل انتخاب شده بوده (مثلاً با زدن دکمه back برگشته)، اون کارت رو هایلایت کن
     const preSelected = "{{ selected_service.id|default:'' }}";
 
     if (preSelected) {
@@ -290,7 +314,7 @@
 
 </script>
 
-
+<!-- لود کردن اسکریپت گارد خروج -->
 <script src="{% static 'js/booking-flow.js' %}"></script>
 
 {% endblock scripts %}

@@ -1,13 +1,37 @@
 {% extends "panel/base_panel.html" %}
 {% block content %}
+
+<style>
+
+@media (max-width: 767.98px) {
+
+.custom-mobile-add-btn{
+
+display: inline-block !important;
+
+width: auto !important;
+
+padding: 0.35rem 0.6rem !important;
+
+font-size: 0.85rem !important;
+
+white-space: nowrap;
+
+}
+
+}
+
+</style>
+
 <h2 class="fw-bold mb-1" style="color: #2c3e50;">⭐ خدمات پرطرفدار</h2>
+
 <div class="container mt-4">
 
     <!-- هدر صفحه -->
-    <div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="mb-3 text-start">
         
 
-        <a href="{% url 'panel:popular_service_add' %}" class="btn btn-primary">
+        <a href="{% url 'panel:popular_service_add' %}" class="btn btn-primary custom-mobile-add-btn">
             ➕ افزودن خدمت
         </a>
     </div>
@@ -23,8 +47,8 @@
 
         {% for s in services %}
         <tr>
-            <td >
-                        <div style="display: flex; align-items: center; gap: 10px;">
+            <td class="text-center">
+                        <div style="display: flex; align-items: center; justify-content: center; gap: 10px;">
                             {% if s.image %}
                                 <img src="{{ s.image.url }}" alt="{{ s.title }}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 5px;">
                             {% else %}
@@ -34,13 +58,14 @@
                         </div>
             </td>
 
+            <!-- استفاده از فیلتر truncatechars:50 برای کوتاه کردن متون طولانی -->
             <td class="text-center">{{ s.description|truncatechars:50 }}</td>
 
             <td class="text-center">{{ s.is_active|yesno:"✔,✖" }}</td>
             <td class="text-center">
-            <a href="{% url 'panel:popular_service_edit' s.id %}">✏️</a>
-            <a href="{% url 'panel:popular_service_delete' s.id %}"
-                onclick="return confirm('حذف شود؟')">🗑</a>
+                <a href="{% url 'panel:popular_service_edit' s.id %}">✏️</a>
+                <a href="{% url 'panel:popular_service_delete' s.id %}"
+                    onclick="return confirm('حذف شود؟')">🗑</a>
             </td>
         </tr>
         {% endfor %}

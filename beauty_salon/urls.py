@@ -22,28 +22,31 @@ from django.conf.urls.static import static
 #مسیرهای اصلی پروژه
 urlpatterns = [
     path('admin/', admin.site.urls),
+    
     # صفحات اصلی سایت (خانه، درباره ما، تماس)
     path('',include('core.urls')),
-   # سیستم رزرو نوبت
+
+   # سیستم رزرو نوبت ( هدایت به اپ booking)
     path('booking/',include('booking.urls')),
-    # سیستم وبلاگ و مقالات
+
+    # سیستم وبلاگ و مقالات ( هدایت به اپ blog_app)
     path('blog/', include('blog_app.urls')),
-     # سیستم نظرات و امتیازات
+
+     # سیستم نظرات و امتیازات ( هدایت به اپ reviews_app)
     path('reviews/', include('reviews_app.urls')),
-     # سیستم خدمات و پکیج‌ها
     
-    # باید این باشد:
+    # معرفی خدمات سالن ( هدایت به اپ services_app)
     path('service/', include('services_app.urls', namespace='services_app')),
     
-    # مسیرهای اپ‌های دیگر
-    #برای ورود و خروحج ثبت نام
+    #برای ورود و خروحج ثبت نام ( هدایت به اپ accounts + بازیابی رمز عبور)
     path('accounts/', include(('accounts.urls', 'accounts'), namespace='accounts')),
 
+    #پنل کاربری ( هدایت به اپ panel)
     path('panel/', include('panel.urls')),
 
 ]
 
 
-# فقط در محیط توسعه (DEBUG=True)
+# دسترسی به فایل‌های آپلود شده (مدیا) در حالت (لوکال)
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

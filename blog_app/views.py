@@ -6,10 +6,12 @@ from django.db.models import Q,Count , F
 from django.http import JsonResponse
 
 def blog_list(request):
-        # دریافت پارامترهای فیلتر و جستجو از URL
+    # دریافت پارامترهای فیلتر و جستجو از URL
+
     category_slug = request.GET.get('category', None)
-     # حذف فاصله‌های اضافه از عبارت جستجو
-    query = request.GET.get('q', '').strip()  # ← strip() برای حذف فاصله‌های اضافه
+    
+    # حذف فاصله‌های اضافه از عبارت جستجو
+    query = request.GET.get('q', '').strip()  
 
     articles = Article.objects.select_related('category', 'author').all()
 
@@ -20,12 +22,14 @@ def blog_list(request):
             Q(content__icontains=query)
         )
 
-    # فیلتر دسته‌بندی
+    # فیلتر بر اساس دسته‌بندی
     if category_slug:
         articles = articles.filter(category__name__icontains=category_slug)
 
-# مرتب‌سازی مقالات از جدیدترین به قدیمی‌ترین
+    # مرتب‌سازی مقالات از جدیدترین به قدیمی‌ترین
     articles = articles.order_by('-created_at')
+    
+    #واکشی دسته‌بندی‌ها به همراه تعداد مقالات هر دسته
     categories = Category.objects.annotate(
         articles_count=Count('article')
     )
@@ -35,7 +39,8 @@ def blog_list(request):
     page_number = request.GET.get('page',1)
     page_obj = paginator.get_page(page_number)
 
-    # ارسال اطلاعات برای نمایش پیام "نتیجه‌ای یافت نشد"
+    # . بررسی برای نمایش پیام "نتیجه‌ای یافت نشد"
+    #چیزی سرچ کرده ولی مقاله ای پیدا نشده
     no_results = (query and not articles.exists())
 
     return render(request, 'blog/blog.html', {
@@ -47,11 +52,11 @@ def blog_list(request):
         'active_page': 'blog',  # برای هایلایت منوی فعال
     })
 
-
+#نمایش جزئیات یک مقاله خاص و مقالات مرتبط
 def blog_detail(request, pk):
     article = get_object_or_404(Article, pk=pk)
 
-    # ✅ افزایش تعداد بازدید (امن و حرفه‌ای)
+    #  افزایش تعداد بازدید
     article.views_count = F('views_count') + 1
     article.save(update_fields=['views_count'])
     article.refresh_from_db()
@@ -69,8 +74,9 @@ def blog_detail(request, pk):
         # ساخت کوئری برای جستجوی مقالات با برچسب‌های مشترک
         query = Q()
         for tag in tag_list:
-            query |= Q(tags__icontains=tag)
+            query = query | Q(tags__icontains=tag)
         
+        #پیدا کردن مقالات مشابه (به جز مقاله فعلی)
         related_articles = Article.objects.filter(query).exclude(pk=article.pk).order_by('-created_at')[:3]
 
     # اگر مقاله‌ای بر اساس برچسب پیدا نشد، بر اساس دسته‌بندی بگرد

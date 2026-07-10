@@ -12,10 +12,16 @@
             <input type="text" name="name" class="form-control" required>
         </div>
 
-        <div class="d-flex flex-column flex-md-row gap-2">
-            <button class="btn btn-success">ثبت</button>
-            <a href="{% url 'panel:services_list' %}" class="btn btn-secondary">بازگشت</a>
+        <div class="row g-2">
+            <div class="col-6 col-md-auto">
+                <button class="btn btn-success w-100 px-2">ثبت</button>
+            </div>
+
+            <div class="col-6 col-md-auto">
+                <a href="{% url 'panel:services_list' %}" class="btn btn-secondary w-100 px-2">بازگشت</a>
+            </div>
         </div>
+
 
 
     </form>

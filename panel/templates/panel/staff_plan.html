@@ -7,72 +7,212 @@
 
     <h4>📅 برنامه کاری پرسنل</h4>
 
-    <!-- انتخاب پرسنل -->
-    <form method="get" class="row g-3 mt-3 mb-4">
-        <div class="col-md-4">
-            <label>انتخاب پرسنل</label>
-            <select name="staff" class="form-select" onchange="this.form.submit()">
-                <option value="">-- انتخاب کنید --</option>
-                {% for s in staffs %}
-                    <option value="{{ s.id }}"
-                        {% if selected_staff == s.id|stringformat:"s" %}selected{% endif %}>
-                        {{ s.full_name }}
-                    </option>
-                {% endfor %}
-            </select>
-        </div>
-    </form>
-
+    <!-- فقط وقتی یه پرسنل انتخاب شده باشه این بخش بالایی رو رندر می‌کنیم -->
     {% if staff %}
-        <div class="card p-3">
 
-            <p><strong>روزهای کاری:</strong>
-                {{ staff.work_days|join:"، " }}
-            </p>
+    <!-- بخش اول: اطلاعات و فیلترهای پرسنل انتخاب شده -->
+    <!-- فیلتر تاریخ -->
+    <div class="card p-3 mb-3 mt-4">
+        <form method="get" class="row g-2 align-items-end">
+            <input type="hidden" name="staff" value="{{ staff.id }}">
+            
+            <div class="col-12 col-md-4">
+                <label class="form-label">انتخاب تاریخ:</label>
+                <!-- input نمایشی شمسی -->
+                <input type="text" 
+                    id="jalali-date-input"
+                    class="form-control" 
+                    placeholder="تاریخ را انتخاب کنید"
+                    autocomplete="off">
+                <!-- input مخفی میلادی برای ارسال به سرور -->
+                <input type="hidden" 
+                    id="hidden-gregorian-date"
+                    name="date" 
+                    value="{{ selected_date|date:'Y-m-d' }}">
+            </div>
 
-            <p><strong>ساعت کاری:</strong>
-                {{ staff.work_start_time }} تا {{ staff.work_end_time }}
-            </p>
+            <div class="col-6 col-md-2">
+                <button type="submit" class="btn btn-primary w-100 text-nowrap">نمایش</button>
+            </div> 
+            
+            <div class="col-6 col-md-2">
+                <a href="?staff={{ staff.id }}" class="btn btn-secondary w-100 text-nowrap">امروز</a>
+            </div>
+        </form>
+    </div>
 
-            {% if staff.has_lunch_break %}
-            <p><strong>ناهار:</strong>
-                {{ staff.lunch_start }} تا {{ staff.lunch_end }}
-            </p>
-            {% endif %}
+    <!-- جزئیات پرسنل انتخاب‌شده -->
+    <h5 class="mb-3 mt-4">📋 اطلاعات {{ staff.full_name }}</h5>
 
+    <div class="card p-3 mb-4">
+        <p><strong>روزهای کاری:</strong> {{ staff.work_days|join:"، " }}</p>
+        <p><strong>ساعت کاری:</strong> {{ staff.work_start_time }} تا {{ staff.work_end_time }}</p>
+        {% if staff.has_lunch_break %}
+        <p><strong>ناهار:</strong> {{ staff.lunch_start }} تا {{ staff.lunch_end }}</p>
+        {% endif %}
+    </div>
+
+    <!-- دکمه‌های ناوبری روز قبل و بعد -->
+    <div class="card p-3 mb-5">      
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <a href="?staff={{ staff.id }}&date={{ prev_date|date:'Y-m-d' }}" 
+            class="btn btn-outline-secondary">
+                ▶روز قبل
+            </a>
+
+            <h5 class="mb-0">نوبت‌های {{ selected_date_jalali }}</h5>
+            
+            <a href="?staff={{ staff.id }}&date={{ next_date|date:'Y-m-d' }}" 
+            class="btn btn-outline-secondary">
+                روز بعد ◀
+            </a>
         </div>
 
-        <div class="card mt-4 p-3">
-            <h5>نوبت‌های امروز</h5>
-
-            {% if appointments %}
-                <table class="table mt-3">
-                    <thead>
-                        <tr>
-                            <th>مشتری</th>
-                            <th>سرویس</th>
-                            <th>ساعت</th>
-                            <th>وضعیت</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                    {% for appt in appointments %}
-                        <tr>
-                            <td>{{ appt.user.username }}</td>
-                            <td>{{ appt.service.name }}</td>
-                            <td>{{ appt.start_time }} - {{ appt.end_time }}</td>
-                            <td>{{ appt.get_status_display }}</td>
-                        </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
-            {% else %}
-                <p class="text-muted mt-3">امروز نوبتی ثبت نشده</p>
-            {% endif %}
+        <!-- خلاصه وضعیت نوبت‌های این روز -->
+        {% if appointments %}
+        <div class="d-flex gap-3 mb-3">
+            <span class="badge bg-primary fs-6">کل نوبت‌ها: {{ appointments|length }}</span>
+            <span class="badge bg-success fs-6">تأیید شده: {{ confirmed_count }}</span>
+            <span class="badge bg-danger fs-6">لغو شده: {{ cancelled_count }}</span>
         </div>
+        {% endif %}
+        
+        {% if not is_working_day %}
+        <div class="mt-2 p-2 border border-warning rounded" style="color: #856404; background-color: #fff3cd;">
+            ⚠️ {{ staff.full_name }} در این تاریخ روز کاری ندارد.
+        </div>
+        {% endif %}
+        
+         <!-- جدول نوبت‌ها -->
+        {% if appointments %}
+            <table class="table mt-3">
+                <thead>
+                    <tr>
+                        <th>مشتری</th>
+                        <th>سرویس</th>
+                        <th>ساعت</th>
+                        <th>وضعیت</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for appt in appointments %}
+                    <tr>
+                        <td class="text-center">{{ appt.user.username }}</td>
+                        <td class="text-center">{{ appt.service.name }}</td>
+                        <td class="text-center">{{ appt.start_time }} - {{ appt.end_time }}</td>
+                        <td class="text-center">
+                            {% if appt.status == 'confirmed' %}
+                                <span class="badge bg-success">{{ appt.get_status_display }}</span>
+                            {% elif appt.status == 'cancelled' %}
+                                <span class="badge bg-danger">{{ appt.get_status_display }}</span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark">{{ appt.get_status_display }}</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p class="text-muted text-center mt-3">در این تاریخ نوبتی ثبت نشده</p>
+        {% endif %}
+    </div>
 
+    <hr class="my-5">
+    <h5 class="mb-3">👥 لیست پرسنل</h5>
     {% endif %}
+
+    <!-- بخش دوم: کارت‌های پرسنل -->
+    <div class="row g-3 mt-2">
+        {% for s in staffs %}
+        <div class="col-6 col-sm-6 col-md-3">
+            <a href="?staff={{ s.id }}&date={{ selected_date|date:'Y-m-d' }}" class="text-decoration-none">
+
+                <div class="card text-center p-3 h-100
+                    {% if selected_staff == s.id|stringformat:'s' %}
+                        border-primary shadow
+                    {% else %}
+                        border
+                    {% endif %}
+                    " style="cursor:pointer; transition: 0.2s;">
+
+                    {% if s.photo %}
+                        <img src="{{ s.photo.url }}"
+                             class="rounded-circle mx-auto mb-2"
+                             style="width:80px; height:80px; object-fit:cover;">
+                    {% else %}
+                        <div class="rounded-circle bg-secondary mx-auto mb-2 d-flex align-items-center justify-content-center"
+                             style="width:80px; height:80px;">
+                            <span style="font-size:2rem;">👤</span>
+                        </div>
+                    {% endif %}
+
+                    <h6 class="mb-1 fw-bold
+                        {% if selected_staff == s.id|stringformat:'s' %}
+                            text-primary
+                        {% endif %}
+                    ">{{ s.full_name }}</h6>
+                    <small class="text-muted">{{ s.role }}</small>
+                </div>
+            </a>
+        </div>
+        {% empty %}
+            <p class="text-muted">هیچ پرسنل فعالی ثبت نشده.</p>
+        {% endfor %}
+    </div>
 
 </div>
 
+<!-- دیت‌پیکر و هندل کردن تاریخ -->
+<script>
+$(document).ready(function() {
+
+    //تبدیل اعداد فارسی به انگلیسی
+    function persianToEnglish(str) {
+        const pn = ['۰','۱','۲','۳','۴','۵','۶','۷','۸','۹'];
+        const en = ['0','1','2','3','4','5','6','7','8','9'];
+        for (let i=0; i<10; i++) str = str.replace(new RegExp(pn[i],'g'), en[i]);
+        return str;
+    }
+
+    function toGregorianString(p) {
+        const g = p.toCalendar('gregorian');
+        const y = g.year();
+        const m = String(g.month()).padStart(2,'0');
+        const d = String(g.date()).padStart(2,'0');
+        return y + '-' + m + '-' + d;
+    }
+
+    //  مقدار اولیه رو از ویو می‌گیریم
+    const initialJalali = "{{ selected_date_jalali }}";  
+    
+    //  اول مقدار رو دستی می‌ذاریم تو اینپوت
+    $('#jalali-date-input').val(initialJalali);
+
+    $('#jalali-date-input').persianDatepicker({
+        format: 'YYYY/MM/DD',
+        autoClose: true,
+        initialValue: false,   
+        onSelect: function(unix) {
+            // وقتی کاربر تاریخ رو انتخاب کرد، همون لحظه میلادیش رو می‌ریزیم تو اینپوت مخفی
+            const p = new persianDate(unix);
+            $('#hidden-gregorian-date').val(toGregorianString(p));
+        }
+    });
+
+    //  یه بار دیگه بعد از لود شدن پلاگین، مقدار اولیه رو ست می‌کنیم که نپره
+    $('#jalali-date-input').val(initialJalali);
+
+    // قبل از سابمیت شدن فرم، یه چک نهایی می‌کنیم که تاریخ حتما درست و انگلیسی باشه
+    $('form').submit(function() {
+        let v = $('#jalali-date-input').val();
+        if (!v) return;
+        v = persianToEnglish(v);
+        const parts = v.split('/');
+        const p = new persianDate([+parts[0], +parts[1], +parts[2]]);
+        $('#hidden-gregorian-date').val(toGregorianString(p));
+    });
+
+});
+</script>
 {% endblock %}

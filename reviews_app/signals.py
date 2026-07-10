@@ -13,6 +13,7 @@ def review_pre_save(sender, instance, **kwargs):
     else:
         instance._old_status = None
         
+#وقتی وضعیت کامنت عوض شد، یوزر رو در جریان میذاره
 @receiver(post_save, sender=Review)
 def review_status_notification(sender, instance, created, **kwargs):
     # اگر نظر تازه ساخته شده، اعلان نده
@@ -22,7 +23,7 @@ def review_status_notification(sender, instance, created, **kwargs):
     old_status = getattr(instance, "_old_status", None)
     new_status = instance.status
 
-    # فقط وقتی وضعیت تغییر کرده
+    # وقتی وضعیت نظر تغییر نکرده نوتیف نمیدیم
     if old_status == new_status:
         return
 

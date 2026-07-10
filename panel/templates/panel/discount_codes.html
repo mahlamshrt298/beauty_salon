@@ -1,21 +1,28 @@
 {% extends "panel/base_panel.html" %}
 {% load jformat %}
+
 {% block content %}
 <div class="card shadow-sm">
     <div class="card-header bg-primary text-white">
         <h5 class="mb-0">🎁 مدیریت کد تخفیف‌ها</h5>
     </div>
     <div class="card-body">
-        <div class="d-flex justify-content-between align-items-center mb-3">
+        <!-- هدر بالای جدول شامل فرم سرچ و دکمه افزودن -->
+        <div class="d-flex justify-content-between align-items-center mb-3 discount-mobile-header">
             <form method="get" class="col-12 col-md-6">
                 <div class="input-group">
                     <input type="text" name="search" class="form-control"
                         placeholder="جستجو کد تخفیف..." value="{{ query }}">
-                    <button class="btn btn-outline-secondary" type="submit">
-                        🔍
-                    </button>
+
+                    <select name="status" class="form-select" style="max-width: 130px;">
+                        <option value="" {% if status == "" %}selected{% endif %}>همه</option>
+                        <option value="active" {% if status == "active" %}selected{% endif %}> فعال</option>
+                        <option value="inactive" {% if status == "inactive" %}selected{% endif %}> غیرفعال</option>
+                    </select>
+                    <button class="btn btn-outline-secondary" type="submit">🔍</button>
                 </div>
             </form>
+
 
             <a href="{% url 'panel:discount_code_add' %}"
             class="btn btn-success px-3 py-1 fw-bold">
@@ -63,11 +70,15 @@
                             {% endif %}
                         </td>
 
+                        <!-- وضعیت اعلان (پیامک/ایمیل) -->
                         <td class="text-center">
-                            {% if code.notification_sent %}
-                                <span class="badge bg-info">اعلان ارسال شد</span>
+                            {% if code.jalali_notification_sent_at %}
+                                <small class="text-info fw-bold">
+                                    📬 آخرین ارسال:<br>
+                                    {{ code.jalali_notification_sent_at }}
+                                </small>
                             {% else %}
-                                <span class="badge bg-secondary">اعلان ارسال نشده</span>
+                                <span class="badge bg-secondary">ارسال نشده</span>
                             {% endif %}
                         </td>
                         
@@ -76,19 +87,24 @@
                             <div class="d-flex flex-wrap gap-1 justify-content-center flex-column flex-md-row">
                                 
                                 <a href="{% url 'panel:discount_code_edit' code.pk %}" class="btn  btn-primary px-1">ویرایش</a>
+                                
+                                <!-- فرم حذف -->
                                 <form method="post" style="display:inline;">
                                     {% csrf_token %}
                                     <input type="hidden" name="delete_id" value="{{ code.pk }}">
+                                    <!-- تاییدیه جاوااسکریپتی قبل از سابمیت فرم -->
                                     <button type="submit"
                                             class="btn btn-danger px-1"
                                             onclick="return confirm('حذف شود؟')">
                                         حذف
                                     </button>
                                 </form>
-                                <!-- دکمه فعال/غیرفعال کردن -->
+
+                                <!-- فرم فعال/غیرفعال کردن -->
                                 <form method="post" style="display:inline;">
                                     {% csrf_token %}
                                     <input type="hidden" name="toggle_active" value="{{ code.pk }}">
+                                    <!--  رنگ و متن آن بر اساس وضعیت فعلی تغییر می‌کند -->
                                     <button type="submit"
                                             class="btn px-1 {% if code.is_active %}btn-warning{% else %}btn-success{% endif %}"
                                             title="{% if code.is_active %}غیرفعال کردن{% else %}فعال کردن{% endif %}">
@@ -100,7 +116,7 @@
                                     </button>
                                 </form>
 
-                                <!-- دکمه ارسال مجدد اعلان -->
+                                <!-- فرم ارسال مجدد اعلان -->
                                 <form method="post" style="display:inline;">
                                     {% csrf_token %}
                                     <input type="hidden" name="resend_notify" value="{{ code.pk }}">
@@ -114,6 +130,7 @@
                         </td>
                     </tr>
                     {% empty %}
+                    <!-- حالت لیست خالی -->
                     <tr>
                         <td colspan="8" class="text-center">هیچ کد تخفیفی یافت نشد</td>
                     </tr>
@@ -123,14 +140,16 @@
         </div>
     </div>
 
-    <!-- قبل از بسته شدن </div> کارت، این کد را اضافه کنید -->
+    <!-- پیاده‌سازی صفحه‌بندی -->
     {% if codes.has_other_pages %}
     <nav aria-label="صفحه‌بندی کدهای تخفیف" class="mt-4">
         <ul class="pagination justify-content-center">
+            <!-- دکمه صفحه قبلی -->
             {% if codes.has_previous %}
                 <li class="page-item">
+                    <!--  حفظ پارامترهادر لینک‌های صفحه‌بندی تا با رفتن به صفحه بعد، نتایج فیلتر شده از دست نروند.-->
                     <a class="page-link" 
-                    href="?page={{ codes.previous_page_number }}{% if query %}&search={{ query }}{% endif %}">
+                    href="?page={{ codes.previous_page_number }}{% if query %}&search={{ query }}{% endif %}{% if status %}&status={{ status }}{% endif %}">
                         <span aria-hidden="true">&laquo;</span> قبلی
                     </a>
                 </li>
@@ -140,6 +159,7 @@
                 </li>
             {% endif %}
 
+            <!-- شماره صفحات -->
             {% for num in codes.paginator.page_range %}
                 {% if codes.number == num %}
                     <li class="page-item active">
@@ -148,17 +168,18 @@
                 {% else %}
                     <li class="page-item">
                         <a class="page-link" 
-                        href="?page={{ num }}{% if query %}&search={{ query }}{% endif %}">
+                        href="?page={{ num }}{% if query %}&search={{ query }}{% endif %}{% if status %}&status={{ status }}{% endif %}">
                             {{ num }}
                         </a>
                     </li>
                 {% endif %}
             {% endfor %}
 
+            <!-- دکمه صفحه بعدی -->
             {% if codes.has_next %}
                 <li class="page-item">
                     <a class="page-link" 
-                    href="?page={{ codes.next_page_number }}{% if query %}&search={{ query }}{% endif %}">
+                    href="?page={{ codes.next_page_number }}{% if query %}&search={{ query }}{% endif %}{% if status %}&status={{ status }}{% endif %}">
                         بعدی <span aria-hidden="true">&raquo;</span>
                     </a>
                 </li>

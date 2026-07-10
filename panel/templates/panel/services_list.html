@@ -1,8 +1,9 @@
 {% extends "panel/base_panel.html" %}
 {% load humanize %}
 {% load static %}
-{% block content %}
 
+
+{% block content %}
 
 <h2  style="color: #2c3e50;">💅 خدمات</h2>
 
@@ -36,7 +37,6 @@
 
         </div>
 
-        <!-- بخش collapse -->
         <div id="dangerZone"
             class="collapse mb-4 {% if selected_danger_category %}show{% endif %}">
             <div class="row">
@@ -69,7 +69,7 @@
                                             <td class="text-center">{{ cat.sub_count }}</td>
                                             <td class="d-flex gap-2">
 
-                                                <!-- دکمه ویرایش -->
+                                                <!-- دکمه ویرایش که دیتای دسته رو می‌ریزه تو مودال پایین صفحه -->
                                                 <button type="button"
                                                     class="btn btn-primary  edit-category-btn"
                                                     data-id="{{ cat.id }}"
@@ -79,7 +79,7 @@
                                                 ویرایش
                                                 </button>
 
-
+                                                <!--قفل کردن دکمه حذف : اگه زیردسته داره اصلا اجازه کلیک نمی‌دیم-->
                                                 {% if cat.sub_count > 0 %}
                                                     <button class="btn btn-secondary " disabled>
                                                         غیرقابل حذف
@@ -117,6 +117,7 @@
                             </div>
 
                             <div class="table-responsive">
+                                <!-- فرم فیلتر زیردسته‌ها بر اساس دسته اصلی -->
                                 <form method="get" class="mb-3">
                                     <label class="form-label">انتخاب دسته</label>
                                     <select name="danger_category"
@@ -147,9 +148,11 @@
                                             <td class="text-center">{{ sub.name }}</td>
                                             <td class="text-center">{{ sub.category.name }}</td>
                                             <td class="text-center">{{ sub.service_count }}</td>
+
                                             <td class="d-flex gap-2 align-items-center">
 
                                                 <!-- دکمه ویرایش -->
+                                                <!-- ارسال دیتای زیردسته به مودال -->
                                                 <button type="button"
                                                     class="btn btn-primary  edit-subcategory-btn"
                                                     data-id="{{ sub.id }}"
@@ -160,7 +163,7 @@
                                                 ویرایش
                                                 </button>
 
-
+                                                <!-- اگر خدمت داشت ،،دکمه حذف غیرفعال میشه -->
                                                 {% if sub.service_count > 0 %}
                                                     <button class="btn btn-secondary " disabled>
                                                         غیرقابل حذف
@@ -191,7 +194,7 @@
 
     {% endif %}
 
-
+    <!-- فرم فیلتر لیست اصلی خدمات -->
     <form method="get" class="row mb-4">
 
         <!-- دسته -->
@@ -209,7 +212,7 @@
         </div>
 
         <!-- زیردسته -->
-        <div class="col-md-4">
+        <div class="col-12 col-md-4">
             <label class="form-label">زیردسته</label>
             <select name="subcategory" class="form-select" onchange="this.form.submit()">
                 <option value="">همه زیردسته‌ها</option>
@@ -222,8 +225,17 @@
             </select>
         </div>
 
+        <div class="col-12 col-md-4">
+            <label class="form-label">وضعیت</label>
+            <select name="status" class="form-select" onchange="this.form.submit()">
+                <option value="">همه</option>
+                <option value="active" {% if selected_status == "active" %}selected{% endif %}>فعال</option>
+                <option value="inactive" {% if selected_status == "inactive" %}selected{% endif %}>غیرفعال</option>
+            </select>
+        </div>
     </form>
 
+    <!-- جدول اصلی خدمات -->
     <div class="table-scroll">
         <table class="table table-bordered text-center align-middle">
             <thead class="table-dark">
@@ -240,10 +252,10 @@
             <tbody>
                 {% for service in services %}
                 <tr>
-                    <!-- ستون عنوان خدمت - نسخه نهایی با عکس -->
+                    <!-- ستون عنوان خدمت -->
                     <td>
                         <div class="d-flex align-items-center gap-3">
-                            <!-- ✅ نمایش عکس خدمت -->
+                            <!--  نمایش عکس خدمت -->
                             <div class="service-image-wrapper">
                                 {% if service.image %}
                                     <img src="{{ service.image.url }}" 
@@ -256,7 +268,7 @@
                                 {% endif %}
                             </div>
                             
-                            <!-- ✅ اطلاعات متنی خدمت -->
+                            <!--  اطلاعات متنی خدمت -->
                             <div class="service-info">
                                 <span>{{ service.category.name }}</span>
                                 {% if service.subcategory %}
@@ -317,7 +329,7 @@
                                 </button>
                             </form>
 
-                            <!-- ویرایش (همچنان GET بماند) -->
+                            <!-- ویرایش  -->
                             <a href="{% url 'panel:service_edit' service.id %}"
                             class="btn btn-primary">
                                 ویرایش
@@ -337,7 +349,7 @@
         </table>
     </div>
 
-    <!-- قبل از بسته شدن </div> کانتینر، این کد را اضافه کنید -->
+    <!-- بخش صفحه‌بندی -->
     {% if services.has_other_pages %}
     <nav aria-label="صفحه‌بندی خدمات" class="mt-4">
         <ul class="pagination justify-content-center">
@@ -347,7 +359,8 @@
                     <a class="page-link" 
                     href="?page={{ services.previous_page_number }}
                             {% if selected_category %}&category={{ selected_category }}{% endif %}
-                            {% if selected_subcategory %}&subcategory={{ selected_subcategory }}{% endif %}">
+                            {% if selected_subcategory %}&subcategory={{ selected_subcategory }}{% endif %}
+                            {% if selected_status %}&status={{ selected_status }}{% endif %}">
                         <span aria-hidden="true">&laquo;</span> قبلی
                     </a>
                 </li>
@@ -368,7 +381,8 @@
                         <a class="page-link" 
                         href="?page={{ num }}
                                 {% if selected_category %}&category={{ selected_category }}{% endif %}
-                                {% if selected_subcategory %}&subcategory={{ selected_subcategory }}{% endif %}">
+                                {% if selected_subcategory %}&subcategory={{ selected_subcategory }}{% endif %}
+                                {% if selected_status %}&status={{ selected_status }}{% endif %}">
                             {{ num }}
                         </a>
                     </li>
@@ -381,7 +395,8 @@
                     <a class="page-link" 
                     href="?page={{ services.next_page_number }}
                             {% if selected_category %}&category={{ selected_category }}{% endif %}
-                            {% if selected_subcategory %}&subcategory={{ selected_subcategory }}{% endif %}">
+                            {% if selected_subcategory %}&subcategory={{ selected_subcategory }}{% endif %}
+                            {% if selected_status %}&status={{ selected_status }}{% endif %}">
                         بعدی <span aria-hidden="true">&raquo;</span>
                     </a>
                 </li>
@@ -396,9 +411,13 @@
 
 </div>
 
+<!-- مودال‌های ویرایش -->
+
+<!-- مودال ویرایش دسته -->
 <div class="modal fade" id="editCategoryModal" tabindex="-1">
   <div class="modal-dialog">
     <div class="modal-content">
+
       <form method="post" id="editCategoryForm">
         <input type="hidden" name="danger_category" value="{{ selected_danger_category }}">
 
@@ -408,6 +427,7 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
+
           <input type="text"
                  name="name"
                  id="editCategoryName"
@@ -422,10 +442,11 @@
   </div>
 </div>
 
-
+<!-- مودال ویرایش زیردسته -->
 <div class="modal fade" id="editSubcategoryModal" tabindex="-1">
   <div class="modal-dialog">
     <div class="modal-content">
+        
       <form method="post" id="editSubcategoryForm">
         <input type="hidden" name="danger_category" value="{{ selected_danger_category }}">
 
@@ -463,7 +484,7 @@
 <script>
 document.addEventListener("DOMContentLoaded", function() {
 
-    // دسته
+    // تنظیمات مودال دسته
     document.querySelectorAll(".edit-category-btn").forEach(btn => {
         btn.addEventListener("click", function() {
             const id = this.dataset.id;
@@ -476,7 +497,7 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     });
 
-    // زیردسته
+    // تنظیمات مودال زیردسته
     document.querySelectorAll(".edit-subcategory-btn").forEach(btn => {
         btn.addEventListener("click", function() {
             const id = this.dataset.id;

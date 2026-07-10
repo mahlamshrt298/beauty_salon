@@ -13,18 +13,21 @@ class ReviewAdmin(admin.ModelAdmin):
         'show_on_home',
         'created_at',
     )
-
+    #فیلترهای سایدبار
     list_filter = ('status','show_on_home', 'created_at', 'service')
+    
+    #سرچ باکس
     search_fields = ('comment', 'user__username')
     ordering = ('-created_at',)
     list_editable = ('show_on_home',) 
     actions = ['approve_reviews', 'reject_reviews']
+    
     fields = (
         'user',
         'service',
         'rating',
         'comment',
-        'admin_reply',   # ← اضافه شد
+        'admin_reply',   
         'status',
     )
 

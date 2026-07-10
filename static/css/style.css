@@ -1,6 +1,6 @@
 /* ===== استایل‌های اصلی و پایه ===== */
 
-/* لینک‌های مشکی برای موارد خاص */
+/* برای لینک‌های خاصی که می‌خوایم حتما مشکی بمونن و با هاور رنگشون عوض نشه */
 .black-link {
     color: #000000 !important;
 }
@@ -9,6 +9,11 @@
 }
 
 /* دکمه طلایی لوکس — نسخه واکنش‌گرا */
+/* 
+ * دکمه طلایی اصلی سایت (کال تو اکشن‌ها)
+ * پ.ن: مجبور شدم به اکثر پراپرتی‌ها important بدم چون کلاس‌های بوت‌استرپ 
+ * یا فایل‌های دیگه باعث می‌شدن استایل دکمه بشکنه.
+ */
 .btn-gold {
     background-color: #D4AF37 !important;
     color: white !important;
@@ -26,6 +31,7 @@
     min-width: auto !important;
 }
 
+/* افکت بالا اومدن دکمه موقع هاور کردن */
 .btn-gold:hover {
     background-color: #B8860B !important;
     color: white !important;
@@ -34,23 +40,14 @@
     transform: translateY(-2px) !important;
 }
 
-/* نسخه موبایل: کوچک‌تر و با padding مناسب */
-@media (max-width: 768px) {
-    .btn-gold {
-        padding: 10px 20px !important;
-        font-size: 15px !important;
-        min-width: 120px !important;
-    }
-}
-
-/* اگر دکمه داخل فرم/لینک باشه، از outline جلوگیری می‌کنه */
+/* حذف کادر آبی‌رنگ پیش‌فرض مرورگرها وقتی روی دکمه کلیک میشه (مخصوصاً تو فرم‌ها) */
 .btn-gold:focus,
 .btn-gold:active {
     outline: none !important;
     box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.4) !important;
 }
 
-/* دکمه فرعی (مثلاً برای "ورود") - اختیاری */
+/* دکمه‌های فرعی و کم‌اهمیت‌تر (مثل دکمه انصراف یا ورود ثانویه) */
 .btn-gray {
     background-color: #555555 !important;
     color: white !important;
@@ -67,12 +64,13 @@
     color: white !important;
 }
 
+/* بخش بنر اصلی  */
 .banner-container {
     position: relative;
     width: 100%;
-    max-width: 1200px; /* اگر می‌خوای عرض ثابت باشه */
-    margin: 0 auto; /* وسط صفحه */
-    overflow: hidden;
+    max-width: 1200px;
+    margin: 0 auto;
+    overflow: hidden;       /* جلوگیری از بیرون زدن عکس از کادر */
 }
 
 .banner-image {
@@ -81,23 +79,25 @@
     display: block;
 }
 
+/* استایلکسی متن روی بنر (حالت دسکتاپ) */
 .banner-text {
     position: absolute;
     top: 50%;
-    left: 5%; /* فاصله از چپ - می‌تونی تنظیم کنی */
-    transform: translateY(-50%);
-    color: #333333; /* رنگ متن - روی پس‌زمینه روشن مناسبه */
+    left: 5%;
+    transform: translateY(-50%);     /* وسط‌چین کردن دقیق عمودی */
+    color: #333333;
     text-align: center;
     max-width: 400px;
     padding: 20px;
     border-radius: 8px;
 }
 
+/* سایه دادن به تیتر بنر که روی عکس‌های روشن هم خوانا باشه */
 .banner-text h1 {
     font-size: 2.5rem;
     margin: 0 0 10px 0;
     color: black;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.5); /* سایه برای خوانایی بیشتر */
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
 }
 
 .banner-text p {
@@ -106,18 +106,57 @@
     line-height: 1.6;
 }
 
+/* تنظیمات بنر برای گوشی‌های موبایل */
+@media (max-width: 768px) {
+    .banner-image {
+        min-height: 320px;
+        object-fit: cover;   /* عکس دفرمه نشه، فقط کراپ بشه */
+    }
 
-/*برای اینکه اسلایدشو در وسط صفحه باشه و حاشیه داشته باشه:*/
-/* ===== Carousel Styles ===== */
+    .banner-text {
+        top: 50%;
+        left: 0%;                        /*  سمت چپ بمونه */
+        transform: translateY(-50%);      /* فقط تو محور Y جابجا بشه */
+        width: 55%;                      /* محدودش کردم که روی بخش تاریک عکس نیفته */
+        max-width: 55%;
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;         /*  چپ‌چین */
+        text-align: center;              /* چون متن فارسیه راست‌چین/وسط‌چین بشه بهتره */
+    }
+
+    /* کوچیک کردن فونت‌ها برای موبایل که جا بشه */
+    .banner-text h1 {
+        font-size: 1.1rem;
+        margin-bottom: 8px;
+    }
+
+    .banner-text p {
+        font-size: 0.8rem;
+        margin-bottom: 12px;
+    }
+
+    .banner-text .header-btn {
+        padding: 6px 0;
+        font-size: 0.75rem;
+    }
+
+    .banner-text .header-btn:last-child {
+        margin-top: 8px;
+    }
+}
+
+
+/*برای اینکه اسلایدر در وسط صفحه باشه و حاشیه داشته باشه:*/
 .carousel-container {
     max-width: 80%;
-    margin: 2rem auto;
+    margin: 2rem auto;  /* وسط‌چین کردن کل اسلایدر تو صفحه */
 }
 
 .carousel {
     height: 400px !important;
     border-radius: 12px;
-    /*overflow: hidden;*/
     overflow: visible !important;
     box-shadow: 0 4px 16px rgba(0,0,0,0.1);
 }
@@ -130,12 +169,12 @@
 .carousel-item img {
     width: 100% !important;
     height: 100% !important;
-    object-fit: cover !important;
+    object-fit: cover !important;   /* پر کردن کادر بدون کشیدگی عکس */
     object-position: center !important;
 }
 
 
-/* ===== کارت‌های سه‌بعدی ===== */
+/*  کارت‌های خدمات (سه‌بعدی)  */
 .service-card {
     border: 1px solid #ddd;
     border-radius: 8px;
@@ -144,6 +183,7 @@
     margin-bottom: 15px; /* فاصله بین کارت‌ها */
 }
 
+/* افکت هاور کارت‌ها (میاد بالا و سایه‌اش بیشتر میشه) */
 .service-card:hover {
     transform: translateY(-8px);
     box-shadow: 0 8px 24px rgba(0,0,0,0.12);
@@ -151,11 +191,12 @@
 
 .service-card img {
     width: 100%;
-    aspect-ratio: 4/3;
-    object-fit: contain;
-    background-color: #f8f9fa;
+    aspect-ratio: 4/3;  /* ثابت نگه‌داشتن نسبت ابعاد عکس‌ها */
+    object-fit: contain;    /* عکس کامل نشون داده بشه (مخصوصاً اگه سایزشون فرق داره) */
+    background-color: #f8f9fa;  /* بک‌گراند طوسی برای فضاهای خالی عکس */
 }
 
+/* استفاده از فلکس برای هماهنگ کردن ارتفاع دکمه و متن کارت‌ها */
 .card-body {
     padding: 20px;
     flex-grow: 1;
@@ -176,15 +217,15 @@
     color: #666666;
     line-height: 1.5;
     margin-bottom: 20px;
-    flex-grow: 1;
+    flex-grow: 1;   /* متن فضاهای خالی رو پر کنه تا دکمه بره پایین */
     text-align: center; 
 }
 
 .btn-gold {
-    align-self: center;
+    align-self: center;     /* دکمه بیاد وسط کارت */
 }
 
-/* ریسپانسیو: روی موبایل 2×2 */
+/* روی موبایل کارت‌ها رو جمع‌وجورتر کردم (معمولاً گرید 2x2 میشه) */
 @media (max-width: 768px) {
     .service-card {
         height: auto;
@@ -197,7 +238,7 @@
 
 
 
-/* ===== معرفی سالن ===== */
+/*  معرفی سالن  */
 .salon-image {
     width: 100%;
     border-radius: 12px;
@@ -212,7 +253,7 @@
     border-radius: 12px;
 }
 
-/* ریسپانسیو: فاصله بیشتر در موبایل */
+/* تو موبایل ارتفاع عکس سالن رو کمتر کردم که کل صفحه رو نگیره */
 @media (max-width: 768px) {
     .salon-image {
         height: 300px;
@@ -220,8 +261,7 @@
 }
 
 
-
-/* ===== قبل و بعد — نسخه لوکس ===== */
+/*  بخش نمونه کارهای قبل و بعد (نسخه لوکس)  */
 .before-after-wrapper {
     overflow-x: auto;
     padding: 10px 0;
@@ -238,9 +278,9 @@
     background: white;
     border-radius: 16px;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);   /* افکت فنری موقع هاور */
     overflow: hidden;
-    flex: 0 0 320px; /* هر کارت 320px عرض داشته باشه */
+    flex: 0 0 320px; /* عرض ثابت برای کارت‌ها تو حالت اسکرول افقی */
     animation: fadeInUp 0.6s ease-out forwards;
     border: 1px solid rgba(212, 175, 55, 0.2); /* حاشیه طلایی ملایم */
 }
@@ -250,6 +290,7 @@
     box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15);
 }
 
+/* کادر مربوط به دو تا عکس (قبل و بعد) که کنار هم قرار می‌گیرن */
 .image-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -273,6 +314,7 @@
     padding: 20px;
 }
 
+/* جزئیات متن کارت‌های قبل و بعد */
 .card-body h5 {
     font-size: 1.25rem;
     color: #333;
@@ -292,7 +334,7 @@
     margin-bottom: 0;
 }
 
-/* انیمیشن ورود */
+/* انیمیشن بالا اومدن کارت‌ها موقع لود صفحه */
 @keyframes fadeInUp {
     from {
         opacity: 0;
@@ -304,7 +346,7 @@
     }
 }
 
-/* موبایل: اسکرول افقی فعال */
+/* تنظیمات موبایل: فعال کردن اسکرول افقی (سواپ کردن کارت‌ها) */
 @media (max-width: 768px) {
     .before-after-wrapper {
         padding: 0;
@@ -315,7 +357,7 @@
     }
 
     .before-after-card {
-        flex: 0 0 280px;
+        flex: 0 0 280px;    /* تو موبایل یکم کارت‌ها رو جمع‌وجورتر کردم */
     }
 
     .image-grid {
@@ -323,7 +365,7 @@
     }
 }
 
-/* تبلت و بالاتر: گرید نرمال */
+/* تنظیمات تبلت و دسکتاپ: نمایش به صورت گرید (۳ تا تو هر ردیف) */
 @media (min-width: 992px) {
     .before-after-wrapper {
         overflow-x: visible;
@@ -339,27 +381,28 @@
 
     .before-after-card {
         flex: none;
-        animation: none;
+        animation: none;    /* انیمیشن پیش‌فرض رو برداشتم که پایین‌تر دستی تنظیمش کنم */
     }
 
-    /* ✅ اصلاح: انیمیشن برای همه 6 کارت با تأخیرهای منطقی */
+    /*  انیمیشن برای همه 6 کارت با تأخیرهای منطقی */
+    /* اینجوری کارت‌ها به ترتیب (مثل موج) ظاهر میشن و قشنگ‌تره  */
   .before-after-card:nth-child(1) { animation: fadeInUp 0.6s 0.1s ease-out both; }
   .before-after-card:nth-child(2) { animation: fadeInUp 0.6s 0.2s ease-out both; }
   .before-after-card:nth-child(3) { animation: fadeInUp 0.6s 0.3s ease-out both; }
-  .before-after-card:nth-child(4) { animation: fadeInUp 0.6s 0.1s ease-out both; } /* سطر دوم هم شروع سریع */
+  .before-after-card:nth-child(4) { animation: fadeInUp 0.6s 0.1s ease-out both; }  /* سطر دوم همزمان با سطر اول شروع میشه */
   .before-after-card:nth-child(5) { animation: fadeInUp 0.6s 0.2s ease-out both; }
   .before-after-card:nth-child(6) { animation: fadeInUp 0.6s 0.3s ease-out both; }
 }
 
 
-/* ===== نظرات مشتریان ===== */
+/*  نظرات مشتریان  */
 .testimonial-card {
     background: white;
     border-radius: 16px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.06);
     padding: 24px;
     transition: all 0.3s ease;
-    border-top: 3px solid #D4AF37; /* خط طلایی بالای کارت */
+    border-top: 3px solid #D4AF37; /* خط طلایی بالای کارت برای زیبایی */
 }
 
 .testimonial-card:hover {
@@ -382,6 +425,7 @@
     font-size: 0.95rem;
 }
 
+/* مشخصات فردی که نظر داده */
 .client-info {
     display: flex;
     flex-direction: column;
@@ -396,6 +440,7 @@
     color: #777;
     font-size: 0.85rem;
 }
+
 @media (max-width: 768px) {
   .content-right {
     padding-right: 15px !important;
@@ -404,6 +449,7 @@
   }
 }
 
+/* افکت دایره نورانی پشت سکشن‌ها (زیبایی بصری) */
 .section-with-space::before {
   content: '';
   position: absolute;
@@ -416,7 +462,7 @@
 }
 
 
-/* ===== تایمر شخصی ===== */
+/* تایمر شمارش معکوس */
 .timer-box {
   background: white;
   color: #D4AF37;
@@ -433,10 +479,10 @@
   display: block;
   font-size: 0.65rem;
   color: #666;
-  margin-top: 2px;
+  margin-top: 2px;      /* فاصله بین عدد تایمر و کلماتی مثل "روز"، "ساعت" */
 }
 
-/* ===== کارت پیشنهاد ===== */
+/* کارت پکیج‌ها و پیشنهادات ویژه  */
 .offer-card {
   position: relative;
   height: 420px;
@@ -452,12 +498,13 @@
   background-color: #f8f9fa;
 }
 
+/* باکسی که میاد روی عکس و متن تخفیف رو نشون میده */
 .offer-overlay {
   position: absolute;
   bottom: 0;
   right: 0;
   left: 0;
-  background: linear-gradient(to top, rgba(255,255,255,0.95), rgba(255,255,255,0.7));
+  background: linear-gradient(to top, rgba(255,255,255,0.95), rgba(255,255,255,0.7));   /* محو شدن به سمت بالا */
   padding: 16px;
   text-align: right;
   border-radius: 16px 16px 0 0;
@@ -469,6 +516,7 @@
   margin-bottom: 8px;
 }
 
+/* لیبل زرد رنگ درصد تخفیف */
 .discount-tag {
   display: inline-block;
   background-color: #D4AF37;
@@ -488,18 +536,17 @@
 
 .offer-price del {
   color: #999;
-  margin-left: 8px;
+  margin-left: 8px;      /* قیمت خط‌خورده قبلی */
 }
 
-/* ریسپانسیو */
 @media (max-width: 768px) {
   .offer-card {
-    height: 360px;
+    height: 360px;  /* تو موبایل ارتفاع کارت پیشنهاد رو کم کردم */
   }
 }
 
 
-/* ===== کارت بلاگ ===== */
+/*  کارت بلاگ  */
 .blog-card {
     background: white;
     border-radius: 16px;
@@ -508,7 +555,7 @@
     transition: all 0.3s ease;
     height: 100%;
     display: flex;
-    flex-direction: column;
+    flex-direction: column;     /* برای اینکه دکمه "بیشتر بخوانید" همیشه پایین کارت بمونه */
 }
 
 .blog-card:hover {
@@ -525,7 +572,7 @@
 
 .blog-content {
     padding: 20px;
-    flex-grow: 1;
+    flex-grow: 1;   /* محتوا کش بیاد تا فضای خالی رو پر کنه */
     display: flex;
     flex-direction: column;
 }
@@ -542,9 +589,10 @@
     font-size: 0.95rem;
     line-height: 1.6;
     margin-bottom: 15px;
-    flex-grow: 1;
+    flex-grow: 1;   /* باعث میشه دکمه بیفته پایین‌ترین قسمت ممکن */
 }
 
+/* استایل لینک "بیشتر بخوانید" */
 .btn-read {
     color: #D4AF37;
     font-weight: 600;
@@ -558,14 +606,13 @@
     text-decoration: underline;
 }
 
-/* ریسپانسیو */
 @media (max-width: 768px) {
     .blog-img {
         height: 160px;
     }
 }
 
-/*مال تماس و موقعیت*/
+/* اطلاعات تماس و نقشه */
 .contact-info h4 {
     margin-top: 20px;
     color: #333;
@@ -578,17 +625,18 @@
 }
 
 .contact-link:hover {
-    text-decoration: underline;
+    text-decoration: underline;     /* تو هاور خط بیفته زیرش که مشخص بشه لینکه */
 }
 
 .google-map iframe {
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);     /* یه سایه نرم دادم که نقشه از پس‌زمینه جدا بشه */
 }
 
 
-/*مال فوتر هست*/
+/* تنظیمات فوتر (پایین سایت)  */
 .footer-top-line {
     height: 2px;
+    /* اون خط طلایی محوشونده‌ای که بالای فوتر می‌افته تا از محتوای اصلی جداش کنه */
     background: linear-gradient(to right, transparent, #D4AF37, transparent);
 }
 .footer-link {
@@ -599,19 +647,9 @@
     color: #D4AF37;
 }
 
-.social-icon {
-    color: #ddd;
-    text-decoration: none;
-    display: inline-block;
-    margin-bottom: 8px;
-}
-.social-icon:hover {
-    color: #D4AF37;
-}
-
-
-/* ===== ناوبری ===== */
+/* منوی اصلی (Navbar) */
 .nav-link {
+    /* فورس کردم مشکی بمونه که با تم سایت بخونه */
     color: #000000 !important; /* متن لینک‌ها همیشه مشکی */
     font-size: 1.1rem !important;
 }
@@ -620,9 +658,11 @@
     font-size: 1.1rem !important;
 }
 
+/* استایل آیتم فعال تو منو (صفحه‌ای که کاربر الان توشه) */
 .nav-link.active {
     font-weight: bold !important;
     color: #000000 !important; /* صفحهٔ فعال هم مشکی (نه طلایی) */
+    /* خط زیرش کشیدم که مشخص بشه کدوم صفحه‌ایم */
     border-bottom: 2px solid #000000 !important; /* خط زیر مشکی */
 }
 
@@ -630,7 +670,8 @@
     color: #333333 !important; /* روی هاور کمی روشن‌تر */
 }
 
-/* === دکمه‌های هدر با استایل یکسان (طلایی لوکس) === */
+/* === دکمه‌های هدر (رزرو، ورود و...) با استایل یکسان (طلایی لوکس)  */
+/* یه کلاس عمومی ساختم که همه دکمه‌های هدر یه شکل بشن */
 .header-btn {
   display: inline-block;
   padding: 8px 16px !important;
@@ -652,10 +693,11 @@
   color: white !important;
   text-decoration: none !important;
   box-shadow: 0 4px 10px rgba(184, 134, 11, 0.3) !important;
-  transform: translateY(-2px);
+  transform: translateY(-2px);      /* افکت بالا پریدن دکمه */
 }
 
-/* === نمایش نام کاربر با رنگ تیره === */
+/*  نمایش نام کاربر با رنگ تیره  */
+/* باکسی که اسم کاربر بعد از لاگین توش نشون داده میشه */
 .username-display {
   color: #212529 !important; /* مشکی نزدیک به سیاه */
   font-weight: bold;
@@ -668,7 +710,8 @@
 }
 
 
-/* === دکمه خروج: همان استایل، ولی رنگ قرمز === */
+/*  دکمه خروج: همان استایل، ولی رنگ قرمز  */
+/* اورراید کردن رنگ دکمه‌ها برای عملیات‌های خاص */
 .header-btn-danger {
   background-color: #dc3545 !important; /* قرمز بوت‌استرپ */
 }
@@ -680,7 +723,7 @@
 
 
 
-/* === دکمه ثبت نام: سبز === */
+/*  دکمه ثبت نام: سبز  */
 .header-btn-signup {
   background-color: #28a745 !important; /* سبز */
 }
@@ -690,7 +733,7 @@
   box-shadow: 0 4px 10px rgba(40, 167, 69, 0.3) !important;
 }
 
-/* === دکمه ورود: آبی === */
+/*  دکمه ورود: آبی  */
 .header-btn-login {
   background-color: #007bff !important; /* آبی */
 }
@@ -700,18 +743,23 @@
   box-shadow: 0 4px 10px rgba(0, 123, 255, 0.3) !important;
 }
 
-/* === بهبود متن معرفی سالن === */
+/*   متن معرفی سالن  */
+/*  استایل‌های متن (تایپوگرافی)  */
+/* این کلاس برای متن‌های طولانیه که چشم کاربر خسته نشه */
 .intro-text {
     color: #333333 !important;
     font-size: 1.1rem !important; /* کمی بزرگتر از قبل */
+    /* فاصله بین خطوط رو زیاد کردم که توهم نره */
     line-height: 1.8 !important; /* فاصله خطوط بیشتر = خوانایی بهتر */
     font-weight: 500 !important; /* نیمه بولد - نه کاملاً bold */
+     /* فیکس کردن بهم‌ریختگی لبه‌های متن */
     text-align: justify !important; /* برای متن‌های بلند، تراز کامل */
 }
 
 .intro-text strong,
 .intro-text b {
     font-weight: 700 !important; /* کلمات مهم را بولد کن */
+    /* کلمات کلیدی رو طلایی و بولد کردم که هایلایت بشه */
     color: #D4AF37 !important; /* رنگ طلایی برای تأکید */
 }
 
@@ -724,7 +772,7 @@
 }
 
 
-/* === متن توضیحات داخل کارت‌های خدمات === */
+/*  متن توضیحات داخل کارت‌های خدمات  */
 .service-card .card-body p {
     font-size: 1rem !important;
     line-height: 1.7 !important;
@@ -734,30 +782,36 @@
     text-align: center !important;
 }
 
-
-
-/* === استایل لینک‌های شبکه‌های اجتماعی === */
+/*  شبکه‌های اجتماعی  */
 .social-icon-link {
     color: #ddd;
     text-decoration: none;
-    display: inline-block;
-    margin-bottom: 10px;
-    font-size: 1.1rem;
-    transition: color 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    transition: color 0.2s ease, transform 0.3s;
 }
 
+/* موقع هاور هم طلایی میشه هم یه کوچولو زوم میشه */
 .social-icon-link:hover {
-    color: #D4AF37; /* طلایی هنگام هاور */
-    transform: scale(1.1); /* کوچکی بزرگ‌تر شدن */
+    color: #D4AF37;
+    transform: scale(1.1);
 }
 
-.social-icon-link i {
-    margin-left: 8px;
-    vertical-align: middle;
+.social-icons {
+    display: flex;
+    gap: 16px;      /* فاصله بین آیکون‌ها بدون نیاز به margin */
+    align-items: center;
 }
 
+/* تو موبایل آیکون‌ها رو بزرگ‌تر کردم که راحت‌تر بشه با انگشت لمسشون کرد */
+@media (max-width: 767px) {
+    .social-icon-link svg {
+        width: 26px;
+        height: 26px;
+    }
+}
 
-/* === بخش درباره ما === */
+/*  بخش درباره ما  */
 .hero-about {
   margin-top: 2rem;
 }
@@ -770,6 +824,7 @@
   margin-bottom: 1.2rem;
 }
 
+/* یه جداکننده طلایی قشنگ برای زیر تیترها */
 .gold-divider {
   width: 80px;
   height: 4px;
@@ -805,9 +860,7 @@
   }
 }
 
-
-
-/* === کارت‌های تیم === */
+/* کارت‌های معرفی پرسنل / تیم */
 .team-card {
   background: white;
   border-radius: 16px;
@@ -825,6 +878,7 @@
   box-shadow: 0 8px 24px rgba(0,0,0,0.12);
 }
 
+/* عکس پرسنل رو گرد کردم (شبیه آواتار) */
 .team-img {
   border-radius: 50%;
   height: 180px;
@@ -835,7 +889,7 @@
 
 .team-info {
   padding: 20px;
-  flex-grow: 1;
+  flex-grow: 1;     /* باعث میشه دکمه‌ها و فواصل همه کارت‌ها با هم تراز بشن */
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -865,16 +919,17 @@
 
 
 
-/* === اسلایدر فضای سالن === */
-/* === تنظیم موقعیت اسلایدر برای دکمه‌های کنترل === */
+/*  اسلایدر فضای سالن  */
+/*  تنظیم موقعیت اسلایدر برای دکمه‌های کنترل  */
 #salonGallery {
-  position: relative; /* ← مهم: برای اینکه دکمه‌ها نسبت به این بلوک موقعیت گیرند */
+  position: relative; /* پوزیشن نسبی دادم که فلش‌های چپ و راستِ اسلایدر رو بتونیم روش تنظیم کنیم */
   border-radius: 16px;
   overflow: hidden;
   box-shadow: 0 6px 20px rgba(0,0,0,0.1);
-  background-color: #f8f9fa; /* اختیاری - برای ظاهر بهتر */
+  background-color: #f8f9fa; 
 }
 
+/* اینا همون دایره‌های کوچیک پایین اسلایدر هستن */
 .carousel-indicators button {
   background-color: #D4AF37 !important;
   width: 12px !important;
@@ -889,7 +944,7 @@
 }
 
 
-/* === دکمه‌های کنترل اسلایدر — در مرکز سمت چپ و راست عکس === */
+/*  دکمه‌های کنترل اسلایدر — در مرکز سمت چپ و راست عکس  */
 #salonGallery .carousel-control-prev,
 #salonGallery .carousel-control-next {
   position: absolute;
@@ -912,25 +967,30 @@
 
 .carousel-control-prev:hover,
 .carousel-control-next:hover {
-  background: rgba(0,0,0,0.5);
+  background: rgba(0,0,0,0.5);      /* رو هاور یه کم تیره‌تر میشه */
 }
 
+/* آیکون فلش‌ها تو بوت‌استرپ پیش‌فرض مشکیه، با این فیلتر سفیدش کردم */
 .carousel-control-prev-icon,
 .carousel-control-next-icon {
   filter: invert(1);
 }
 
-/* === اصلاح دقیق موقعیت دکمه‌ها === */
+/*  اصلاح دقیق موقعیت دکمه‌ها  */
+/* 
+ * فیکس کردن باگ چسبیدن فلش‌ها به لبه‌های کادر.
+ * از calc استفاده کردم که همیشه یه فاصله منطقی از بغل‌ها داشته باشن.
+ */
 #salonGallery .carousel-control-prev {
-  left: calc(20px + 5%) !important; /* ← اضافه کردن درصد برای تنظیم */
+  left: calc(20px + 5%) !important; /*  اضافه کردن درصد برای تنظیم */
 }
 
 #salonGallery .carousel-control-next {
-  right: calc(20px + 94%) !important; /* ← اضافه کردن درصد برای تنظیم */
+  right: calc(20px + 94%) !important; /*  اضافه کردن درصد برای تنظیم */
 }
 
 
-/* === اصلاح اسلایدر برای نمایش کامل عکس === */
+/*  اصلاح اسلایدر برای نمایش کامل عکس  */
 .carousel-item img {
     object-fit: contain !important;
     object-position: center !important;
@@ -938,10 +998,10 @@
 }
 
 .carousel-item {
-    overflow: visible !important; /* ← اینجا مشکل را حل می‌کند */
+    overflow: visible !important; /* این خط باگ بریده شدن سایه‌ها رو حل کرد */
 }
 
-/* === کارت‌های گواهی‌نامه === */
+/* کارت‌های مدارک و گواهی‌نامه‌ها */
 .certificate-card {
   background: white;
   border-radius: 12px;
@@ -949,7 +1009,7 @@
   overflow: hidden;
   transition: all 0.3s ease;
   display: flex;
-  flex-direction: row;
+  flex-direction: row;      /* تو دسکتاپ عکس و متن روبروی همن */
   height: 160px;
 }
 
@@ -988,27 +1048,34 @@
   line-height: 1.5;
 }
 
-/* ریسپانسیو: در موبایل تصویر بالا باشد */
+/* 
+ * ریسپانسیو: تو موبایل چون عرض کمه، عکس رو فرستادم بالای متن
+ * و آبجکت فیت رو از cover گذاشتم رو contain که عکس گواهینامه کراپ نشه.
+ */
 @media (max-width: 768px) {
   .certificate-card {
     flex-direction: column;
     height: auto;
+    min-height: auto;
   }
 
   .certificate-img {
     width: 100%;
-    height: 180px;
+    height: 250px;
     border-right: none;
     border-bottom: 1px solid #eee;
+    object-fit: contain;   
+    background: #f8f9fa;   /* پس‌زمینه برای فضای خالی */
+    padding: 10px;
   }
 }
 
-/* === دکمه‌های دسته‌بندی بلاگ === */
+/* دکمه‌های دسته‌بندی وبلاگ / فیلترها */
 .btn-outline-gold {
   color: #D4AF37;
   border-color: #D4AF37;
   padding: 8px 16px;  
-  border-radius: 30px;
+  border-radius: 30px;      /* دکمه‌های کپسولی */
   transition: all 0.3s ease;
 }
 
@@ -1021,7 +1088,8 @@
 }
 
 
-/* === فرم جست‌وجو بلاگ === */
+/*  فرم جست‌وجوی وبلاگ (بخش سرچ)  */
+/* وقتی روی اینپوت سرچ کلیک میشه، حاشیه‌اش طلایی بشه (جایگزین آبی دیفالت بوت‌استرپ) */
 .form-control:focus {
   border-color: #D4AF37 !important;
   box-shadow: 0 0 0 0.25rem rgba(212, 175, 55, 0.25) !important;
@@ -1046,7 +1114,11 @@
 
 
 
-/* === استایل پیشنهاد جست‌وجو === */
+/*  استایل پیشنهاد جست‌وجو  */
+/* 
+ * باکسی که زیر سرچ باز میشه و نتایج زنده (Ajex) رو نشون میده.
+ * اسکرول رو فعال کردم که اگه نتایج زیاد بود سایت رو بهم نریزه.
+ */
 #suggestions {
   border: 1px solid #ddd;
   border-top: none;
@@ -1062,7 +1134,7 @@
   border: none;
   border-bottom: 1px solid #eee;
   color: #333;
-  text-align: right; /* برای فارسی */
+  text-align: right;  /* حتما راست‌چین باشه که متن‌های فارسی درست نمایش داده بشن */
 }
 
 #suggestions .list-group-item:hover {
@@ -1070,14 +1142,14 @@
   color: #D4AF37;
 }
 
-/* === فیکس برای راست‌چین === */
+/* فیکس کردن اینپوت سرچ که چشمک‌زن کرسر سمت راست بیفته */
 #search-input {
   text-align: right;
 }
 
 
 
-/* === رنگ طلایی برای لینک‌های مهم === */
+/*  رنگ طلایی برای لینک‌های مهم  */
 .text-gold {
     color: #D4AF37 !important;
     font-weight: 600;
@@ -1089,7 +1161,7 @@
 }
 
 
-/* === نظرات مشتریان === */
+/* باکس نظرات و امتیازات مشتریان */
 .hero-title {
     font-size: 2.2rem;
     color: #212529;
@@ -1098,6 +1170,7 @@
     margin-bottom: 0.5rem;
 }
 
+/* کادری که میانگین امتیازات (مثلا 4.8 از 5) رو اون بالا نشون میده */
 .rating-box {
     background: #f8f9fa;
     padding: 15px 20px;
@@ -1124,7 +1197,7 @@
     color: #555;
 }
 
-/* === کارت نظرات === */
+/*  کارت نظرات  */
 .testimonial-card {
     background: white;
     border-radius: 16px;
@@ -1140,14 +1213,16 @@
     box-shadow: 0 8px 20px rgba(0,0,0,0.1);
 }
 
+/* آیکون ستاره‌ها */
 .stars {
     color: #D4AF37;
     font-size: 1.2rem;
 }
 
+/* محتوای متنی نظرات */
 .testimonial-content {
     padding: 20px;
-    flex-grow: 1;
+    flex-grow: 1;   /* فلکس‌گرو که باکسی اسم شخص رو بفرسته بچسبه به کف کارت */
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -1161,6 +1236,7 @@
     flex-grow: 1;
 }
 
+/* بخش اطلاعات کسی که نظر داده (اسم و تاریخ/موقعیت) */
 .client-info {
     display: flex;
     flex-direction: column;
@@ -1178,16 +1254,14 @@
 }
 
 
-/* === ستاره‌های تعاملی === */
+/*  ستاره‌های تعاملی  */
 .star-selectable:hover {
-    transform: scale(1.1);
+    transform: scale(1.1);      /* یه پاپِ کوچیک موقع هاور که کاربر بفهمه کلیک‌پذیره */
     transition: transform 0.2s;
 }
 
 
-
-
-/* === صفحه خدمات === */
+/*  صفحه خدمات  */
 .hero-title {
     font-size: 2.2rem;
     color: #212529;
@@ -1202,7 +1276,7 @@
     transition: all 0.3s ease;
     height: 100%;
     display: flex;
-    flex-direction: column;
+    flex-direction: column;     /* کارت‌ها رو فلکس کردیم تا دکمه‌ها بیفتن ته کارت */
 }
 
 .service-card:hover {
@@ -1213,14 +1287,14 @@
 .service-img {
     width: 100%;
     height: 200px;
-    object-fit: contain;
+    object-fit: contain;         /* عکس‌ها کراپ نشن */
     background-color: #f8f9fa;
     border-radius: 12px;
 }
 
 .service-content {
     padding: 20px;
-    flex-grow: 1;
+    flex-grow: 1;       /* این باعث میشه بخش محتوا کش بیاد و قد کارت‌ها یکی بشه */
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -1240,11 +1314,12 @@
     flex-grow: 1;
 }
 
+/* دکمه بیشتر بخوانید تو کارت‌ها */
 .btn-read {
     color: #D4AF37;
     font-weight: 600;
     text-decoration: none;
-    align-self: flex-start;
+    align-self: flex-start;     /* فقط به اندازه متنش جا بگیره، نه کل عرض کارت رو */
     transition: color 0.2s;
 }
 
@@ -1254,7 +1329,7 @@
 }
 
 
-/* === برچسب سرویس در نظرات === */
+/*  برچسب سرویس در نظرات  */
 .service-info .badge {
     font-weight: 600;
     padding: 6px 12px;
@@ -1262,10 +1337,10 @@
 }
 
 
-/* ===== اسکرول افقی دسته‌ها ===== */
+/*  اسکرول افقی دسته‌ها (مخصوص موبایل)  */
 .d-flex.gap-2.overflow-x-auto.pb-3 {
-    scroll-snap-type: x mandatory;
-    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x mandatory;      /* اسکرول نرم و مگنتی (می‌چسبه به کارت بعدی) */
+    -webkit-overflow-scrolling: touch;      /* واسه روون شدن اسکرول تو iOS */
 }
 
 /* برای هر بخش دسته، اسکرول افقی فعال کن */
@@ -1278,12 +1353,13 @@
 .category-scroll {
     margin-top: 20px;
     overflow-x: auto;
-    white-space: nowrap;
+    white-space: nowrap;        /* جلوگیری از رفتن تگ‌ها به خط بعدی */
     scroll-behavior: smooth;
     padding-bottom: 8px;
     padding-top: 6px; 
 }
 
+/* کاستوم کردن اسکرول‌بار که دیفالت مرورگر خیلی زشته */
 .category-scroll::-webkit-scrollbar {
     height: 6px;
 }
@@ -1333,22 +1409,23 @@
     flex: 1;
 }
 
+/* آیکون باز و بسته شدن لیست خدمات (آکاردئون) */
 .toggle-services i {
     transition: transform 0.3s;
 }
 
 .toggle-services i.fa-minus {
-    transform: rotate(45deg);
+    transform: rotate(45deg);       /* تبدیل علامت + به x موقع باز شدن */
 }
 
-/* --- تغییر فونت منوی افقی دسته‌بندی‌ها --- */
+/*  تغییر فونت منوی افقی دسته‌بندی‌ها  */
 .category-scroll .btn {
-    font-size: 1.2rem; /* اندازه فونت رو بزرگ‌تر کن (مثلاً 1.2rem یا 18px) */
+    font-size: 1.2rem; /* اندازه فونت رو بزرگ‌تر کن */
     padding: 0.75rem 1.5rem; /* پدینگ رو هم کمی بزرگ‌تر کن تا خواناتر بشه */
     font-weight: 600; /* فونت رو ضخیم‌تر کن */
 }
 
-/* اگر می‌خوای در حالت ریسپانسیو هم کار کنه */
+/* ریسپانسیو کردن منوها */
 @media (max-width: 768px) {
     .category-scroll .btn {
         font-size: 1rem; /* در موبایل کمی کوچک‌تر */
@@ -1357,8 +1434,9 @@
 }
 
 
-/* --- استایل تایمر پکیج‌ها --- */
+/*  استایل تایمر پکیج‌ها  */
 .offer-timer .timer-display {
+     /* فونت انگلیسی دادیم که عددها موقع تغییر ثانیه پرش نداشته باشن و عرضشون ثابت بمونه */
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     font-weight: bold;
     color: #D4AF37; /* رنگ طلایی */
@@ -1384,9 +1462,7 @@
 }
 
 
-
-/* فایل style.css */
-
+/*  نوار پیشرفت (Progress Bar) مراحل رزرو  */
 /* نوار پیشرفت سفارشی */
 .custom-progress-bar {
     display: flex;
@@ -1416,11 +1492,12 @@
     z-index: 1;
 }
 
+/* استایل مرحله‌ای که کاربر الان توشه */
 .step.active {
     background-color: #007bff;
     color: white;
     font-weight: bold;
-    transform: scale(1.05);
+    transform: scale(1.05);     /* یکم بزرگ‌تر میشه که مشخص باشه */
     z-index: 2;
 }
 
@@ -1441,7 +1518,7 @@
     padding: 0 5px;
 }
 
-/* اضافه کردن خطوط جداکننده (اختیاری) */
+/* خط‌های طوسی بین مراحل (جداکننده) */
 .step:not(:last-child)::after {
     content: '';
     position: absolute;
@@ -1455,6 +1532,7 @@
     z-index: 0;
 }
 
+/* باکس‌های انتخاب ساعت (تایم‌اسلات‌ها) */
 .selectable-time {
     padding: 10px;
     border: 1px solid #ccc;
@@ -1473,7 +1551,7 @@
     font-weight: bold;
 }
 
-
+/* فیکس کردن باگ بوت‌استرپ تو قرارگیری دکمه بستن آلرت‌ها تو حالت RTL */
 .alert .btn-close {
     float: left !important;
     margin-left: 10px;
@@ -1487,7 +1565,7 @@
 .category-btn.active {
     background-color: #D4AF37;
     color: #fff;
-    border-color: #D4AF37;   /* هم‌رنگ خودش */
+    border-color: #D4AF37;   
     box-shadow: 0 6px 18px rgba(212, 175, 55, 0.35);
     transform: translateY(-2px);
 }
@@ -1502,7 +1580,7 @@
   color: inherit;
 }
 
-
+/*  تنظیمات منوهای دراپ‌داون  */
 .dropdown-menu {
     border-radius: 12px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.15);
@@ -1512,9 +1590,10 @@
     padding: 10px 16px;
 }
 .dropdown-item:hover {
-    background-color: #f8f5f0;
+    background-color: #f8f5f0;      /* یه کرم خیلی ملایم جای آبیِ دیفالت */
 }
 
+/* دکمه ورود به پنل ادمین تو هدر */
 .header-btn.header-btn-admin {
     background-color: #0d6efd !important;
     color: #fff !important;
@@ -1526,6 +1605,7 @@
     color: #fff !important;
 }
 
+/*  بخش تقویم نوبت‌دهی  */
 .calendar-box {
     background: #ffffff;
     padding: 24px;
@@ -1555,6 +1635,7 @@
     text-decoration: underline;
 }
 
+/* چیدمان روزهای هفته (شنبه یکشنبه...) */
 .weekdays {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
@@ -1566,12 +1647,14 @@
     text-align: center;
 }
 
+/* کانتینر اصلی روزها */
 .days {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
     gap: 16px;
 }
 
+/* سلول هر روز */
 .day {
     height: 44px;
     display: flex;
@@ -1591,6 +1674,7 @@
     color: #0d6efd;
 }
 
+/* روز انتخاب شده */
 .day.selected {
     background: #0b5ed7 !important;
     color: #fff !important;;
@@ -1604,14 +1688,13 @@
     cursor: default;
 }
 
-/* ⛔ روزهای پر */
+/*  روزهای پر (ظرفیت تکمیل) */
 .day.taken {
     background: #ffcccc;
     color: #a00;
     cursor: not-allowed;
 }
-
-/* ⛔ روزهای گذشته */
+/* روزهای گذشته (سوخته) */
 .day.past {
     background: #444;
     color: #aaa;
@@ -1619,7 +1702,7 @@
 }
 
 
-/* ✅ روزهای آزاد */
+/*  روزهای آزاد (قابل رزرو) */
 .day.selectable-day {
     background: #e7f1ff;
     color: #0d6efd;
@@ -1632,9 +1715,10 @@
 }
 
 .card-header {
-    border-bottom: 0;      /* مرز آبی رو تمیز می‌کنه */
+    border-bottom: 0;       /* مرز آبی رو تمیز می‌کنه که کادر یک‌دست بشه */
 }
 
+/* راهنمای رنگ‌های تقویم (لجند پایین تقویم) */
 .legend {
     display: inline-block;
     width: 14px;
@@ -1672,13 +1756,15 @@
     color: #333;
     white-space: nowrap;
 }
+
+/* اسم کاربر رو تو موبایل قایم می‌کنیم که جا کم نیاد */
 @media (max-width: 768px) {
     .header-username {
         display: none;
     }
 }
 
-/*css حرفه ای برای ستاره ها */
+/* استایل حرفه‌ای برای ستاره‌های امتیازدهی */
 .star {
   cursor: pointer;
   font-size: 1.8rem;
@@ -1692,7 +1778,7 @@
 
 .star.active {
   color: #f5c518;  /* طلایی واقعی */
-  text-shadow: 0 0 3px rgba(245,197,24,0.7);
+  text-shadow: 0 0 3px rgba(245,197,24,0.7);        /* یه گلو (Glow) ریز پشت ستاره */
 }
 
 #ratingValue {
@@ -1700,7 +1786,8 @@
   color: #777;
   margin-top: 6px;
 }
-/* پاپ‌آپ خروج از فرآیند رزرو - متناسب با طراحی سایت */
+
+/* پاپ‌آپ خروج از فرآیند رزرو */
 #exit-confirmation-modal {
     display: none;
     position: fixed;
@@ -1709,10 +1796,10 @@
     width: 100%;
     height: 100%;
     background: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(3px);
+    backdrop-filter: blur(3px);     /* تار کردن بک‌گراند واسه تمرکز رو مدال */
     justify-content: center;
     align-items: center;
-    z-index: 99999;
+    z-index: 99999;     /* بالاترین لایه باشه حتما */
     animation: fadeIn 0.3s ease-out;
 }
 
@@ -1726,10 +1813,10 @@
     position: relative;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
     border: 2px solid #D4AF37;
-    animation: slideIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    animation: slideIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);    /* انیمیشن فنری موقع باز شدن مدال */
 }
 
-/* آیکون هشدار */
+/* آیکون هشدار خروج */
 .modal-warning-icon {
     font-size: 48px;
     color: #e74c3c;
@@ -1762,7 +1849,7 @@
     flex-wrap: wrap;
 }
 
-/* دکمه "ادامه بده" (سبز - اصلی) */
+/* دکمه "ادامه بده" (گرادیان سبز واسه نگه داشتن کاربر) */
 .btn-stay {
     background: linear-gradient(135deg, #28a745, #20c997);
     border: none;
@@ -1784,7 +1871,7 @@
     background: linear-gradient(135deg, #20c997, #28a745);
 }
 
-/* دکمه "بله، خارج شوم" (قرمز - خطر) */
+/* دکمه "بله، خارج شوم" (گرادیان قرمز) */
 .btn-exit {
     background: linear-gradient(135deg, #dc3545, #e83e8c);
     border: none;
@@ -1806,7 +1893,7 @@
     background: linear-gradient(135deg, #e83e8c, #dc3545);
 }
 
-/* دکمه بستن */
+/* دکمه ضربدر بستن مدال */
 #close-exit-modal {
     position: absolute;
     top: 15px;
@@ -1831,7 +1918,7 @@
     color: #dc3545;
 }
 
-/* انیمیشن‌ها */
+/* کی‌فریم‌های انیمیشن پاپ‌آپ */
 @keyframes fadeIn {
     from { opacity: 0; }
     to { opacity: 1; }
@@ -1848,7 +1935,7 @@
     }
 }
 
-/* برای موبایل */
+/* استایل مدال خروج برای موبایل (جمع‌وجورترش کردیم) */
 @media (max-width: 576px) {
     #exit-confirmation-modal .modal-content {
         width: 95%;
@@ -1856,7 +1943,7 @@
     }
     
     .modal-buttons {
-        flex-direction: column;
+        flex-direction: column;      /* دکمه‌ها میرن زیر هم */
         gap: 10px;
     }
     
@@ -1865,7 +1952,8 @@
         min-width: auto;
     }
 }
-/* استایل برای ستون شماره تماس */
+
+/*  استایل برای ستون شماره تماس (جلوگیری از بهم ریختن LTR/RTL)  */
 .phone-column {
     width: 200px !important; /* عرض ثابت منطقی */
     min-width: 180px; /* حداقل عرض */
@@ -1879,14 +1967,15 @@
 .phone-item {
     display: block;
     margin-bottom: 5px;
-    text-align: center; /* تغییر اصلی: center به جای right */
+    text-align: center;         /* تراز وسط که ظاهرش رو مرتب کنه */
+    /* واسه اینکه کد شهر و شماره جابجا نشون داده نشن */
     direction: ltr; /* برای نمایش صحیح اعداد */
 }
 
 .phone-item a {
     display: inline-flex;
     align-items: center;
-    justify-content: center; /* اضافه کردن این خط */
+    justify-content: center;
     gap: 5px;
     padding: 2px 5px;
     border-radius: 4px;
@@ -1896,7 +1985,7 @@
 }
 
 .phone-number {
-    font-family: 'Courier New', monospace;
+    font-family: 'Courier New', monospace;      /* فونت مونو که اعداد دقیق زیر هم تراز بشن */
     font-size: 0.9em;
     direction: ltr;
     display: inline-block;
@@ -1910,6 +1999,8 @@
     cursor: not-allowed !important;
     position: relative;
 }
+
+/* غیرفعال کردن افکت‌های اضافه روز تعطیل */
 .day.holiday::after {
     
     display: none !important;
@@ -1926,7 +2017,7 @@
     font-size: 0.8rem !important;
 }
 
-/* رفع مشکل دکمه‌های اقدامات در صفحه تعطیلات */
+/* تو صفحه تعطیلات دکمه‌های عملیات می‌شکست می‌رفت خط بعد، این فیکسش می‌کنه */
 .table td.text-center.d-flex {
     white-space: nowrap !important;
     min-width: 150px !important; /* فضای کافی برای دکمه‌ها */
@@ -1950,7 +2041,8 @@
     margin: 0 !important;
 }
 
-/* ========== استایل‌های عمومی ========== */
+/*  استایل‌های عمومی  */
+/* یه بک‌گراند تمیز و سایه نرم برای باکِ جدول */
 .table-responsive {
     border-radius: 10px;
     overflow: hidden;
@@ -1961,9 +2053,9 @@
     margin-bottom: 0;
 }
 
-/* ✅ این را جایگزین کنید */
+/* هدر تیره که با تم سایت همخونی داشته باشه */
 .table th {
-    background-color: #343a40 !important; /* مشکی */
+    background-color: #343a40 !important; /* هدر دارک */
     color: white !important;
     font-weight: 600;
     border: none;
@@ -1978,14 +2070,14 @@
     border-bottom: 1px solid #eee;
 }
 
-/* ✅ این را جایگزین کنید */
+/* افکت هاور ردیف‌ها که کاربر بدونه رو کدوم خطه */
 .table tbody tr:hover {
     background-color: #f8f9fa !important;
     transition: background-color 0.2s;
 }
 
-/* ========== استایل‌های صفحه تعطیلات ========== */
-/* ستون عنوان - کاهش فضای خالی */
+/*  استایل‌های صفحه تعطیلات  */
+/* کنترل عرض ستون عنوان که الکی کش نیاد */
 td:has(> .holiday-title) {
     min-width: 180px !important;
     max-width: 250px !important;
@@ -2014,11 +2106,9 @@ td .invalid-date {
 }
 
 
-/* ============================= */
 /* پروفایل - استایل دکمه‌ها */
-/* ============================= */
 
-/* دکمه‌های ستون سمت راست */
+/* یه افکت بالا پریدن ریز (translateY) دادیم که دکمه‌ها مرده نباشن */
 .profile-side-btn {
     font-size: 15px;
     padding: 10px 0;
@@ -2037,7 +2127,7 @@ td .invalid-date {
 .profile-filter-group .btn {
     padding: 8px 16px;
     font-size: 14px;
-    border-radius: 20px !important;
+    border-radius: 20px !important;     /* حالت پیل (کپسولی) */
     transition: 0.2s;
 }
 
@@ -2055,7 +2145,7 @@ td .invalid-date {
     font-size: 14px;
     padding: 6px 14px;
     border-radius: 8px;
-    min-width: 110px;
+    min-width: 110px;       /* هم‌اندازه کردن دکمه‌ها */
 }
 
 .appointment-actions .btn:hover {
@@ -2063,11 +2153,11 @@ td .invalid-date {
     box-shadow: 0 5px 12px rgba(0,0,0,0.15);
 }
 
-/* ===== بهینه‌سازی متن برای موبایل ===== */
+/*  خوانایی بهتر متن‌ها تو موبایل  */
 @media (max-width: 768px) {
     body {
         font-size: 15px;
-        line-height: 1.8;
+        line-height: 1.8;        /* فاصله خطوط رو زیاد کردیم چشم خسته نشه */
     }
 
     p {
@@ -2080,8 +2170,9 @@ td .invalid-date {
 }
 
 
-/* ===== دکمه‌های مناسب لمس در موبایل ===== */
+/*  دکمه‌های مناسب لمس در موبایل  */
 @media (max-width: 768px) {
+    /* اپل میگه حداقل 44 پیکسل ارتفاع بدین که کاربر اشتباهی کلیک نکنه */
     .btn,
     .btn-sm,
     .btn-read,
@@ -2092,7 +2183,7 @@ td .invalid-date {
     }
 }
 
-/* ===== کارت‌ها در موبایل ===== */
+/*  کارت‌ها در موبایل  */
 @media (max-width: 768px) {
     .service-card,
     .blog-card,
@@ -2101,13 +2192,14 @@ td .invalid-date {
         margin-bottom: 16px;
     }
 
+        /* عکس‌ها رو تو موبایل یه کم جمع‌وجورتر کردیم */
     .service-img,
     .blog-img {
         height: 160px;
     }
 }
 
-/* ===== اسکرول افقی نرم در موبایل ===== */
+/*  اسکرول افقی نرم در موبایل  */
 @media (max-width: 768px) {
     .before-after-cards,
     .category-scroll {
@@ -2116,24 +2208,26 @@ td .invalid-date {
 
     .before-after-card,
     .category-scroll .btn {
-        scroll-snap-align: center;
+        scroll-snap-align: center;       /* دقیق روی وسط آیتم قفل میشه */
     }
 }
 
-/* ===== بهینه‌سازی هدر موبایل ===== */
+/*  بهینه‌سازی هدر موبایل  */
 @media (max-width: 768px) {
     .navbar {
         padding: 10px 12px;
     }
 
+         /* دکمه‌های هدر کوچیکتر بشن که جا بشه */
     .header-btn {
         font-size: 14px !important;
         padding: 8px 12px !important;
     }
 }
 
-/* ===== فرم‌ها برای موبایل ===== */
+/*  فیکس فرم‌ها برای موبایل  */
 @media (max-width: 768px) {
+    /* زوم شدن خودکار آیفون رو با ارتفاع مناسب و فونت 15+ می‌گیریم */
     input,
     select,
     textarea {
@@ -2155,9 +2249,10 @@ td .invalid-date {
     }
 }
 
-
+/* شکستن گریدها و فیکس‌های لایوت در موبایل */
 @media (max-width: 768px) {
 
+     /* دکمه‌های کارت‌ها فول‌وایز بشن */
   .appointment-actions {
     width: 100%;
   }
@@ -2167,13 +2262,14 @@ td .invalid-date {
   }
 
   .profile-filter-group .btn {
-    flex: 1 1 45%;
+    flex: 1 1 45%;      /* دو تا دو تا کنار هم بشینن */
   }
 
   .blog-card {
     margin-bottom: 1rem;
   }
 
+  /* اسکرول دسته‌بندی‌ها رو خطی نگه دار */
 .category-scroll {
     overflow-x: auto;
     flex-wrap: nowrap;
@@ -2202,6 +2298,7 @@ td .invalid-date {
     font-size: 0.8rem;
   }
 
+    /* ساعت‌ها رو تو موبایل ۳ ستونه کردیم جای ۴ ستون */
   .times-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -2234,12 +2331,63 @@ td .invalid-date {
     font-size: 0.9rem;
   }
 
+  /*  فیکس اساسی ساختار کارت نوبت در موبایل  */
+  /* قبلا عکس و متن کنار هم بودن تو موبایل جا نمیشد، الان عکس میفته بالا متن پایین */
+  .card-body .list-group-item .d-flex.flex-column.flex-md-row {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  .card-body .list-group-item .flex-shrink-0 {
+    width: 100% !important;
+    margin-bottom: 12px !important;
+    margin-right: 0 !important;
+  }
+
+  .card-body .list-group-item .flex-shrink-0 img {
+    width: 100% !important;
+    height: 160px !important;
+    object-fit: cover;
+    border-radius: 8px;
+  }
+
+  .card-body .list-group-item .flex-grow-1 {
+    width: 100% !important;
+    margin-bottom: 12px !important;
+  }
+
+  /* چیدمان دکمه‌های اکشن به صورت شبکه‌ای ۲ تایی */
+  .appointment-actions {
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    width: 100% !important;
+    margin-left: 0 !important;
+    margin-top: 0 !important;
+  }
+
+  .appointment-actions > * {
+    flex: 1 1 calc(50% - 4px) !important;
+    min-width: 0 !important;
+  }
+
+  .appointment-actions .btn {
+    width: 100% !important;
+    margin: 0 !important;
+  }
+
+  .appointment-actions form {
+    margin: 0 !important;
+  }
+
+  .appointment-actions form .btn {
+    width: 100% !important;
+  }
+
 }
 
 
-/* ===========================
-REVIEWS PAGE MOBILE FIX
-=========================== */
+/* ریسایزهای صفحه نظرات برای موبایل */
 @media (max-width: 768px) {
 
     .hero-title {
@@ -2263,7 +2411,7 @@ REVIEWS PAGE MOBILE FIX
         font-size: 0.9rem;
     }
 
-    /* فرم ثبت نظر */
+    /* پدینگ فرم ثبت نظر رو کم کردم فضای کمتری اشغال کنه */
     form.bg-white {
         padding: 15px !important;
     }
@@ -2272,7 +2420,7 @@ REVIEWS PAGE MOBILE FIX
         width: 100%;
     }
 
-    /* ستاره‌ها کوچکتر */
+   /* ستاره‌ها یکم جمع‌وجورتر */
     .star-selectable {
         font-size: 1.2rem !important;
     }
@@ -2282,16 +2430,16 @@ REVIEWS PAGE MOBILE FIX
         font-size: 0.95rem;
     }
 
+    /* دکمه کال تو اکشن باید تو چشم باشه */
     .btn-gold {
-        padding: 8px 14px;
-        font-size: 0.85rem;
+        padding: 12px 22px !important; 
+        font-size: 1.25rem !important;
+    
     }
 }
 
 
-/* ===========================
-SERVICES PAGE MOBILE FIX
-=========================== */
+/* بهینه‌سازی‌های صفحه خدمات در موبایل */
 @media (max-width: 768px) {
 
     /* اسکرول دسته‌بندی‌ها بهتر */
@@ -2357,7 +2505,7 @@ SERVICES PAGE MOBILE FIX
     }
 }
 
-
+/* استایل پیجینیشن (صفحه‌بندی) تم طلایی سایت */
 /*صفحه بندی نظرات مشتریان*/
 .pagination .page-link {
     color: #c9a227; /* طلایی */
@@ -2377,7 +2525,7 @@ SERVICES PAGE MOBILE FIX
     color: #fff;
 }
 
-/* ========== فیلتر بازه زمانی (از تاریخ تا تاریخ) ========== */
+/*  فیلتر بازه زمانی (از تاریخ تا تاریخ)  */
 .date-range-filter {
     display: flex;
     flex-direction: column;
@@ -2385,6 +2533,7 @@ SERVICES PAGE MOBILE FIX
     width: 100%;
 }
 
+/* دایرکشن اینپوت‌های تاریخ هم LTR گذاشتم که تقویم شمسی به هم نریزه */
 .date-range-filter .date-input {
     width: 100%;
     padding: 8px 12px;
@@ -2395,13 +2544,16 @@ SERVICES PAGE MOBILE FIX
     transition: border-color 0.3s;
 }
 
+/* فوکوس طلایی روی اینپوت */
 .date-range-filter .date-input:focus {
     border-color: #D4AF37;
     box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.2);
     outline: none;
 }
 
+/* کلمه "تا" بین دو فیلد تاریخ */
 .date-range-filter .separator {
+    /* تو دسکتاپ مخفیه، پایین‌تر هندلش کردم */
     display: none; /* در دسکتاپ مخفی */
     text-align: center;
     font-weight: 600;
@@ -2410,7 +2562,7 @@ SERVICES PAGE MOBILE FIX
     margin: 4px 0;
 }
 
-/* ریسپانسیو: نمایش "تا" در موبایل */
+/* موبایل: اینپوت‌ها زیر هم میفتن پس "تا" رو نمایش میدیم */
 @media (max-width: 768px) {
     .date-range-filter {
         flex-direction: column;
@@ -2426,7 +2578,7 @@ SERVICES PAGE MOBILE FIX
     }
 }
 
-/* نسخه دسکتاپ: نمایش در یک خط */
+/* دسکتاپ: اینپوت‌ها تو یه خط کنار هم باشن */
 @media (min-width: 769px) {
     .date-range-filter {
         flex-direction: row;
@@ -2453,19 +2605,31 @@ SERVICES PAGE MOBILE FIX
     }
 }
 
+/* سرریز جدول‌ها اسکرول بخوره که قالب بیرون نزنه */
 .table-responsive {
     overflow-x: auto;
 }
 
-/* ✅ کلاس سفارشی برای دکمه‌های کوچک‌تر اما خوانا */
+/*  کلاس سفارشی برای دکمه‌های کوچک‌تر اما خوانا (همراه با تراز وسط آیکون و متن) */
 .btn-xs {
-    padding: 0.3rem 0.6rem !important;
-    font-size: 0.85rem !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 5px !important; /* فاصله بین آیکون و متن */
+    padding: 0.3rem 0.6rem !important; /* اندازه پدینگ قبلی خودتان */
+    font-size: 0.85rem !important; /* سایز فونت قبلی خودتان */
     line-height: 1.2 !important;
-    min-width: 80px !important;
+    white-space: nowrap !important; /* جلوگیری از دو خط شدن */
+    min-width: 80px !important; /* حداقل عرض قبلی خودتان */
 }
 
-/* ✅ استایل عکس خدمات در لیست */
+/* حذف حاشیه اضافی آیکون‌ها چون از gap استفاده کردیم */
+.btn-xs i {
+    margin: 0 !important;
+}
+
+
+/*  استایل عکس خدمات در لیست */
 .service-image-wrapper {
     width: 60px;
     height: 60px;
@@ -2481,6 +2645,7 @@ SERVICES PAGE MOBILE FIX
     background: #f8f9fa;
 }
 
+/* جای خالی عکس (پلیس‌هولدر) وقتی عکسی ثبت نشده */
 .service-image-placeholder {
     width: 100%;
     height: 100%;
@@ -2493,8 +2658,9 @@ SERVICES PAGE MOBILE FIX
     color: #6c757d;
 }
 
+/* جلوگیری از سرریز شدن اسم‌های طولانی خدمات */
 .service-info {
-    min-width: 0; /* برای جلوگیری از overflow */
+    min-width: 0;
 }
 
 .service-info strong {
@@ -2503,14 +2669,15 @@ SERVICES PAGE MOBILE FIX
 }
 
 
-/* استایل برای اسکرول افقی خدمات */
+/* اسکرول افقی با دکمه برای خدمات پرطرفدار */
 .popular-services-wrapper {
     position: relative;
     max-width: 100%;
 }
 
+/* جایگزین کردن اسکرول‌بار زشت ویندوز با یه اسکرول‌بار اختصاصی باریک و طلایی */
 .services-scroll-container {
-    scrollbar-width: thin;
+    scrollbar-width: thin;      /* فایرفاکس */
     scrollbar-color: #D4AF37 #f0f0f0;
 }
 
@@ -2532,51 +2699,42 @@ SERVICES PAGE MOBILE FIX
     background: #b8960f;
 }
 
+/* دکمه‌های فلش چپ و راست روی اسکرولدر */
 .scroll-btn {
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
-    width: 40px;
-    height: 40px;
+    width: 48px;
+    height: 48px;
     border-radius: 50%;
-    background: white;
-    border: 1px solid #D4AF37;
-    color: #D4AF37;
-    font-size: 18px;
+    background: #C9A227;
+    border: none;
+    color: #fff;
     cursor: pointer;
     z-index: 10;
     display: flex;
     align-items: center;
     justify-content: center;
+    padding: 0;
     transition: all 0.3s;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 14px rgba(150, 110, 0, 0.5);
 }
 
 .scroll-btn:hover {
-    background: #D4AF37;
-    color: white;
-    transform: translateY(-50%) scale(1.1);
+    background: #a07c10;
+    transform: translateY(-50%) scale(1.1);     /* هم رنگ عوض میشه هم یه کم بزرگ میشه */
 }
 
-.scroll-left {
-    left: -20px;
-}
+/* انداختن دکمه‌ها بیرون کادر اصلی */
+.scroll-left  { left:  -24px; }
+.scroll-right { right: -24px; }
 
-.scroll-right {
-    right: -20px;
-}
-
-/* نمایش دکمه‌ها فقط در دسکتاپ */
+/* تو موبایل چون طرف می‌تونه سوایپ کنه، این دکمه‌ها رو مخفی می‌کنیم */
 @media (min-width: 768px) {
-    .scroll-btn {
-        display: flex !important;
-    }
+    .scroll-btn { display: flex !important; }
 }
-
 @media (max-width: 767px) {
-    .scroll-btn {
-        display: none !important;
-    }
+    .scroll-btn { display: none !important; }
 }
 
 .service-card {
@@ -2590,4 +2748,1821 @@ SERVICES PAGE MOBILE FIX
 .service-card:hover {
     transform: translateY(-5px);
     box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+}
+
+/* آیکون باز و بسته کردن زیرشاخه‌ها (آکاردئون) */
+.toggle-services {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+}
+
+.toggle-services svg {
+    display: block;
+}
+
+
+/* بک‌گراند سفید کردن سلکت‌باکس‌ها تو تم ادمین */
+.content .form-select {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+}
+
+.content .form-select option {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+}
+
+/* تغییر رنگ آیکون همبرگری منو به مشکی که رو پس‌زمینه روشن دیده بشه */
+.navbar-toggler {
+  border-color: #333 !important;
+}
+.navbar-toggler-icon {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(0,0,0,0.85)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") !important;
+}
+
+/* فیکس اساسی نوبار بوت‌استرپ در حالت موبایل
+بوت‌استرپ کلا ترتیب المان‌ها رو به هم می‌ریخت، با Flex Order درستش کردیم*/
+@media (max-width: 991.98px) {
+
+  /* نوبار به هیچ وجه تو موبایل هاید نشه */
+  .navbar {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+
+  .navbar-toggler {
+    display: block !important;
+    visibility: visible !important;
+  }
+
+  /*  چیدمان فلکس هدر  */
+  /* باکسی که همه چیو نگه می‌داره فلکس کردیم */
+  .navbar .container-fluid {
+    display: flex !important;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  /* لوگو سمت راست باشه*/
+  .navbar-brand {
+    order: 1;
+    flex-shrink: 0;
+  }
+
+  /* دکمه همبرگری بلافاصله بچسبه بغل لوگو*/
+  .navbar-toggler {
+    order: 2;
+    flex-shrink: 0;
+    margin-left: 8px;
+  }
+
+  /*دکمه‌های اکشن (ورود/پروفایل) برن سمت چپ هدر*/
+  .header-actions {
+    order: 3;
+    margin-left: auto !important;        /* هل میده سمت چپ (تو rtl) */
+    flex-direction: row !important;
+    gap: 6px !important;
+    flex-wrap: nowrap !important;
+    margin-top: 0 !important;
+  }
+
+  .header-actions * {
+    white-space: nowrap;
+  }
+
+  /* منوی دراپ‌داون بیفته زیر همه اینا*/
+  .navbar-collapse {
+    order: 4;
+    width: 100%;
+    flex-basis: 100%;
+    display: none;           /* پیش‌فرض بسته‌س */
+  }
+
+  .navbar-collapse.show {
+    display: block;      /* با کلیک رو همبرگری باز میشه */
+  }
+
+/* جمع و جور کردن دکمه‌های هدر تو موبایل که بیرون نزنن */
+
+.header-btn {
+    font-size: 12px !important;
+    padding: 3px 6px !important;
+    width: auto !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    line-height: 1 !important;
+}
+
+
+  #notification-bell {
+    font-size: 12px !important;
+    padding: 4px 6px !important;
+  }
+
+  .header-avatar {
+    width: 28px !important;
+    height: 28px !important;
+  }
+
+  /* نام کاربری رو مخفی کردیم فقط آواتار بمونه چون جا نمیشد */
+  .header-username {
+    display: none !important;
+  }
+}
+
+/* کاستوم کردن آیکون پلاس/ماینوس برای لیست خدمات */
+.toggle-services {
+    color: #0d6efd !important;
+    line-height: 1;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+/* زخیم کردن خطوط svg که بولدتر دیده بشن */
+.toggle-services svg {
+    stroke: #0d6efd !important;
+    fill: none !important;
+    stroke-width: 2.5 !important;
+    width: 18px !important;
+    height: 18px !important;
+    display: block !important;
+    overflow: visible !important;
+}
+
+.toggle-services svg line,
+.toggle-services svg path,
+.toggle-services svg polyline {
+    stroke: #0d6efd !important;
+    stroke-width: 2.5 !important;
+}
+
+/* سوئیچ کردن بین آیکون مثبت و منفی با خوندن اتریبیوت data-open */
+.toggle-services .icon-minus {
+    display: none !important;
+}
+
+.toggle-services[data-open="true"] .icon-plus {
+    display: none !important;
+}
+
+.toggle-services[data-open="true"] .icon-minus {
+    display: block !important;
+}
+
+/* تو تبلت‌ها اسم یوزر جا میشه پس نشونش میدیم */
+@media (max-width: 991px) {
+  .header-username {
+    display: inline !important;
+    font-size: 0.85rem;
+  }
+}
+
+/* جلوگیری از افتادن دکمه‌ها زیر هم
+دکمه‌های کنار هم رو تو موبایل ۵۰ در ۵۰ (تقریبا) می‌کنیم */
+@media (max-width: 768px) {
+    .d-flex.justify-content-between .btn-secondary,
+    .d-flex.justify-content-between .btn-primary {
+        font-size: 0.85rem !important;
+        padding: 8px 14px !important;
+        width: 48% !important;  /* هرکدوم نصف کادر رو بگیرن */
+    }
+}
+
+/* دکمه‌های صفحه contact_info برای موبایل */
+@media (max-width: 768px) {
+
+    /* وادار کردن قرارگیری در یک ردیف */
+    .contact-buttons {
+        display: flex !important;
+        flex-direction: row !important;
+        justify-content: space-between !important;
+        gap: 10px !important;
+    }
+
+    /* دکمه‌ها هم‌عرض و کمی کوچک‌تر */
+    .contact-buttons .btn {
+        width: 48% !important;
+        padding: 10px !important;
+        font-size: 0.9rem !important;
+    }
+}
+
+@media (max-width: 768px) {
+
+ /* دکمه‌های بخش پرداخت هم مشابه تماس، تو یه خط قرار دادیم */
+
+.payment-buttons {
+
+    display: flex !important;
+
+    flex-direction: row !important;
+
+    justify-content: space-between !important;
+
+    gap: 10px !important;
+
+    margin-top: 15px;
+
+}
+
+.payment-buttons .btn {
+
+    width: 48% !important;
+
+    font-size: 0.9rem !important;
+
+    padding: 10px !important;
+
+}
+
+
+}
+
+/* دکمه اعمال کد تخفیف در صفحه پرداخت – فقط موبایل */
+@media (max-width: 768px) {
+  .discount-btn {
+    width: 60% !important;   
+    display: inline-block !important;
+    font-size: 0.85rem !important;
+    padding: 8px 12px !important;
+    margin-top: 5px !important;
+    margin-bottom: 10px !important;
+  }
+}
+
+/* کاستوم کردن دکمه‌های رادیویی (Radio Buttons) تو فرم‌ها که ظاهر مدرن‌تری داشته باشن */
+@media (max-width: 768px) {
+
+  .form-check {
+    display: flex;
+    align-items: center;
+    padding: 14px;
+    margin-bottom: 12px;
+    background: #fafafa;
+    border-radius: 12px;
+    border: 1px solid #eee;
+    gap: 10px;
+  }
+
+  .form-check-input[type="radio"] {
+    all: unset;         /*  اورراید کامل استایل‌های دیفالت مرورگر */
+    
+    width: 22px;
+    height: 22px;
+    aspect-ratio: 1 / 1; /*  جلوگیری از بیضی شدن */
+
+    border: 2px solid #999;
+    border-radius: 50%;
+    background-color: #fff;
+
+    display: grid;
+    place-content: center;
+
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  /* نقطه وسط رادیو باتن موقع انتخاب شدن */
+  .form-check-input[type="radio"]::before {
+    content: "";
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: #d4af37;
+    transform: scale(0);
+    transition: transform 0.15s ease-in-out;
+  }
+
+  .form-check-input[type="radio"]:checked::before {
+    transform: scale(1);
+  }
+
+  /* هایلایت شدن کل باکس وقتی روش کلیک می‌شه */
+  .form-check:has(input:checked) {
+    border-color: #d4af37;
+    background: #fff8e1;
+  }
+
+  .form-check-label {
+    font-size: 1rem;
+    cursor: pointer;
+  }
+}
+
+/* فیلترهای بالای صفحه پروفایل */
+.profile-filter-group {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 4px;
+}
+
+.profile-filter-group .btn {
+    padding: 8px 16px;
+    font-size: 14px;
+    border-radius: 20px;
+    transition: 0.2s;
+    white-space: nowrap;        /* نذاریم متن دکمه بشکنه بیاد خط پایین */
+}
+
+/* تو موبایل سعی کردیم فیلترها رو فشرده‌تر کنیم که جا بشن */
+@media (max-width: 768px) {
+    .profile-filter-group {
+        gap: 3px;
+    }
+
+    .profile-filter-group .btn {
+        padding: 6px 6px !important;
+        font-size: 0.92rem !important;
+        border-radius: 8px !important;
+        flex: 1 1 0 !important;      /* دکمه‌ها به یه اندازه کش بیان */
+        text-align: center !important;
+        min-width: 0 !important;
+        white-space: nowrap !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+}
+
+/* تنظیمات دکمه‌ها و لیست نوبت‌ها */
+/*  دکمه مشاهده در موبایل - راست‌چین */
+   /* وقتی دکمه "مشاهده" تو لیست نوبت‌ها تنهاست، می‌بریمش سمت چپ/راست که شکیل‌تر بشه */
+@media (max-width: 768px) {
+    /* زمانی که فقط دکمه مشاهده وجود دارد */
+    .appointment-actions .view-btn:only-child {
+        width: auto !important;
+        min-width: 120px !important;
+        max-width: 150px !important;
+        padding: 6px 14px !important;
+        font-size: 0.85rem !important;
+        display: inline-flex !important;  
+        align-items: center !important;  /* عمودی وسط */
+        justify-content: center !important;  /* افقی وسط */
+        margin: 0 0 0 auto !important;  /* راست‌چین */
+        text-align: center !important;
+    }
+
+    /* اگر دکمه داخل فرم باشد */
+    .appointment-actions form:only-child .btn.view-btn {
+        width: auto !important;
+        min-width: 120px !important;
+        max-width: 150px !important;
+        padding: 6px 14px !important;
+        display: inline-flex !important;  
+        align-items: center !important; 
+        justify-content: center !important; 
+        text-align: center !important;
+    }
+
+    /* راست‌چین کردن دکمه تنها */
+    /* کانتینر والدش رو فلکس کردیم که راحت‌تر تراز بشه */
+    .appointment-actions:has(.view-btn:only-child) {
+        display: flex !important;
+        justify-content: flex-end !important;
+    }
+}
+
+/* استایل‌های هدر و نوبار (Navbar)*/
+
+/* بازنویسی ترتیب نمایش آیتم‌های نوبار تو موبایل با استفاده از order */
+@media (max-width: 768px) {
+    .navbar.fixed-top {
+        direction: rtl !important;
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+         /* به هیچ وجه اسکرول یا شکسته نشه */
+        flex-wrap: nowrap !important; /* جلوگیری از رفتن به سطر بعد */
+        gap: 8px !important;
+        padding: 0.5rem !important;
+        overflow: hidden !important; /* جلوگیری از اسکرول افقی ناخواسته */
+    }
+
+    .navbar.fixed-top > * {
+        margin: 0 !important;
+    }
+
+    /* ۱. اول از راست: لوگو (حتما نمایش داده شود) */
+    .navbar-brand.d-flex, 
+    .navbar-brand img {
+        order: 1 !important;
+        display: flex !important;
+        max-height: 40px !important; /* کوچک کردن لوگو برای جا شدن */
+        width: auto !important;
+    }
+
+    /* ۲. دوم از راست: دکمه همبرگری */
+    #toggleSidebar {
+        order: 2 !important;
+        display: inline-block !important;
+        padding: 4px 8px !important; /* دکمه همبرگری کمی جمع و جورتر */
+    }
+
+    /* ۳. سوم از راست: کلمه پنل مدیریت */
+    .navbar-brand:not(.d-flex):not(img) {
+        order: 3 !important;
+        display: inline-block !important;
+        font-size: 0.9rem !important;
+        white-space: nowrap !important;
+    }
+
+    /* ۴. اطلاعات کاربر (هل دادن بقیه به سمت چپ) */
+    /* ۴. یوزر اینفو - با margin-auto هلش دادیم سمت چپ */
+    .navbar .text-white {
+        order: 4 !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        margin-right: auto !important;
+        font-size: 0.8rem !important;
+        white-space: nowrap !important;
+    }
+
+    /* ۵. دکمه مشاهده سایت */
+    .navbar a.btn-outline-light[target="_blank"] {
+        order: 5 !important;
+        display: inline-flex !important;
+    }
+
+    /* ۶. دکمه خروج (آخرین آیتم سمت چپ) */
+    .navbar a.btn-danger {
+        order: 6 !important;
+        display: inline-flex !important;
+    }
+}
+
+/*  استایل برای موبایل‌های کوچک‌تر (زیر 570 و 436)  */
+@media (max-width: 570px) {
+    .navbar.fixed-top {
+        gap: 4px !important;
+        padding: 0.25rem !important;
+    }
+
+    /* مخفی کردن کلمه "پنل مدیریت" برای باز شدن فضا */
+    .navbar-brand:not(.d-flex):not(img) {
+        display: none !important;
+    }
+
+    /* لوگو کمی کوچکتر شود تا فضا باز شود اما حذف نشود */
+    .navbar-brand.d-flex, 
+    .navbar-brand img {
+        max-height: 32px !important;
+    }
+
+    /* مخفی کردن اسم/نقش کاربر (فقط آیکون کاربر و نوتیفیکیشن بماند) */
+    .navbar .text-white span {
+        display: none !important;
+    }
+
+    /* مخفی کردن متن دکمه مشاهده سایت (فقط آیکن بماند) */
+    .navbar a.btn-outline-light[target="_blank"] > span,
+    .navbar a.btn-outline-light[target="_blank"] > i + text {
+        display: none !important;
+    }
+
+    /* مخفی کردن متن دکمه خروج (فقط آیکن بماند) در صورت نیاز برای سایز 436 */
+    .navbar a.btn-danger > span {
+         display: none !important;
+    }
+
+    /* کوچک‌تر کردن دکمه‌ها و آیکون‌ها برای جا شدن در یک سطر */
+    .navbar a.btn, 
+    #toggleSidebar {
+        padding: 4px 6px !important;
+        font-size: 0.75rem !important;
+        height: 30px !important; 
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+}
+
+/*  تنظیمات هدر برای دسکتاپ و تبلت (بالاتر از 768)  */
+@media (min-width: 769px) {
+    /* کوچک‌تر کردن دکمه‌های "پنل مدیریت" و "رزرو نوبت" */
+    .navbar .btn-primary, 
+    .navbar .btn-warning {
+        padding: 6px 16px !important; /* کاهش پدینگ */
+        font-size: 0.9rem !important; /* کاهش سایز فونت */
+        height: 38px !important; /* تنظیم ارتفاع ثابت و مناسب */
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        white-space: nowrap !important;
+    }
+
+    /* کاهش فاصله بین لینک‌های منو (زبانه‌ها) برای جلوگیری از فشردگی */
+    .navbar-nav .nav-link {
+        padding-right: 10px !important;
+        padding-left: 10px !important;
+        font-size: 1.05rem !important;  /* افزایش ملایم سایز فونت */
+        font-weight: 500 !important; /* کمی کوچک‌تر کردن فونت منوها در صورت نیاز */
+    }
+
+    /* تنظیم فاصله (gap) بین عناصر سمت چپ (نوتیفیکیشن، یوزر، دکمه‌ها) */
+    .navbar .d-flex {
+        gap: 12px !important; 
+    }
+}
+
+/* تبلت‌های بین 769 تا 1200 - واسه اینکه هدر شلوغ نشه */
+@media (min-width: 769px) and (max-width: 1200px) {
+
+/* جلوگیری از رفتن دکمه‌ها زیر هم */
+
+.header-actions {
+
+flex-direction: row !important;
+
+gap: 8px !important;
+
+}
+
+/* کوچک‌تر شدن کمی دکمه‌های هدر */
+
+.header-actions a.header-btn,
+
+.header-user,
+
+#notification-bell {
+
+padding: 6px 10px !important;
+
+font-size: 0.85rem !important;
+
+white-space: nowrap !important;
+
+}
+
+/* محدود کردن فضای منوی وسط (خانه، خدمات…) */
+
+.navbar-nav .nav-link {
+
+padding: 4px 8px !important;
+
+font-size: 0.95rem !important;
+
+}
+
+/* لوگو کمی کوچک‌تر شود */
+
+.navbar-brand img {
+
+max-height: 40px !important;
+
+}
+
+}
+
+@media (min-width: 769px) {
+
+    /* فاصله بین دکمه مشاهده سایت و خروج */
+
+    .navbar a.btn-outline-light[target="_blank"] {
+
+    margin-left: 10px !important;
+
+    }
+
+    }
+
+
+/*  اصلاح دقیق و قطعی چک‌باکس فعال است در موبایل */
+@media (max-width: 767.98px) {
+    /* چون کلاس‌ها روی یک المان هستند، نباید بینشان فاصله باشد */
+    .mobile-active-box.form-check {
+        background: transparent !important;  /* حذف قطعی رنگ طلایی */
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+    }
+
+    .mobile-active-box input[type="checkbox"] {
+        width: 18px !important;
+        height: 18px !important;
+        min-height: 18px !important;
+        max-height: 18px !important;
+        flex: 0 0 18px !important;
+        margin: 0 !important;
+    }
+
+    .mobile-active-box label {
+        margin: 0 !important;
+        font-size: 0.9rem !important;
+        display: inline-block !important;
+    }
+}
+
+/* دکمه کوچیک اد کردن سرویس محبوب */
+@media (max-width: 767.98px) {
+
+a.popular-service-add-btn.btn.btn-primary {
+
+padding: 0.45rem 0.75rem !important;
+
+font-size: 0.9rem !important;
+
+border-radius: 6px !important;
+
+}
+
+}
+
+/* کوچک شدن دکمه افزودن پکیج در موبایل */
+@media (max-width: 767.98px) {
+    .mobile-add-package-btn {
+        padding: 0.25rem 0.5rem !important;  /* کم کردن شدید حاشیه برای کاهش ارتفاع و طول */
+        font-size: 0.75rem !important;       /* کوچک کردن متن */
+        height: 32px !important;             /* ثابت کردن ارتفاع دکمه در موبایل */
+        max-width: max-content !important;   /* جلوگیری از کش آمدن طول */
+        gap: 4px !important;                 /* فاصله کمتر بین + و متن */
+    }
+}
+
+/* جلوگیری از شکستن لیبل چک‌باکس تو فرم اصلی */
+@media (max-width: 767.98px) {
+
+#show_on_homepage_checkbox + label {
+
+white-space: nowrap !important;
+
+}
+
+}
+
+/* دکمه‌های اکشن لیست پرسنل */
+@media (max-width: 767.98px) {
+    .staff-add-buttons .btn {
+        padding: 0.4rem 0.6rem;
+        font-size: 0.8rem;
+        white-space: nowrap;
+
+        display: flex;
+        align-items: center;      /* وسط عمودی */
+        justify-content: center;  /* وسط افقی */
+    }
+}
+
+/* استایل بهتر برای روزهای کاری در موبایل */
+/* استایل حرفه‌ای تگ‌های روز کاری در موبایل (کپسولی) */
+@media (max-width: 767.98px) {
+    
+    .work-days-chips {
+        display: flex;
+        flex-wrap: wrap; /* قرارگیری طبیعی کنار هم مثل تگ */
+        gap: 8px;
+        margin-top: 10px;
+    }
+
+    .day-chip {
+        margin: 0;
+        cursor: pointer;
+    }
+
+    .day-chip input {
+        display: none; /* مخفی کردن چک‌باکس اصلی */
+    }
+
+    .day-chip .chip-box {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 6px 16px;
+        border: 1px solid #ced4da;
+        border-radius: 50px; /* شکل گرد و کپسولی */
+        background-color: #f8f9fa;
+        color: #6c757d;
+        font-size: 0.85rem;
+        transition: all 0.3s ease;
+    }
+
+    /* استایل هنگام انتخاب شدن (سبز رنگ با افکت زیبا) */
+    .day-chip input:checked + .chip-box {
+        background-color: #198754; 
+        border-color: #198754;
+        color: white;
+        font-weight: 500;
+        box-shadow: 0 4px 6px rgba(25, 135, 84, 0.2); /* سایه ملایم */
+    }
+
+   /* تیک فونت‌آوسام واسه نشون دادن انتخاب شدن */
+    .day-chip input:checked + .chip-box::before {
+        content: "\f00c"; 
+        font-family: "Font Awesome 5 Free";
+        font-weight: 900;
+        margin-left: 6px; /* فاصله تیک تا نام روز */
+        font-size: 0.8rem;
+    }
+}
+
+/*  دکمه‌های فیلتر، جدول نظرات و مدیریت تعطیلات */  
+/* تنظیمات دکمه های فیلتر و پاک کردن به صورت 50-50 در موبایل */
+@media (max-width: 767.98px) {
+    .mobile-form-buttons {
+        display: flex !important;
+        flex-direction: row !important;
+        gap: 10px !important;
+        width: 100% !important;
+    }
+
+    /* هر دو دکمه به یک اندازه کش بیایند (نصف - نصف) */
+    .mobile-form-buttons .filter-btn-mobile,
+    .mobile-form-buttons a.btn {
+        flex: 1 !important; 
+        width: 50% !important;
+        white-space: nowrap !important;
+    }
+}
+
+@media (max-width: 767.98px) {
+    /* اگه یه دکمه تنها بود */
+    .mobile-form-buttons:only-child,
+    .mobile-form-buttons > :only-child {
+        flex: 0 0 50% !important;
+        max-width: 50% !important;
+        width: 50% !important;
+
+        /* راست‌چین شدن */
+        margin-right: 0 !important;
+        margin-left: auto !important;
+
+        white-space: nowrap !important;
+    }
+}
+
+/* کوچک‌تر کردن دکمه اعمال فیلتر فقط در صفحه گزارش درآمد */
+@media (max-width: 767.98px) {
+    .filter-btn-income-mobile {
+        width: 30% !important;      /* کل سطر را نگیرد */
+        margin-left: auto !important;
+        margin-right: auto !important;
+        padding: 0.6rem 0 !important; /* ارتفاع کمی کمتر */
+        font-size: 0.9rem !important;
+        border-radius: 8px !important;
+    }
+}
+
+/* فرم سرچ کدهای تخفیف */
+@media (max-width: 767.98px) {
+    /* 1. والد اصلی ستونی شود */
+    .discount-mobile-header {
+        flex-direction: column !important;
+        gap: 12px !important;
+    }
+
+    /* 2. فرم جستجو کل عرض را بگیرد */
+    .discount-mobile-header form {
+        width: 100% !important;
+        margin-bottom: 0 !important;
+    }
+
+    /* 3. مرتب‌سازی اجزای فرم */
+    .discount-mobile-header form .input-group {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        width: 100% !important;
+        gap: 6px !important;
+    }
+
+    /* اینپوت جستجو (بیشترین فضا را بگیرد) */
+    .discount-mobile-header .input-group input {
+        flex: 1 1 auto !important; /* اجازه رشد به کادر متن */
+        width: 100% !important;
+        font-size: 0.85rem !important;
+        border-radius: 5px !important;
+    }
+
+    /* سلکت باکس (عرض ثابت) */
+    .discount-mobile-header .input-group select {
+        flex: 0 0 90px !important; 
+        width: 90px !important;
+        font-size: 0.8rem !important;
+        border-radius: 5px !important;
+    }
+
+    /* دکمه ذره‌بین (عرض ثابت و کوچک) */
+    .discount-mobile-header .input-group button {
+        flex: 0 0 45px !important; /* قفل کردن عرض دکمه */
+        width: 45px !important;
+        padding: 0 !important;
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        border-radius: 5px !important;
+    }
+
+    /* 4. دکمه افزودن کد تخفیف */
+    .discount-mobile-header > a.btn-success {
+    width: max-content !important;
+    align-self: flex-start !important;  
+    font-size: 0.85rem !important;
+    padding: 0.4rem 0.8rem !important;
+}
+
+}
+
+/* بخش سرویس‌ها و مقالات تو موبایل (چیدمان کنار هم) */
+@media (max-width: 767.98px) {
+    .service-buttons-mobile {
+        display: flex !important;
+        justify-content: space-between !important;
+        width: 100% !important;
+        gap: 10px !important;
+    }
+
+    .service-buttons-mobile .btn{
+
+    flex:1 !important;
+
+    display:flex !important;
+
+    align-items:center !important;
+
+    justify-content:center !important;
+
+    font-size:1.1rem !important;
+
+    font-family:inherit !important;
+
+    font-weight:500 !important;
+
+    line-height:1.4 !important;
+
+    padding:10px 0 !important;
+
+    height:44px !important;
+
+    white-space:nowrap;
+
+    }
+}
+
+@media (max-width: 767.98px) {
+
+/* تبدیل بخش بالای لیست مقاله به فلکس افقی در موبایل */
+
+.article-mobile-header > div {
+
+display: flex !important;
+
+flex-direction: row !important;
+
+justify-content: space-between !important;
+
+align-items: center !important;
+
+width: 100% !important;
+
+gap: 10px !important;
+
+}
+
+/* دوتا دکمه دقیقا نیم نیم (کنار هم) */
+
+.article-mobile-header a.btn {
+
+flex: 1 !important;
+
+width: 50% !important;
+
+white-space: nowrap !important;
+
+text-align: center !important;
+
+font-size: 0.9rem !important;
+
+padding: 0.55rem 0 !important;
+
+}
+
+}
+
+/* استایل هدر دسته‌بندی مقالات در موبایل */
+@media (max-width: 767.98px) {
+    /* والد اصلی ستونی شود تا دکمه‌ها بروند زیر عنوان */
+    .category-mobile-header {
+        flex-direction: column !important;
+        align-items: flex-start !important; /* عنوان سمت راست قرار بگیرد */
+        gap: 15px !important; /* فاصله بین عنوان و دکمه‌ها */
+    }
+
+    /* باکسی که دکمه‌ها داخلش هستند تمام عرض شود */
+    .category-mobile-header > div {
+        display: flex !important;
+        flex-direction: row !important;
+        justify-content: space-between !important;
+        width: 100% !important;
+        gap: 10px !important; /* فاصله بین دو دکمه */
+    }
+
+    /* دکمه‌ها دقیقاً ۵۰-۵۰ شوند */
+    .category-mobile-header a.btn {
+        flex: 1 !important;
+        width: 50% !important;
+        white-space: nowrap !important;
+        text-align: center !important;
+        font-size: 0.85rem !important;
+        padding: 0.55rem 0 !important;
+        margin: 0 !important; /* خنثی کردن مارجین‌های احتمالی */
+    }
+}
+
+/* تنظیمات ستون‌های عملیات و پاسخ به نظر در جدول نظرات - فقط موبایل */
+@media (max-width: 767.98px) {
+    /* ستون عملیات (تایید/رد) */
+    .review-actions-td {
+        min-width: 110px !important; /* جلوگیری از فشرده شدن ستون */
+    }
+    .review-actions-td form {
+        display: block !important;
+        margin-bottom: 6px !important; /* فاصله بین دکمه تایید و رد */
+    }
+    .review-actions-td form:last-child {
+        margin-bottom: 0 !important;
+    }
+    .review-actions-td button {
+        width: 100% !important; /* دکمه تمام عرض ستون را بگیرد */
+        font-size: 0.85rem !important;
+        padding: 0.4rem 0 !important;
+    }
+
+        /* ستون پاسخ به نظر */
+    .review-reply-td {
+        min-width: 220px !important; /* عرض بیشتر در موبایل */
+    }
+    .review-reply-td textarea {
+        font-size: 0.85rem !important;
+        min-height: 70px !important; /* ارتفاع کادر در موبایل */
+    }
+
+    .review-reply-td button {
+        width: max-content !important; /* عرض دکمه به اندازه متن آن می‌شود */
+        margin: 0 auto !important; /* دکمه را وسط‌چین می‌کند */
+        display: block !important; /* برای اعمال وسط‌چین شدن */
+        font-size: 0.85rem !important;
+        padding: 0.32rem 1.2rem !important; /* حاشیه راست و چپ برای زیبایی بیشتر */
+        white-space: nowrap !important;
+    }
+}
+
+/* تنظیمات ستون پاسخ به نظر در دسکتاپ */
+@media (min-width: 768px) {
+    .review-reply-td {
+        min-width: 250px !important; /* عرض کادر در دسکتاپ */
+    }
+    .review-reply-td textarea {
+        min-height: 80px !important; /* ارتفاع کادر در دسکتاپ */
+    }
+}
+
+   /* استایل مخصوص بخش تاریخ و ماه در کارت تعطیلات */
+   .holiday-date {
+       font-size: 1.2rem; /* اندازه معمول در دسکتاپ */
+       font-weight: 600;
+   }
+
+   .holiday-month {
+       display: block;
+       font-size: 1rem; /* کمی بزرگ‌تر از حالت پیش‌فرض */
+       font-weight: 600;
+       color: #555;
+   }
+
+   /* تنظیمات فقط برای موبایل */
+   @media (max-width: 767.98px) {
+       .holiday-date {
+           font-size: 1.25rem !important; /* تاریخ بزرگ‌تر در موبایل */
+       }
+
+       .holiday-month {
+           font-size: 1.1rem !important; /* ماه هم در موبایل بزرگ‌تر شود */
+           font-weight: 700 !important;
+       }
+   }
+
+/* دکمه افزودن تعطیلی در موبایل */
+@media (max-width: 767.98px) {
+
+    /* هدر صفحه حتماً ستونی و وسط‌چین شود */
+    .d-flex.justify-content-between.align-items-center.mb-4 {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        text-align: center !important;
+        gap: 8px !important;
+    }
+
+    /* خود دکمه: کوچک و وسطِ صفحه */
+    .holiday-add-btn-mobile {
+        align-self: center !important;      /* وسط ستون هدر */
+        width: auto !important;             /* نه تمام عرض */
+        display: inline-flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+
+        font-size: 0.8rem !important;      
+        padding: 0.35rem 0.8rem !important; 
+
+        border-radius: 8px !important;
+        margin-top: 6px !important;
+        margin-bottom: 6px !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        white-space: nowrap !important;     /* متن نشکند */
+    }
+}
+
+/* تبدیل سوییچ‌های زمخت بوت‌استرپ به چک‌باکس‌های شیک (تنظیمات/تعطیلات) */
+@media (max-width: 767.98px) {
+    /* تنظیمات کادر دور چک‌باکس و متن */
+    .holiday-switch-box {
+        display: flex !important;
+        flex-direction: row !important; /* چک‌باکس راست، متن چپ */
+        align-items: center !important;
+        justify-content: flex-start !important; /* چسبیدن کل محتوا به سمت راست */
+        padding: 12px 15px !important; 
+        margin-bottom: 15px !important;
+        background-color: #fdfdfd !important; 
+        border: 1px solid #e0e0e0 !important; 
+        border-radius: 8px !important; 
+        direction: rtl !important;
+    }
+
+    /* خنثی کردن پدینگ‌های اضافه بوت‌استرپ */
+    .holiday-switch-box.form-switch {
+        padding-left: 0 !important; 
+        padding-right: 15px !important; 
+    }
+
+    /* جلوگیری از کشیدگی و تنظیم چک‌باکس */
+    .holiday-switch-box .form-check-input {
+        position: static !important;
+        margin: 0 !important;
+        margin-left: 10px !important; /* فاصله چک‌باکس تا متن */
+        float: none !important;
+        cursor: pointer !important;
+        
+        /* ابعاد ثابت برای جلوگیری از کشیده شدن */
+        width: 20px !important; 
+        height: 20px !important; 
+        min-width: 20px !important;
+        min-height: 20px !important;
+        flex-shrink: 0 !important; /* جلوگیری از فشرده یا کشیده شدن توسط فلکس */
+        
+        border-radius: 4px !important; /* لبه‌های مربعی ملایم */
+        background-image: none !important;
+        appearance: none !important;        /* ظاهر دیفالت رو می‌گیریم که خودمون استایل بدیم */
+        border: 1px solid #adb5bd !important;
+    }
+
+    /* تنظیمات آیکون تیک خوردن چک‌باکس */
+    .holiday-switch-box .form-check-input:checked {
+        background-color: #0d6efd !important;
+        border-color: #0d6efd !important;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M6 10l3 3l6-6'/%3e%3c/svg%3e") !important;
+    }
+
+    /* استایل متن */
+    .holiday-switch-box .form-check-label {
+        padding: 0 !important;
+        margin: 0 !important;
+        font-size: 0.95rem !important;
+        color: #333 !important;
+        cursor: pointer !important;
+    }
+}
+
+/*  اصلاح کامل ظاهر روزهای هفته در تنظیمات سالن (فقط موبایل) */
+@media (max-width: 767.98px) {
+
+    /* چیدمان زیبا و طبیعی روزهای هفته */
+    .card-body .form-check-inline {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        width: auto !important; /* جلوگیری از کش آمدن کل باکس */
+        padding: 4px 8px !important;
+        margin: 4px !important;
+        border: 1px solid #ddd !important;
+        border-radius: 8px !important;
+        background: #fff !important; 
+        box-shadow: none !important;
+    }
+
+    /* چک‌باکس‌ها اندازه نرمال و بدون کشش */
+    .card-body .form-check-inline input[type="checkbox"].form-check-input {
+        width: 18px !important;
+        height: 18px !important;
+        flex-shrink: 0 !important;
+        margin: 0 6px 0 0 !important; /* فاصله مناسب از متن */
+        appearance: auto !important;  /* برگرداندن ظاهر پیش‌فرض مرورگر */
+    }
+
+    /* متن کنار چک‌باکس */
+    .card-body .form-check-inline label.form-check-label {
+        margin: 0 !important;
+        font-size: 0.9rem !important;
+        color: #333 !important;
+    }
+
+    /* افکت انتخاب‌شد */
+    .card-body .form-check-inline input[type="checkbox"]:checked + label.form-check-label {
+        color: #0d6efd !important;
+        font-weight: 500 !important;
+    }
+}
+
+/* کادر سوییچ‌های بوت‌استرپ رو اینجا تبدیل کردیم به چک‌باکس معمولی */
+@media (max-width: 767.98px) {
+
+/* کادر سوییچ‌ها در موبایل */
+
+.card-body .form-check.form-switch {
+
+padding: 10px 14px !important;
+
+border: 1px solid #ddd !important;
+
+border-radius: 8px !important;
+
+background: #fff !important; 
+
+display: flex !important;
+
+align-items: center !important;
+
+gap: 10px !important;
+
+}
+
+/* تبدیل کامل سوییچ بوت‌استرپ به چک‌باکس استاندارد */
+
+.card-body .form-check.form-switch .form-check-input {
+
+appearance: auto !important;
+
+width: 20px !important;
+
+height: 20px !important;
+
+margin: 0 !important;
+
+cursor: pointer !important;
+
+background-color: #fff !important;
+
+border: 1px solid #adb5bd !important;
+
+box-shadow: none !important;
+
+transform: none !important;     /* جلوگیری از افکت‌های عجیب غریب */
+
+}
+
+/* حالت checked چک‌باکس */
+
+.card-body .form-check.form-switch .form-check-input:checked {
+
+background-color: #0d6efd !important;
+
+border-color: #0d6efd !important;
+
+}
+
+/* متن کنار چک‌باکس */
+/* لیبلِ کنار سوییچ‌ها تو بادیِ کارت‌ها */
+.card-body .form-check.form-switch .form-check-label {
+
+font-size: 0.92rem !important;      /* فونت رو یه نمه کوچیک کردیم که جاگیر نشه */
+
+color: #333 !important;     /* یه خاکستری تیره مایل به مشکی واسه خوانایی بهتر */
+
+margin: 0 !important;       /* حاشیه‌های مزاحم رو صفر کردیم */
+
+cursor: pointer !important;     /* نشون می‌ده که روی خود متن هم میشه کلیک کرد */
+
+}
+
+}
+
+/*  استایل دکمه‌های ذخیره و انصراف در کارت‌ها (فقط موبایل) */
+@media (max-width: 767.98px) {
+    /* فوتر کارت که دکمه‌ها توشن رو فلکس کردیم */
+    .card-footer.d-flex.justify-content-between {
+        display: flex !important;
+        flex-direction: row !important;     /* حتماً تو یه خط باشن */
+        gap: 10px !important; /* فاصله یکدست بین دو دکمه */
+        padding: 12px 15px !important; /* پدینگ متناسب برای فوتر */
+    }
+
+    /* خود دکمه‌های سیو و کنسل */
+    .card-footer.d-flex.justify-content-between .btn {
+        flex: 1 !important; /* کشیده شدن دکمه‌ها به یک اندازه */
+        width: 50% !important;       /* محکم‌کاری واسه اینکه دقیقاً نصف بشن */
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;     /* متن و آیکون دکمه قشنگ بیفته وسط */
+        gap: 6px !important; /* فاصله بین آیکون و متن دکمه */
+        font-size: 0.9rem !important;
+        padding: 0.6rem 0 !important; /* ارتفاع استاندارد دکمه‌ها در موبایل */
+        white-space: nowrap !important; /* جلوگیری از شکستن متن به خط بعد */
+        margin: 0 !important; /* حذف فاصله‌های اضافی احتمالی */
+        border-radius: 8px !important; /* لبه‌های نرم و مدرن */
+    }
+}
+
+/*  برگردوندن استایل دکمه‌های اکشن تو دسکتاپ به حالت عادی */
+@media (min-width: 768px) {
+    /* تنظیمات گروه دکمه‌ها در دسکتاپ */
+    #actionButtons {
+        /* دکمه ذخیره بره یه سمت، بازگشت بره سمت دیگه */
+        justify-content: space-between !important; /* دکمه ذخیره را راست و بازگشت را چپ می‌اندازد */
+        flex-direction: row !important; /* به حالت استاندارد قالب برمی‌گرداند */
+    }
+    
+    /* تنظیمات ظاهر هر دکمه در دسکتاپ */
+    #actionButtons .btn {
+        width: auto !important; 
+        min-width: 100px !important; /* کاهش حداقل عرض دکمه */
+        padding: 6px 16px !important; /* کاهش فاصله داخلی (ارتفاع دکمه) */
+        font-size: 0.95rem !important; /* کاهش اندازه فونت */
+        border-radius: 6px !important; /* کمی گرد کردن گوشه‌ها */
+    }
+}
+
+/*  دکمه‌های سرویس تو دسکتاپ */
+@media (min-width: 768px) {
+
+    .service-buttons-mobile {
+        display: flex !important;
+        flex-direction: row !important;
+        justify-content: space-between !important; /* دو دکمه دو طرف */
+        align-items: center !important;
+        width: 100% !important;
+    }
+
+    /* جلوگیری از کش آمدن دکمه‌ها در دسکتاپ */
+    .service-buttons-mobile .btn {
+        flex: 0 0 auto !important;      /* غیرفعال کردن خاصیت کشسانی فلکس */
+        width: auto !important;
+        min-width: 110px !important;
+    }
+
+}
+
+/*  دکمه‌های صفحه افزودن زیردسته – فقط دسکتاپ */
+@media (min-width: 768px) {
+
+    /* تبدیل ردیف به فلکس برای دوطرفه کردن دکمه‌ها */
+    .container form .row.g-2 {
+        display: flex !important;
+        justify-content: space-between !important; /* یکی چپ، یکی راست */
+        align-items: center !important;
+    }
+
+    /* جلوگیری از کش آمدن دکمه‌ها */
+    .container form .row.g-2 > div {
+        flex: 0 0 auto !important;
+        width: auto !important;
+    }
+
+    .container form .row.g-2 .btn {
+        width: auto !important;
+        min-width: 110px !important;
+    }
+
+}
+
+/*  فرم افزودن دسته رو تو دسکتاپ فول‌عرض کردیم که جا باز شه */
+@media (min-width: 768px) {
+    /* فرم افزودن دسته تمام عرض شود */
+    .container form.col-md-8 {
+        max-width: 100% !important;
+        width: 100% !important;
+        flex: 0 0 100% !important;      /* بوت‌استرپ رو اورراید کردیم که هشت ستونه نمونه */
+    }
+}
+
+/* فاصله بیشتر بین فیلدهای فرم افزودن خدمت */
+.card-body .mb-3 {
+    margin-bottom: 1.1rem !important;
+}
+
+/* فاصله بیشتر بین فیلدهای crispy */
+.card-body .form-group {
+    margin-bottom: 1.1rem !important;
+}
+
+/* دکمه اعمال فیلتر در داشبورد - فقط موبایل */
+@media (max-width: 767.98px) {
+    #dashboard-filter-btn {
+        font-size: 0.85rem !important;
+        padding: 0.55rem !important;
+        width: auto !important;
+        min-width: 140px !important;
+        margin-right: 0 !important;
+        margin-left: auto !important;       /* دکمه رو با این ترفند انداختیم گوشه سمت چپ (راست‌چین تو RTL) */
+        display: block !important;
+    }
+}
+
+/* تبلت‌ها و لپ‌تاپ‌های کوچیک (بازه 769 تا 1200) - فیکس کردن بنر */
+@media (min-width: 769px) and (max-width: 1200px) {
+    .banner-text {
+        top: 25% !important; /* بالاتر می‌آید */
+        left: 2% !important; /* تنظیم فاصله از چپ */
+        transform: none !important; /* خنثی کردن transform اصلی برای کنترل بهتر */
+        max-width: 320px !important; /* عرض کمتر می‌شود تا روی بخش تیره عکس نیفتد */
+    }
+
+    .banner-text h1 {
+        font-size: 1.6rem !important;
+        line-height: 1.3 !important;
+    }
+
+    .banner-text p {
+        font-size: 0.9rem !important;
+    }
+
+    /* بزرگتر کردن دکمه‌ها */
+    .banner-text .header-btn,
+    .btn-gold.header-btn {
+        padding: 12px 24px !important;
+        font-size: 1rem !important;
+        border-radius: 999px !important;        /* لبه‌های کاملاً گرد (Pill-shape) */
+    }
+}
+
+/* دکمه‌های طلایی تو موبایل یکم کوچیک‌تر بشن */
+@media (max-width: 768px) {
+    body .btn-gold {
+        font-size: 16px !important;
+        padding: 12px 24px !important;
+    }
+}
+
+/*  رفع مشکل به هم ریختن گرید تو مانیتورهای متوسط (1200 تا 992)  */
+@media (max-width: 1200px){
+
+    /* به جای دو ستونه بودن، هر زیردسته رو فول‌عرض (یه ستونه) کردیم */
+    #subcategory-container .col-md-6 {
+        width: 100% !important;
+        flex: 0 0 100% !important;
+        max-width: 100% !important;
+    }
+
+    /* کارت خدمت عمودی شود */
+    .service-item {
+        flex-direction: column !important;
+        text-align: center !important;      /* محتوا وسط‌چین بشه */
+    }
+
+    /* عکس سرویس هم عرض کارد بشه */
+    .service-item img.service-img {
+        width: 100% !important;
+        height: auto !important;
+        max-height: 260px !important;       /* نذاریم عکس بیش از حد قد بکشه */
+        object-fit: contain !important;     /* عکس دفرمه نشه، کامل بیفته تو کادر */
+    }
+
+    /* بخش متن زیر عکس */
+    .service-info {
+        width: 100% !important;
+    }
+}
+
+/*  یه فیکس  واسه گوشی‌های خیلی کوچیک (مثلا آیفون SE یا هم‌رده‌ها زیر 442 پیکسل) */
+@media (max-width: 442px) {
+
+    .offer-card {
+        position: relative;
+        overflow: hidden;       /* هرچی زد بیرون رو کات کن */
+    }
+
+     /* باکسی که میاد روی عکس آفر */
+    .offer-card .offer-overlay {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        
+        /* فقط پایین تصویر رو بپوشونه */
+        height: 55%;   
+        
+        padding: 12px !important;
+        /* یه گرادینت خوشگل زدیم که از پایین مشکی بشه بیاد بالا محو بشه */
+        background: linear-gradient(
+            to top,
+            rgba(0,0,0,0.85),
+            rgba(0,0,0,0.4),
+            transparent
+        );
+        color: #fff !important;
+    }
+
+    .offer-card .offer-overlay h3 {
+        font-size: 1rem !important;
+        color: #fff !important;
+    }
+
+    /* متن توضیحات روی کارت */
+    .offer-card .offer-overlay p {
+        font-size: 0.8rem !important;
+        margin-bottom: 6px;
+        color: #fff !important;
+        /* این ترفند (Line Clamp) متن رو محدود می‌کنه به ۳ خط و بقیش رو سه نقطه (...) می‌ذاره */
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .offer-card .offer-overlay .btn-gold {
+        font-size: 0.8rem !important;
+        padding: 6px 14px !important;
+    }
+}
+
+/* بازنویسی اساسی تقویم واسه تبلت‌ها (بین 768 تا 992) */
+@media (max-width: 992px) and (min-width: 768px) {
+
+    /*  ریست کردن استایل‌های مزاحم بوت‌استرپ  */
+    .calendar .weekdays,
+    .calendar .weekdays div,
+    .calendar .days,
+    .calendar .days .day {
+        all: unset;
+        display: revert;
+    }
+
+    /*  استفاده از CSS Grid واسه چیدمان دقیق ۷ روز هفته  */
+    .calendar {
+        width: 100% !important;
+    }
+
+    /* هدر ایام هفته */
+    .calendar .weekdays {
+        display: grid !important;
+        grid-template-columns: repeat(7, 1fr) !important;    /* دقیقاً ۷ ستون مساوی */
+        gap: 4px !important;
+        text-align: center !important;
+        padding: 0 !important;
+    }
+
+    .calendar .weekdays div {
+        font-size: 0.9rem !important;
+        font-weight: 600 !important;        /* بولد کردن ایام هفته */
+        padding: 4px 0 !important;
+    }
+
+     /* خونه‌های روزها */
+    .calendar .days {
+        display: grid !important;
+        grid-template-columns: repeat(7, 1fr) !important;
+        gap: 4px !important;
+        text-align: center !important;
+        padding: 0 !important;
+    }
+
+    .calendar .days .day {
+        height: 42px !important;
+        line-height: 42px !important;       /* فیکس کردن متن وسط مربع */    
+        border-radius: 8px !important;
+        font-size: 0.9rem !important;
+    }
+
+    /*  رنگ‌بندی وضعیت روزها  */
+    /* روزهای گذشته (خاکستری و غیرقابل کلیک) */
+    .calendar .days .day.past {
+        background: #444 !important;
+        color: #aaa !important;
+        cursor: not-allowed !important;     /* موس میره روش علامت ممنوع میاد */
+    }
+
+    /* روزهای پر شده/رزرو شده (قرمز) */
+    .calendar .days .day.taken {
+        background: #ffcccc !important;
+        color: #a00 !important;
+    }
+
+    /* روزهای آزاد و قابل انتخاب (آبی روشن) */
+    .calendar .days .day.selectable-day {
+        background: #e7f1ff !important;
+        color: #0d6efd !important;
+    }
+
+    /*  وقتی یه روز رو انتخاب می‌کنی (آبی پررنگ)  */
+    .calendar .days .day.selected,
+    .calendar .days .day.selectable-day.selected,
+    .calendar .days .day.selected:hover {
+        background: #0b5ed7 !important;
+        color: #fff !important;
+        border-radius: 8px !important;
+    }
+
+    /*  افکت هاور واسه روزهای آزاد  */
+    .calendar .days .day.selectable-day:not(.selected):hover {
+        background: #dbeafe !important;
+        color: #0d6efd !important;
+    }
+}
+
+/* تنظیم تقویم برای گوشی‌های بسیار کوچک */
+@media (max-width: 420px) {
+    /* هم‌تراز کردن دقیق گرید ایام هفته و روزها */
+    .calendar .weekdays,
+    .calendar .days {
+        display: grid !important;
+        grid-template-columns: repeat(7, 1fr) !important;
+        gap: 2px !important; /* فاصله یکسان و کم برای هر دو */
+        padding: 0 4px !important;
+    }
+
+    /* کوچک کردن فونت اسم روزهای هفته برای جا شدن در ستون */
+    .calendar .weekdays div {
+        font-size: 0.65rem !important;
+        padding: 2px 0 !important;
+        text-align: center !important;
+    }
+
+    /* تنظیم سایز دایره/مربع روزها */
+    .calendar .days .day {
+        height: 32px !important;
+        line-height: 32px !important;
+        font-size: 0.8rem !important;
+        border-radius: 6px !important;
+        width: 100% !important; /* پر کردن عرض ستون اختصاص یافته */
+        max-width: 35px !important;     /* نذاریم از یه حدی بزرگتر بشن */
+        margin: 0 auto !important; /* وسط‌چین کردن داخل ستون */
+    }
+}
+
+/* استایل کانتینر پرسنل تو موبایل */
+@media (max-width: 767px) {
+
+#staff-container label {
+
+display: flex !important;
+
+align-items: center !important;
+
+gap: 6px !important;        /* فاصله عکس/اسم با رادیوباتن */
+
+font-size: 1rem;
+
+white-space: nowrap !important; /* جلوگیری از رفتن به خط بعد */
+
+}
+
+/* رادیو باتن پرسنل */
+#staff-container input[type="radio"] {
+
+width: 16px;
+
+height: 16px;
+
+}
+
+}
+
+/* دکمه‌های سایدبار پروفایل تو تبلت */
+@media (max-width: 992px) and (min-width: 768px) {
+
+.profile-side-btn{
+
+
+width: 60% !important;
+
+margin: 0 auto !important;      /* وسط‌چین کردن دکمه */
+
+font-size: 1rem !important;
+
+padding: 10px 0 !important;
+
+}
+
+}
+
+/* دکمه‌های سایدبار تو موبایل (یکم عریض‌تر باشن راحت‌تر تاچ میشن) */
+
+@media (max-width: 767px) {
+
+.profile-side-btn{
+
+width: 70% !important;
+
+margin: 0 auto !important;
+
+font-size: 0.95rem !important;
+
+padding: 10px 0 !important;
+
+}
+
+}
+
+/* فرم افزودن منشی - دکمه‌ها زیر هم نباشن، برن تو یه سطر (موبایل) */
+@media (max-width: 767px) {
+
+    .mobile-form-buttons {
+        flex-direction: row !important;      /* اجبار به قرارگیری تو یک خط */
+        justify-content: space-between !important;
+        align-items: stretch !important;        /* هم‌قد کردن دکمه‌ها */
+        gap: 10px !important;
+    }
+
+    .mobile-form-buttons .btn {
+        width: 50% !important;       /* نصف-نصف */
+        font-size: 0.95rem !important;
+        padding: 10px 0 !important;
+    }
+}
+
+
+nav.navbar { 
+    flex-shrink: 0 !important;      /* گفتیم حق نداری فشرده بشی */
+}
+
+/* جلوگیری از به هم ریختن نوبار تو تبلت و موبایل */
+@media (max-width: 992px) {
+    nav.navbar, 
+    .navbar {
+        flex-wrap: nowrap !important;       /* نذاریم المان‌ها بشکنن برن خط دوم */
+        white-space: nowrap !important;
+        overflow-x: auto !important;        /* اگه جا نشد، اسکرول افقی بخوره بهتر از اینه که به هم بریزه */
+        flex-shrink: 0 !important;
+        width: 100% !important;
+    }
+    
+    /* فورس کردن المان‌های داخل نوبار به تو یه خط موندن */
+    nav.navbar .d-flex, 
+    .navbar .d-flex,
+    nav.navbar > div,
+    .navbar > div {
+        flex-wrap: nowrap !important;
+        white-space: nowrap !important;
+        flex-shrink: 0 !important;
+    }
+}
+
+/* فیکس سایز دکمه فیلتر داشبورد */
+@media (min-width: 992px) and (max-width: 1034px) {
+    #dashboard-filter-btn {
+        white-space: nowrap !important; /* جلوگیری از دو خطی شدن */
+        font-size: 0.85rem !important;  /* کمی کوچک‌تر کردن فونت برای جا شدن */
+        padding-left: 5px !important;   /* کاهش فاصله داخلی سمت چپ */
+        padding-right: 5px !important;  /* کاهش فاصله داخلی سمت راست */
+    }
+}
+
+/* وسط‌چین کردن دکمه‌های عملیات جدول تو رزولوشن‌های متوسط */
+@media (max-width: 1306px) and (min-width: 768px) {
+    .table .btn {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+}
+
+/* کوچیک کردن فیلدهای فرم تو مانیتورهای ۱۳ اینچی و لپ‌تاپ‌ها که شلوغ نشه */
+@media (max-width: 1306px) and (min-width: 992px) {
+    .form-control,
+    .form-select {
+        font-size: 0.85rem !important;
+        padding-right: 6px !important;
+        padding-left: 6px !important;
+    }
+
+    .input-group-text {
+        font-size: 0.8rem !important;
+        padding: 0 6px !important;
+    }
+
+    /* متن کم‌رنگ داخل اینپوت‌ها هم باید ریز بشه که بیرون نزنه */
+    .form-control::placeholder {
+        font-size: 0.78rem !important;
+    }
+}
+
+@media (max-width: 1306px) and (min-width: 992px) {
+
+    /* جلوگیری از ورود فلش به متن داخل select */
+    select.form-select {
+        background-position: left 0.6rem center !important; /* فاصله دادن فلش از متن */
+        padding-left: 1.8rem !important; /* ایجاد فضای مناسب برای فلش */
+    }
+}
+
+/* دکمه‌های تایید و رد نظر تو تبلت‌ها زیر هم بیفتن و وسط‌چین بشن */
+@media (min-width: 768px) and (max-width: 1306px) {
+    .review-actions-td {
+        display: flex;
+        flex-direction: column;
+        gap: 8px; /* این مقدار فاصله بین دو دکمه را تنظیم می‌کند */
+        justify-content: center;
+        align-items: center;
+        height: 100%;
+        min-height: 100px; /* حداقل ارتفاع دادیم که فلکس بتونه کارشو بکنه */
+    }
+    
+    .review-actions-td form {
+        display: block !important;
+        margin: 0 !important;
+    }
+}
+
+/* کلاس کمکی واسه عرض اتوماتیک تو دسکتاپ */
+@media (min-width: 768px){
+    .w-md-auto{
+        width: auto !important;
+    }
+}
+
+/* فیکس کردن فرم فیلتر تو رزولوشن‌های لپ‌تاپ (1111 تا 768) */
+@media (max-width: 1111px) and (min-width: 768px) {
+
+    /* جلوگیری از بریده شدن متن داخل فیلدها */
+    #filter-form .form-control,
+    #filter-form .form-select {
+        font-size: 0.85rem !important;
+        padding: 6px 8px !important;
+        min-height: 38px;
+        white-space: nowrap;    /* نذاریم متن دو خطی بشه */
+    }
+
+    /* فیلدهای تاریخ فضای مناسب بگیرند */
+    #filter-form .col-md-2 {
+        flex: 0 0 25% !important;
+        max-width: 25% !important;
+    }
+
+    /* ردیف آخر (فیلتر + پاک کردن) درست چینش شود */
+    #filter-form .col-md-4 {
+        flex: 0 0 100% !important;
+        max-width: 100% !important;
+    }
+
+    /* دکمه‌های فیلتر کنار هم چیده بشن */
+    #filter-form .mobile-form-buttons {
+        display: flex;
+        flex-direction: row;
+        justify-content: flex-start;        /* بچسبن به سمت راست (چون RTL هست) */
+        gap: 8px;
+    }
+}
+
+/*  پس‌زمینه صفحه ورود  */
+body.login-page {
+    background-image: url('/static/images/login-bg.png');
+    background-size: cover;     /* عکس کل بک‌گراند رو بپوشونه */
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;       /* موقع اسکرول، بک‌گراند ثابت بمونه */
+    min-height: 100vh;      /* حداقل به اندازه کل ارتفاع مانیتور باشه */
+}
+
+/* حالت شیشه‌ای واسه کادر فرم لاگین */
+body.login-page .card {
+    background: rgba(255, 255, 255, 0.95);      /* رنگ سفید با 5 درصد شفافیت */
+    backdrop-filter: blur(10px);        /* همون افکت بلور یا تار شدن بک‌گراند زیر کارت */
+    border: none;       /* حاشیه دور کارت رو برداشتیم که شیک‌تر بشه */
+}
+
+/* تنظیم فاصله از نوبار تو صفحه لاگین */
+body.login-page .container.mt-5 {
+    padding-top: 0px;
+}
+
+/*  پس‌زمینه صفحه ثبت‌نام  */
+body.register-page {
+    background-image: url('/static/images/login-bg.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    min-height: 100vh;
+}
+
+/* شفافیت کارت ثبت‌نام */
+body.register-page .card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border: none;
+}
+
+/* فاصله از بالا */
+body.register-page .container {
+    padding-top: 0px;
 }

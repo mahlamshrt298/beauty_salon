@@ -4,13 +4,15 @@
 {% block content %}
 
 <div class="container mt-4">
+    <!-- کانتینر خالی برای نمایش پیام خطای جاوااسکریپتی تقویم -->
+    <div id="date-error-message" class="mb-3"></div>
 
     <h3 class="mb-4">💳 پرداخت‌ها</h3>
 
     <!-- فیلترها -->
-    <form method="get" class="row g-2 mb-3">
+    <form method="get" class="row g-2 mb-3 align-items-center" id="filter-form" >
 
-        <div class="col-12  col-md-3">
+        <div class="col-12  col-md-2">
             <select name="method" class="form-select">
                 <option value="">همه روش‌ها</option>
                 <option value="cash" {% if selected_method == "cash" %}selected{% endif %}>نقدی</option>
@@ -19,7 +21,7 @@
             </select>
         </div>
 
-        <div class="col-12  col-md-3">
+        <div class="col-12  col-md-2">
             <select name="status" class="form-select">
                 <option value="">همه وضعیت‌ها</option>
                 <option value="success" {% if selected_status == "success" %}selected{% endif %}>موفق</option>
@@ -28,8 +30,34 @@
             </select>
         </div>
 
+        <div class="col-12 col-md-3">
+            <div class="d-flex align-items-center gap-2">
+            <label for="start_date_picker" class="form-label small mb-0 text-nowrap">از تاریخ</label>
+            <input type="text" name="start_date" class="form-control" id="start_date_picker" 
+                placeholder="مثلا 1404/12/13" value="{{ selected_start_date|default:'' }}">
+        
+            </div>
+        </div>
+
+        <div class="col-12 col-md-3">
+            <div class="d-flex align-items-center gap-2">
+            <label for="end_date_picker" class="form-label small mb-0 text-nowrap">تا تاریخ</label>
+            <input type="text" name="end_date" class="form-control" id="end_date_picker" 
+                placeholder="مثلا 1404/12/17" value="{{ selected_end_date|default:'' }}">
+            </div>
+        </div>
+        
         <div class="col-12 col-md-2">
-            <button type="submit" class="btn btn-primary">فیلتر</button>
+            <div class="d-flex gap-md-2 mobile-form-buttons">
+                <button type="submit" class="btn btn-primary filter-btn-mobile">فیلتر</button>
+                
+                <!-- فقط زمانی رندر میشه که حداقل یکی از فیلترها مقدار گرفته باشه -->
+                {% if selected_method or selected_status or selected_start_date or selected_end_date %}
+                    <a href="{% url 'panel:payment_list' %}" class="btn btn-outline-secondary" title="پاک کردن فیلترها">
+                        ✕ پاک کردن
+                    </a>
+                {% endif %}
+            </div>
         </div>
 
     </form>
@@ -57,7 +85,7 @@
                         <tr>
                             <td>{{ payment.appointment.user.username }}</td>
                             
-                            <td class="text-start">
+                            <td class="text-center">
 
                                 {% with ap_phone=payment.appointment.phone pr_phone=payment.appointment.user.profile.phone %}
 
@@ -93,8 +121,14 @@
                                 {% endif %}
                             </td>
 
-                            <td>{{ payment.amount|intcomma }} تومان</td>
-
+                            <td>
+                                <!-- نمایش عدد و حروف زیر هم برای جلوگیری از اشتباه خوندن مبلغ -->
+                                {{ payment.amount_display }} تومان
+                                <div style="font-size:0.75rem; color:#888; margin-top:2px;">
+                                    {{ payment.amount_words }} تومان
+                                </div>
+                            </td>
+                            
                             <td>
                                 {% if payment.payment_method == "cash" %}
                                     نقدی
@@ -132,7 +166,6 @@
         </div>
     </div>
 
-    <!-- قبل از بسته شدن </div> کانتینر، این کد را اضافه کنید -->
     {% if payments.has_other_pages %}
     <nav aria-label="صفحه‌بندی پرداخت‌ها" class="mt-4">
         <ul class="pagination justify-content-center">
@@ -141,7 +174,9 @@
                     <a class="page-link" 
                     href="?page={{ payments.previous_page_number }}
                             {% if selected_method %}&method={{ selected_method }}{% endif %}
-                            {% if selected_status %}&status={{ selected_status }}{% endif %}">
+                            {% if selected_status %}&status={{ selected_status }}{% endif %}
+                            {% if selected_start_date %}&start_date={{ selected_start_date }}{% endif %}
+                            {% if selected_end_date %}&end_date={{ selected_end_date }}{% endif %}">
                         <span aria-hidden="true">&laquo;</span> قبلی
                     </a>
                 </li>
@@ -161,7 +196,9 @@
                         <a class="page-link" 
                         href="?page={{ num }}
                                 {% if selected_method %}&method={{ selected_method }}{% endif %}
-                                {% if selected_status %}&status={{ selected_status }}{% endif %}">
+                                {% if selected_status %}&status={{ selected_status }}{% endif %}
+                                {% if selected_start_date %}&start_date={{ selected_start_date }}{% endif %} 
+                                {% if selected_end_date %}&end_date={{ selected_end_date }}{% endif %}">
                             {{ num }}
                         </a>
                     </li>
@@ -173,7 +210,9 @@
                     <a class="page-link" 
                     href="?page={{ payments.next_page_number }}
                             {% if selected_method %}&method={{ selected_method }}{% endif %}
-                            {% if selected_status %}&status={{ selected_status }}{% endif %}">
+                            {% if selected_status %}&status={{ selected_status }}{% endif %}
+                            {% if selected_start_date %}&start_date={{ selected_start_date }}{% endif %} 
+                            {% if selected_end_date %}&end_date={{ selected_end_date }}{% endif %}">
                         بعدی <span aria-hidden="true">&raquo;</span>
                     </a>
                 </li>
@@ -188,4 +227,63 @@
 
 </div>
 
+{% endblock %}
+
+{% block extra_js %}
+    <script>
+        $(document).ready(function() {
+            // راه‌اندازی دیت‌پیکر شمسی روی هر دو فیلد ورودی تاریخ
+            $("#start_date_picker, #end_date_picker").pDatepicker({
+                format: 'YYYY/MM/DD',
+                autoClose: true,
+                // جلوی پر شدن خودکار با تاریخ امروز رو میگیره
+                initialValue: false, // برای اینکه مقدار پیش‌فرض نگذارد
+                observer: true,
+                calendar: {
+                    persian: {
+                        locale: 'fa'
+                    }
+                }
+            });
+        
+        // هندل کردن سابمیت فرم فیلتر
+        $('#filter-form').on('submit', function(event) {
+                const startDate = $('#start_date_picker').val();
+                const endDate = $('#end_date_picker').val();
+                const errorMessageContainer = $('#date-error-message');
+                const submitBtn = $(this).find('button[type="submit"]');
+
+                // ابتدا پیام خطای قبلی را پاک کن
+                errorMessageContainer.html('');
+
+                // اگر هر دو تاریخ وجود داشتند و تاریخ شروع بزرگتر بود
+                if (startDate && endDate && startDate > endDate) {
+                    // جلوی ارسال فرم را بگیر
+                    event.preventDefault();
+                    event.stopImmediatePropagation();
+                    submitBtn.prop('disabled', false).html('فیلتر');
+
+                    // پیام خطا را نمایش بده
+                    // با دکمه بستن
+                    let errorHtml = `
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                           لطفاً دقت کنید که “تاریخ شروع” باید قبل از “تاریخ پایان” انتخاب شود 
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    `;
+                    errorMessageContainer.html(errorHtml);
+                    const newAlert = errorMessageContainer.find('.alert');
+                    
+                    // تنظیم تایمر برای بستن آن بعد از 5 ثانیه
+                    setTimeout(function() {
+                        const bsAlert = new bootstrap.Alert(newAlert[0]);
+                        // ممکن است کاربر دستی آن را بسته باشد، پس بررسی می‌کنیم
+                        if (bsAlert) {
+                            bsAlert.close();
+                        }
+                    }, 5000);
+                }
+            });
+        });
+    </script>
 {% endblock %}

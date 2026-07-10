@@ -2,6 +2,7 @@
 {% block content %}
 
 <h4 class="mb-3">🔔 اعلان‌های من</h4>
+<!-- ایجاد یک ظرف واکنش‌گرا (responsive) برای جدول تا در موبایل اسکرول افقی بخورد -->
 <div class="table-responsive">
   <table class="table table-bordered text-center">
       <thead class="table-dark">
@@ -15,10 +16,12 @@
 
       <tbody>
           {% for n in notifications %}
-                  <tr class="{% if not n.is_read %}table-warning{% endif %}">
+          <!-- ایجاد یک سطر؛ اگر اعلان خوانده نشده باشد (not n.is_read)، کلاس table-warning به آن اضافه می‌شود تا پس‌زمینه زرد رنگ بگیرد -->
+          <tr class="{% if not n.is_read %}table-warning{% endif %}">
               <td>سیستم</td>
               <td>{{ n.message }}</td>
-              <td>{{ n.jalali_created_at }}</td>
+              <td>{{ n.jalali_created_at }}</td> <!-- تاریخ و زمان ایجاد اعلان به صورت شمسی -->
+              <!-- بررسی وضعیت خوانده شدن اعلان -->
               <td>
                   {% if n.is_read %}
                       خوانده شده
@@ -27,6 +30,7 @@
                   {% endif %}
               </td>
           </tr>
+          <!-- اگر لیست اعلان‌ها خالی باشد (هیچ رکوردی در دیتابیس نباشد) این بخش اجرا می‌شود -->
           {% empty %}
           <tr>
               <td colspan="4">اعلانی وجود ندارد</td>
@@ -35,22 +39,28 @@
       </tbody>
   </table>
 </div>
+
+<!-- بخش صفحه‌بندی (Pagination) -->
+<!-- اگر تعداد کل صفحات بیشتر از ۱ باشد، این بخش نمایش داده می‌شود -->
 {% if notifications.paginator.num_pages > 1 %}
 <nav class="mt-4">
   <ul class="pagination justify-content-center">
 
+    <!-- اگر صفحه قبلی وجود داشته باشد، لینک آن نمایش داده می‌شود -->
     {% if notifications.has_previous %}
       <li class="page-item">
         <a class="page-link" href="?page={{ notifications.previous_page_number }}">قبلی</a>
       </li>
     {% endif %}
 
+    <!-- تولید شماره صفحات -->
     {% for num in notifications.paginator.page_range %}
       <li class="page-item {% if notifications.number == num %}active{% endif %}">
         <a class="page-link" href="?page={{ num }}">{{ num }}</a>
       </li>
     {% endfor %}
 
+    <!-- اگر صفحه بعدی وجود داشته باشد، لینک آن نمایش داده می‌شود -->
     {% if notifications.has_next %}
       <li class="page-item">
         <a class="page-link" href="?page={{ notifications.next_page_number }}">بعدی</a>

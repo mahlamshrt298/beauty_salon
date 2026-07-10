@@ -1,6 +1,6 @@
 from booking.models import Staff,Appointment,Payment
 from django.contrib.auth.decorators import login_required
-from services_app.models import Category, Service,Subcategory  # فقط Category نیاز است
+from services_app.models import Category, Service,Subcategory 
 from django.contrib import messages
 from django.utils import timezone
 from django.http import JsonResponse
@@ -21,28 +21,32 @@ from core.models import PackageBooking
 from django.db.models import Q
 from services_app.models import number_to_persian_words
 from core.models import SalonSettings
+import sys
 
+#سقف تعداد نوبت‌های همزمان برای هر کاربر
 MAX_ACTIVE_APPOINTMENTS_PER_USER = 5
 
+#تابع کمکی برای پیدا کردن پرسنل آزاد برای یک خدمت خاص در یک بازه زمانی مشخص
+#از این تابع توی تابع بعدی استفاده میشه
 def get_available_staff(service, date, start_time, end_time):
-    """
-    پرسنل آزاد برای یک خدمت، تاریخ و بازه زمانی
-    """
 
+    #کل پرسنل فعال که این سرویس رو انجام میدن
     staff_qs = Staff.objects.filter(
         services=service,
         is_active=True,
         status="active"
     )
 
+    ## حالا اونایی که تو این تاریخ و ساعت تداخل نوبت دارن رو پیدا می‌کنیم
     busy_staff_ids = Appointment.objects.filter(
         service=service,
         appointment_date=date,
         status__in=["pending", "confirmed"],
-        start_time__lt=end_time,
-        end_time__gt=start_time
+        start_time__lt=end_time,    # start_time مال نوبت قبلی <= end_time
+        end_time__gt=start_time     # end_time مال نوبت قبلی >= start_time
     ).values_list("staff_id", flat=True)
 
+    # در نهایت پرسنل مشغول رو از لیست کل حذف می‌کنیم
     return staff_qs.exclude(id__in=busy_staff_ids)
 
 @login_required
@@ -66,6 +70,7 @@ def get_available_staff_ajax(request):
     jy, jm, jd = map(int, date.split("-"))
     date_gregorian = jdatetime.date(jy, jm, jd).togregorian()
 
+    # محاسبه تایم پایان بر اساس تایم شروع و مدت زمان خود سرویس
     start_time = datetime.strptime(time, "%H:%M").time()
     end_time = (
         datetime.combine(date_gregorian, start_time)
@@ -90,153 +95,145 @@ def get_available_staff_ajax(request):
         ]
     })
 
-# Create your views here.
 @login_required     #فقط کاربران وارد شده دسترسی خوانهند داشت
 def reserve(request):
+
+    # یه فلگ تو سشن می‌ذاریم که بدونیم کاربر تو پروسه رزروه
     request.session["in_booking_flow"] = True
 
-    if request.method == "POST":
-        staff_id = request.POST.get("staff")
+    
+    today = timezone.localdate()
+    # چک می‌کنیم کاربر بیشتر از حد مجاز نوبت فعال نداشته باشه
+    active_appointments_count = Appointment.objects.filter(
+        user=request.user,
+        status__in=['pending', 'confirmed'],
+        appointment_date__gte=today ,
+        package_booking__isnull=True    # نوبت‌های پکیجی استثنا هستن
+    ).count()
 
-        if staff_id:
-            request.session["selected_staff"] = int(staff_id)
-        else:
-            request.session["selected_staff"] = None
-
-        return redirect("select_date")
-
-    else:
-        today = timezone.localdate()
-        active_appointments_count = Appointment.objects.filter(
-            user=request.user,
-            status__in=['pending', 'confirmed'],
-            appointment_date__gte=today ,
-            package_booking__isnull=True 
-        ).count()
-
-        if active_appointments_count >= MAX_ACTIVE_APPOINTMENTS_PER_USER:
-            messages.error(
-                request,
-                "⛔ شما بیش از حد مجاز نوبت فعال دارید. ابتدا نوبت‌های قبلی را مدیریت کنید.",
-                extra_tags="front"
-            )
-            return redirect("accounts:profile")  # یا صفحه نوبت‌های کاربر
-
-
-        PendingAppointment.objects.get_or_create(
-            user=request.user,
-            is_completed=False,
-            defaults={"step": "select_service"}
-        )
-
-        package_id = request.GET.get('package')
-        selected_package = None
-
-        if package_id:
-            selected_package = Package.objects.get(id=package_id)
-            request.session['package_id'] = selected_package.id
-
-        # متن راهنمایی بالای صفحه
-        reserve_text = "در چند مرحله نوبت خود را رزرو کنید — آنلاین یا پرداخت در محل"
-
-        # ➊ دریافت service_id از URL در صورتی که کاربر از صفحه خدمات آمده باشد
-        service_id = request.GET.get("service")
-
-        selected_category = request.GET.get("category")
-
-        selected_service = None
+    if active_appointments_count >= MAX_ACTIVE_APPOINTMENTS_PER_USER:
         
-        if service_id:
-            try:
-                # ✅ پشتیبانی از هر دو: ID عددی و اسلاگ
-                if service_id.isdigit():
-                    selected_service = Service.objects.get(id=int(service_id))
-                else:
-                    selected_service = Service.objects.get(slug=service_id)  # ✅ جستجو با اسلاگ
-                
-                request.session["selected_service"] = selected_service.id
-                return redirect('select_date', service_id=selected_service.id)  # همیشه عدد ارسال می‌شود
-            except Service.DoesNotExist:
-                selected_service = None
-                
-
-        service = None
-        available_staff = Staff.objects.none()
-
-        if service_id:
-            try:
-                # ✅ پشتیبانی از هر دو: ID عددی و اسلاگ
-                if service_id.isdigit():
-                    service = Service.objects.get(id=int(service_id))
-                else:
-                    service = Service.objects.get(slug=service_id)  # ✅ جستجو با اسلاگ
-                
-                available_staff = Staff.objects.filter(
-                    services=service,
-                    is_active=True,
-                    status="active"
-                )
-            except Service.DoesNotExist:
-                service = None
-                available_staff = Staff.objects.none()  # ❌ جلوگیری از 404 و نمایش صفحه عادی
-                
+        print("DEBUG: Redirect 1 - سقف نوبت ها پر شده است!") # <--- اینجا پرینت کنید
+        
+        messages.error(
+            request,
+            "⛔ شما بیش از حد مجاز نوبت فعال دارید. ابتدا نوبت‌های قبلی را مدیریت کنید.",
+            extra_tags="front"
+        )
+        return redirect("accounts:profile")  
 
 
-        # لیست مراحل برای نوار پیشرفت
-        steps = [
-            {"number": 1, "title": "انتخاب خدمت", "active": True},  # فرض می‌کنیم کاربر در مرحله اول است
-            {"number": 2, "title": "انتخاب تاریخ و ساعت", "active": False},
-            {"number": 3, "title": "اطلاعات تماس", "active": False},
-            {"number": 4, "title": "پرداخت و تایید", "active": False},
-        ]
+    PendingAppointment.objects.get_or_create(
+        user=request.user,
+        is_completed=False,
+        defaults={"step": "select_service"}
+    )
+
+    # اگه کاربر از صفحه خرید پکیج اومده باشه، آیدی پکیج رو تو سشن نگه می‌داریم
+    package_id = request.GET.get('package')
+    #  دریافت service_id از URL در صورتی که کاربر از صفحه خدمات آمده باشد
+    service_id = request.GET.get("service")
+
+    selected_package = None
+
+    if package_id:
+        selected_package = Package.objects.get(id=package_id)
+        request.session['package_id'] = selected_package.id
+    
+    elif not service_id:
+        # اگر نه پکیجی در کار بود و نه مستقیما روی یک سرویس کلیک کرده بود (ورود به صفحه اصلی رزرو)
+        # حافظه پکیج‌های قبلی را پاک کن تا رزرو عادی دچار مشکل نشود
+        request.session.pop('package_id', None)
+        request.session.pop('from_package', None)
+        request.session.pop('auto_finalize_package', None)
 
 
-        # محاسبه عرض هر مرحله (درصد)
-        step_width = 100 / len(steps) if len(steps) > 0 else 0
+    # متن راهنمایی بالای صفحه
+    reserve_text = "در چند مرحله نوبت خود را رزرو کنید — آنلاین یا پرداخت در محل"
 
-        # گرفتن تمام دسته‌ها برای نمایش در دانلود
-        categories = Category.objects.prefetch_related('subcategories__services').all().order_by('name')
+    selected_category = request.GET.get("category")
 
-        #    نمایش صفحه رزرو نوبت
-        context = {
-            "service": service,
-            "available_staff": available_staff,
-            'active_page': 'reserve',  # ← اینجا مشخص می‌کنه که صفحه فعلی "reserve" هست
-            'reserve_text': reserve_text,
-            'steps': steps,  # ارسال لیست مراحل به تمپلیت
-            'step_width': step_width,  # ارسال عرض به تمپلیت
-            'categories': categories,  # ارسال دسته‌ها با زیردسته‌ها و خدمات
-            # ➋ ارسال سرویس انتخاب‌شده به تمپلیت
-            "selected_category": selected_category,
-            'selected_service': selected_service,
-            'selected_package': selected_package,
-        }
-        return render(request,'reserve.html',context)
+    selected_service = None
+    
+    if service_id:
+        try:
+            # ساپورت آیدی عددی و اسلاگ به صورت همزمان
+            if service_id.isdigit():
+                selected_service = Service.objects.get(id=int(service_id))
+            else:
+                selected_service = Service.objects.get(slug=service_id)  #  جستجو با اسلاگ
+            
+            # سرویس رو تو سشن می‌ذاریم و مستقیم می‌فرستیمش مرحله انتخاب تاریخ
+            request.session["selected_service"] = selected_service.id
+            return redirect('select_date', service_id=selected_service.id)  # همیشه عدد ارسال می‌شود
+        except Service.DoesNotExist:
+            selected_service = None
+            
+
+    # لیست مراحل برای نوار پیشرفت
+    steps = [
+        {"number": 1, "title": "انتخاب خدمت", "active": True},  # فرض می‌کنیم کاربر در مرحله اول است
+        {"number": 2, "title": "انتخاب تاریخ و ساعت", "active": False},
+        {"number": 3, "title": "اطلاعات تماس", "active": False},
+        {"number": 4, "title": "پرداخت و تایید", "active": False},
+    ]
+
+    # محاسبه عرض هر مرحله (درصد)
+    step_width = 100 / len(steps) if len(steps) > 0 else 0
+
+    # گرفتن لیست دسته‌بندی‌ها به همراه زیردسته‌ها و سرویس‌ها برای دراپ‌داون
+    categories = Category.objects.prefetch_related('subcategories__services').all().order_by('name')
+
+    #    نمایش صفحه رزرو نوبت
+    context = {
+        'active_page': 'reserve', 
+        'reserve_text': reserve_text,
+        'steps': steps,  # ارسال لیست مراحل به تمپلیت
+        'step_width': step_width,  # ارسال عرض به تمپلیت
+        'categories': categories,  # ارسال دسته‌ها با زیردسته‌ها و خدمات
+        "selected_category": selected_category,
+        'selected_service': selected_service,
+        'selected_package': selected_package,
+    }
+    return render(request,'reserve.html',context)
+
 
 @login_required
 def select_date(request, service_id , year=None, month=None):
+    """
+    ویوی مربوط به نمایش تقویم و انتخاب تاریخ وساعت توسط کاربر.
+    """
+
     service = get_object_or_404(Service, id=service_id)
     request.session["selected_service"] = service_id
 
-    from_package = request.GET.get("from_package") == "1"
-    request.session['from_package'] = from_package
+    # در ویوی select_date، بخش ابتدایی را اینطور تغییر دهید:
+    if "from_package" in request.GET:
+        # فقط اگر پارامتر در URL بود، سشن را ست کن
+        is_from_pkg = request.GET.get("from_package") == "1"
+        request.session['from_package'] = is_from_pkg
+    # اگر پارامتر نبود، به سشن دست نزن (تا مقدار قبلی حفظ شود)
 
     if request.session.get("from_package"):
         package_id = request.session.get("package_id")
-        if not package_id:
-            messages.error(request, "پکیج معتبر نیست")
-            return redirect("accounts:profile")
+        
+        is_valid_package = False
+        if package_id:
+            is_valid_package = PackageBooking.objects.filter(
+                user=request.user,
+                package_id=package_id,
+                service=service,
+                is_completed=False
+            ).exists()
 
-        if not PackageBooking.objects.filter(
-            user=request.user,
-            package_id=package_id,
-            service=service,
-            is_completed=False
-        ).exists():
-            messages.error(request, "این سرویس جزو پکیج شما نیست")
-            return redirect("accounts:profile")
+        if not is_valid_package:
+            # به جای اینکه ارور بدهیم و کاربر را به پروفایل پرت کنیم،
+            # سشن گیر کرده‌ی پکیج را باطل می‌کنیم تا سیستم با این درخواست به عنوان یک «رزرو عادی» رفتار کند.
+            request.session.pop('from_package', None)
+            request.session.pop('package_id', None)
+            request.session.pop('auto_finalize_package', None)
 
-
+    # آپدیت وضعیت رزرو موقت کاربر به مرحله فعلی
     PendingAppointment.objects.filter(
         user=request.user,
         is_completed=False
@@ -251,17 +248,17 @@ def select_date(request, service_id , year=None, month=None):
     ]
     step_width = 100 / 4
 
-    # 📌 تاریخ امروز شمسی
+    #  تاریخ امروز شمسی
     today = jdatetime.date.today()
 
-    # 📌 تعیین سال و ماه فعلی
+    # اگه سال و ماه تو URL پاس داده نشده بود، تاریخ امروز رو در نظر می‌گیریم
     current_year = int(year) if year else today.year
     current_month = int(month) if month else today.month
 
-    # 📌 نام ماه
+    #  نام ماه
     current_month_name = jdatetime.date.j_months_fa[current_month - 1]
 
-    # 📌 محاسبه ماه قبل
+    #  محاسبه ماه قبل
     if current_month == 1:
         prev_month = 12
         prev_year = current_year - 1
@@ -269,7 +266,7 @@ def select_date(request, service_id , year=None, month=None):
         prev_month = current_month - 1
         prev_year = current_year
 
-    # 📌 محاسبه ماه بعد
+    #  محاسبه ماه بعد
     if current_month == 12:
         next_month = 1
         next_year = current_year + 1
@@ -277,29 +274,30 @@ def select_date(request, service_id , year=None, month=None):
         next_month = current_month + 1
         next_year = current_year
 
-    # 📌 تعیین تعداد روزهای ماه با روش صحیح
+    #  تعیین تعداد روزهای ماه با روش صحیح
+    # پیدا کردن روز اول ماه تا بفهمیم چند تا خونه خالی اول تقویم باید بذاریم
     first_day = jdatetime.date(current_year, current_month, 1)
-    # 0 = شنبه ، 6 = جمعه
+
+    # شنبه =0 و جمعه =6
     start_weekday = first_day.weekday()
+
     empty_days = range(start_weekday)
 
     first_day_next = jdatetime.date(next_year, next_month, 1)
     num_days = (first_day_next - first_day).days
 
-    # 📌 ساخت لیست روزها
+    #  ساخت لیست روزها
     days_list = list(range(1, num_days + 1))
 
+    #کدوم روزها پر هستن (تعطیلن یا وقتشون پره)
     taken_days = []
 
-    # بعد از کد taken_days اضافه کن
-    print(f"\n🎯 دیباگ - روزهای گرفته‌شده ماه {current_month}:")
-    print(f"تعطیلات کامل: {taken_days}")
-    print(f"تعطیلات نیم‌روز: [لیست نیم‌روزها اگر داریم]")
+    #  اضافه کردن روزهای تعطیل به taken_days
 
-# ✅ اضافه کردن روزهای تعطیل به taken_days
-    from booking.models import Holiday
     first_day_jalali = jdatetime.date(current_year, current_month, 1)
     last_day_jalali = jdatetime.date(current_year, current_month, days_list[-1]) if days_list else first_day_jalali
+    
+    # تبدیل به میلادی می‌کنیم
     first_day_greg = first_day_jalali.togregorian()
     last_day_greg = last_day_jalali.togregorian()
     
@@ -314,13 +312,32 @@ def select_date(request, service_id , year=None, month=None):
         if hol_jalali.year == current_year and hol_jalali.month == current_month:
             if hol.is_half_day:
                 # نیم‌روز: فقط اون نیمه رو علامت بزن
-                # باید منطق پیچیده‌تری داشته باشی یا جداگانه مدیریت کنی
                 pass  
             else:
                 # تعطیل کامل
                 if hol_jalali.day not in taken_days:
                     taken_days.append(hol_jalali.day)
-                    
+
+    #  اضافه کردن روزهای تعطیل هفتگی سالن
+    salon_settings = SalonSettings.objects.first()
+    if salon_settings and salon_settings.weekend_days:
+        persian_weekdays = {
+            'شنبه': 0, 'یکشنبه': 1, 'دوشنبه': 2, 
+            'سه‌شنبه': 3, 'چهارشنبه': 4, 'پنج‌شنبه': 5, 'جمعه': 6
+        }
+        
+        for day_num in days_list:
+            jalali_date = jdatetime.date(current_year, current_month, day_num)
+            weekday_num = jalali_date.weekday()  # 0=شنبه, 6=جمعه
+            
+            # اسم روز هفته رو پیدا می‌کنیم (مثلا "جمعه")
+            weekday_name = [k for k, v in persian_weekdays.items() if v == weekday_num][0]
+            
+            if weekday_name in salon_settings.weekend_days:
+                if day_num not in taken_days:
+                    taken_days.append(day_num)
+
+
     # گرفتن پرسنل‌های فعال مرتبط با این خدمت
     staffs = Staff.objects.filter(
         is_active=True,
@@ -328,6 +345,7 @@ def select_date(request, service_id , year=None, month=None):
         services=service
     )
 
+    # اگه هیچ پرسنلی برای این سرویس پیدا نشد، کاربر رو برمی‌گردونیم مرحله قبل
     if not staffs.exists():
         messages.error(
             request,
@@ -336,7 +354,7 @@ def select_date(request, service_id , year=None, month=None):
         )
         return redirect("reserve")
 
-
+    # کل روزهای ماه رو چک می‌کنیم تا ببینیم آیا هیچ تایم خالی پیدا میشه یا نه
     for day in days_list:
         date_gregorian = jdatetime.date(
             current_year, current_month, day
@@ -346,11 +364,18 @@ def select_date(request, service_id , year=None, month=None):
 
         for staff in staffs:
             # بررسی روز کاری پرسنل
-            weekday_fa = jdatetime.date(
+            weekday_fa_raw = jdatetime.date(
                 current_year, current_month, day
             ).strftime("%A")
 
-            if weekday_fa not in staff.work_days:
+            # حذف فاصله و نیم‌فاصله از روز فعلی
+            weekday_fa_clean = weekday_fa_raw.replace("‌", "").replace(" ", "")
+            
+            # حذف فاصله و نیم‌فاصله از لیست روزهای کاری پرسنل
+            staff_work_days_clean = [d.replace("‌", "").replace(" ", "") for d in staff.work_days]
+
+            # اگه پرسنل این روز تعطیله، بی‌خیالش میشیم
+            if weekday_fa_clean not in staff_work_days_clean:
                 continue
 
             start_work = datetime.combine(date_gregorian, staff.work_start_time)
@@ -359,16 +384,19 @@ def select_date(request, service_id , year=None, month=None):
             duration = service.duration_minutes
             current = start_work
 
+            # شیفت کاری پرسنل رو اسلات به اسلات (بر اساس تایم سرویس) جلو میریم
+            #میخاد ببینه حتی یه جای خالی توی این روز هست یا نه،اگر پیدا کرد میره روز بعدی وگرنه میزارش توی روزهای پر
             while current + timedelta(minutes=duration) <= end_work:
                 slot_start = current.time()
                 slot_end = (current + timedelta(minutes=duration)).time()
 
-                # ✅ **اضافه کن: چک وقت ناهار پرسنل**
+                # چک وقت ناهار پرسنل
                 if staff.has_lunch_break:
                     if slot_start < staff.lunch_end and slot_end > staff.lunch_start:
                         current += timedelta(minutes=duration)
                         continue
 
+                # چک می‌کنیم تو این اسلات زمانی، نوبت ثبت‌شده‌ای داره یا نه
                 conflict = Appointment.objects.filter(
                     appointment_date=date_gregorian,
                     staff=staff,
@@ -378,6 +406,7 @@ def select_date(request, service_id , year=None, month=None):
                     end_time__gt=slot_start
                 ).exists()
 
+                # اگه تداخل نداشت، یعنی حداقل یه جای خالی تو این روز هست
                 if not conflict:
                     has_any_free_slot = True
                     break
@@ -387,9 +416,11 @@ def select_date(request, service_id , year=None, month=None):
             if has_any_free_slot:
                 break
 
+        # اگه هیچ جای خالی تو کل پرسنل برای این روز نبود، روز رو می‌بندیم (غیرفعال میشه تو تقویم)
         if not has_any_free_slot:
             taken_days.append(day)
 
+    #پیدا کردن روزهای گذشته
     past_days = []
 
     for d in days_list:
@@ -397,7 +428,7 @@ def select_date(request, service_id , year=None, month=None):
         if date_jalali < today:
             past_days.append(d)
 
-
+    #نمایش تقویم
     if request.method == "GET":
         context = {
             'service': service,
@@ -429,16 +460,15 @@ def select_date(request, service_id , year=None, month=None):
 
         return render(request, 'select_date.html', context)
 
+    #وقتی کاربر تاریخ و ساعت رو انتخاب و سابمیت می‌کنه
     if request.method == "POST":
-         # ✅ اول از همه انتخاب پرسنل
+         #  اول از همه انتخاب پرسنل
         staff_id = request.POST.get("staff")
         if staff_id:
             request.session["selected_staff"] = int(staff_id)
         elif "staff" in request.POST:
-            request.session["selected_staff"] = None
+            request.session["selected_staff"] = None    # کاربر گفته "فرقی نمی‌کنه چه پرسنلی باشه"
 
-        appointment_date = request.POST.get("appointment_date")
-        start_time = request.POST.get("start_time")
 
         appointment_date = request.POST.get("appointment_date")
         start_time = request.POST.get("start_time")
@@ -448,7 +478,30 @@ def select_date(request, service_id , year=None, month=None):
             messages.error(request, "لطفاً تاریخ و ساعت را انتخاب کنید.")
             return redirect(request.path)
 
-        # ذخیره در session
+        try:
+            year, month, day = map(int, appointment_date.split('-'))
+            jalali_date = jdatetime.date(year, month, day)
+        except:
+            messages.error(request, "تاریخ نامعتبر است.")
+            return redirect(request.path)
+
+        #  چک روزهای تعطیل هفتگی
+        #اعتبارسنجی مجدد سمت بک‌اند
+        salon_settings = SalonSettings.objects.first()
+        if salon_settings and salon_settings.weekend_days:
+            persian_weekdays = {
+                'شنبه': 0, 'یکشنبه': 1, 'دوشنبه': 2, 
+                'سه‌شنبه': 3, 'چهارشنبه': 4, 'پنج‌شنبه': 5, 'جمعه': 6
+            }
+            
+            weekday_num = jalali_date.weekday()
+            weekday_name = [k for k, v in persian_weekdays.items() if v == weekday_num][0]
+            
+            if weekday_name in salon_settings.weekend_days:
+                messages.error(request, f'روز {weekday_name} تعطیل هفتگی سالن است.')
+                return redirect(request.path)
+            
+        # ذخیره تو سشن و محاسبه تایم پایان
         request.session["appointment_date"] = appointment_date
         request.session["start_time"] = start_time
 
@@ -456,6 +509,7 @@ def select_date(request, service_id , year=None, month=None):
         end_dt = start_dt + timedelta(minutes=service.duration_minutes)
         request.session["end_time"] = end_dt.strftime("%H:%M")
 
+        # رفتن به مرحله گرفتن شماره تماس
         return redirect("contact_info")
 
     return render(request, "select_date.html", {
@@ -464,6 +518,8 @@ def select_date(request, service_id , year=None, month=None):
         "step_width": step_width,
     })
 
+
+#تایید اطلاعات و گرفتن شماره تماس/توضیحات مشتری
 @login_required
 def contact_info(request):
 
@@ -478,16 +534,16 @@ def contact_info(request):
     appointment_date_fa = None
     weekday_fa = None
 
+    #فرمت‌بندی تاریخ انتخاب شده
     if appointment_date_jalali:
         jy, jm, jd = map(int, appointment_date_jalali.split("-"))
 
         # تاریخ شمسی
         date_jalali = jdatetime.date(jy, jm, jd)
 
-        # تاریخ میلادی (برای date filter)
-        appointment_date = date_jalali.togregorian()
+        appointment_date = date_jalali.togregorian()    # تبدیل به میلادی برای ذخیره تو دیتابیس
 
-        appointment_date_fa = date_jalali.strftime("%Y/%m/%d")
+        appointment_date_fa = date_jalali.strftime("%Y/%m/%d")      # برای نمایش به کاربر
 
         # روز هفته فارسی
         weekday_fa = date_jalali.strftime("%A")
@@ -497,6 +553,7 @@ def contact_info(request):
     selected_staff = None
     staff_label = "فرقی ندارد (اولین پرسنل آزاد)"
 
+    # اگه یوزر از وسط راه پریده بود تو این صفحه و دیتای سشن ناقص بود
     if not all([service_id, appointment_date, start_time]):
         messages.error(request, "اطلاعات ناقص است. لطفاً مراحل قبلی را تکمیل کنید.", extra_tags = "front")
         return redirect('reserve')
@@ -516,6 +573,7 @@ def contact_info(request):
         messages.error(request, "خدمت مورد نظر یافت نشد.", extra_tags = "front")
         return redirect('reserve')
 
+    # آپدیت استپ فعلی در دیتابیس
     PendingAppointment.objects.filter(
         user=request.user,
         is_completed=False
@@ -530,8 +588,10 @@ def contact_info(request):
         request.session['phone'] = phone
         request.session['notes'] = notes
 
+        # اگه رزرو از نوع پکیج بود، نیازی به درگاه پرداخت نیست، مستقیم فاکتور نهایی رو می‌سازیم
         if request.session.get("from_package"):
             request.session["auto_finalize_package"] = True
+            request.session.save()
             return redirect('payment_confirm')
         else:
             return redirect('payment_confirm')
@@ -545,7 +605,7 @@ def contact_info(request):
     ]
     step_width = 100 / 4
 
-    # ✅ پیش‌پر کردن شماره تماس از پروفایل (اولویت: سشن > پروفایل)
+    #  پیش‌پر کردن شماره تماس از پروفایل (اولویت: سشن > پروفایل)
     phone_value = request.session.get('phone', '')  # اگر قبلاً در این فرآیند وارد کرده
     phone_value = request.user.profile.phone or ''  # از پروفایل بگیر
 
@@ -568,23 +628,20 @@ def contact_info(request):
 
 @login_required
 def payment_confirm(request):
-
+    # چک می‌کنیم آیا کاربر داره از اعتبار پکیجش استفاده می‌کنه یا رزرو عادیه
     from_package = request.session.get("from_package", False)
 
+    print(f"DEBUG: from_package={from_package}, auto_finalize_session={request.session.get('auto_finalize_package')}")
 
-     # 🔴 این کد رو دقیقاً اینجا اضافه کن (اولین خط بعد از @login_required)
-    import sys
-    print("\n" + "="*60, file=sys.stderr)
-    print(f"🔥 DEBUG: Request Method = {request.method}", file=sys.stderr)
-    if request.method == "POST":
-        print(f"🔥 DEBUG: POST Keys = {list(request.POST.keys())}", file=sys.stderr)
-        print(f"🔥 DEBUG: discount_code = '{request.POST.get('discount_code', 'NOT FOUND')}'", file=sys.stderr)
-        print(f"🔥 DEBUG: 'apply_discount' in POST? = {'apply_discount' in request.POST}", file=sys.stderr)
-    print("="*60 + "\n", file=sys.stderr)
+
+    # اطمینان از اینکه اگر کاربر از پکیج است، auto_finalize حتما فعال باشد
+    if from_package:
+        request.session["auto_finalize_package"] = True
 
     discount = None
     discounted_price = None
  
+    # بررسی اینکه آیا از قبل کد تخفیفی تو سشن ذخیره شده یا نه
     discount_id = request.session.get("discount_id")
     if discount_id:
         try:
@@ -597,13 +654,15 @@ def payment_confirm(request):
     # دریافت تمام داده‌ها از session
     service_id = request.session.get('selected_service')
     appointment_date_jalali = request.session.get('appointment_date')
+    
+    # اگه تاریخ نداشتیم یعنی یوزر مستقیم لینک رو باز کرده، پس برش می‌گردونیم
     if not appointment_date_jalali:
         messages.error(request, "تاریخ نوبت مشخص نشده است.", extra_tags="front")
         return redirect("select_date", service_id=service_id)
+    
     # تبدیل تاریخ شمسی به میلادی
     jy, jm, jd = map(int, appointment_date_jalali.split("-"))
     date_jalali = jdatetime.date(jy, jm, jd)
-    
     appointment_date_gregorian = jdatetime.date(jy, jm, jd).togregorian()
 
     start_time = request.session.get('start_time')
@@ -615,11 +674,13 @@ def payment_confirm(request):
     selected_staff = None
     staff_label = "فرقی ندارد (اولین پرسنل آزاد)"
 
+    #تبدیل عدد قیمت به حروف
     discounted_price_words = number_to_persian_words(discounted_price) if discounted_price else None
 
     # نام روز هفته به فارسی
     weekday_fa = date_jalali.strftime("%A")
 
+    # چک امنیتی: اگه متد GET بود و دیتامون ناقصه
     if request.method == "GET":
         if not all([service_id, appointment_date_jalali, start_time, phone]):
             messages.error(request, "اطلاعات ناقص است.", extra_tags = "front")
@@ -629,12 +690,13 @@ def payment_confirm(request):
         service = Service.objects.get(id=service_id)
         base_price = service.price
         
-        if from_package and request.method == "GET":
-            # مستقیماً مثل final_submit عمل کن
+        """ if from_package and request.method == "GET":
+            
             request.POST = request.POST.copy()
             request.POST["final_submit"] = "1"
-
-
+         """
+        
+        # پیدا کردن آبجکت پرسنل انتخابی (اگه انتخاب کرده باشه)
         if selected_staff_id:
             try:
                 selected_staff = Staff.objects.get(id=selected_staff_id)
@@ -647,7 +709,7 @@ def payment_confirm(request):
         messages.error(request, "خدمت یافت نشد.", extra_tags = "front")
         return redirect('reserve')
 
- # نوار پیشرفت
+    # نوار پیشرفت
     steps = [
         {"number": 1, "title": "انتخاب خدمت", "active": False},
         {"number": 2, "title": "انتخاب تاریخ و ساعت", "active": False},
@@ -656,16 +718,25 @@ def payment_confirm(request):
     ]
     step_width = 100 / 4
 
-    if request.session.get("auto_finalize_package"):
-        request.session.pop("auto_finalize_package")
+    """ if request.session.get("auto_finalize_package"):
+        #request.session.pop("auto_finalize_package")
 
         request.POST = request.POST.copy()
         request.POST["final_submit"] = "1"
-
+        request.method = "POST"
+     """
+    
 
     settings = SalonSettings.objects.first()
 
-    # 1️⃣ اعمال کد تخفیف
+    """ #  منطق هدایت خودکار برای پکیج 
+    if from_package or request.session.get("auto_finalize_package"):
+        request.POST = request.POST.copy()
+        request.POST["final_submit"] = "1"
+        request.method = "POST"
+     """
+    
+    #  اعمال کد تخفیف
     if "apply_discount" in request.POST:
 
         code = request.POST.get("discount_code")
@@ -675,8 +746,8 @@ def payment_confirm(request):
             try:
                 disc = DiscountCode.objects.get(code=code)
 
+                # اعتبارسنجی‌های مربوط به کد تخفیف
                 if DiscountUsage.objects.filter(user=request.user,discount=disc).exists():
-                    print("DEBUG: کاربر قبلاً از این کد استفاده کرده!")
                     messages.error(request, "❌ شما قبلاً از این کد تخفیف استفاده کرده‌اید", extra_tags="front")
 
                 elif not disc.is_active:
@@ -686,7 +757,9 @@ def payment_confirm(request):
                     messages.error(request, "⏰ مهلت استفاده از این کد به پایان رسیده", extra_tags="front")
 
                 else:
+                    # اعمال تخفیف و ذخیره آیدیش تو سشن
                     discount = disc
+                    #این قیمت پس از اعمال تخفیفه
                     discounted_price = service.price * (100 - disc.percent) / 100
                     # ذخیره‌سازی موقت برای استفاده در ایجاد پرداخت
                     request.session["discount_id"] = disc.id
@@ -696,6 +769,7 @@ def payment_confirm(request):
                 messages.error(request, "کد تخفیف نامعتبر.", extra_tags="front")
         
         # حفظ تمام داده‌های سشن
+        # رندر مجدد صفحه با قیمت‌های جدید
         context = {
             "discount_percent": discount.percent if discount else None,
             "discounted_price": discounted_price,
@@ -715,14 +789,15 @@ def payment_confirm(request):
         }
         return render(request, "payment_confirm.html", context)
     
+    # مشخص می‌کنیم که آیا این یک درخواست ثبت نهایی است یا هدایت خودکار پکیج
+    is_auto_finalize = from_package or request.session.get("auto_finalize_package", False)
+    is_final_submit = "final_submit" in request.POST or is_auto_finalize
 
-     # 2️⃣ رزرو نهایی
-    if "final_submit" in request.POST:
-        # 🔥 فقط اینجا نوبت ساخته شود
-        #             
+     #  رزرو نهایی
+    if is_final_submit:        
         payment_method = request.POST.get('payment_method', 'cash')
 
-        # 🚨 جلوگیری از تقلب در صورت غیرفعال بودن پرداخت آنلاین
+        #  جلوگیری از تقلب در صورت غیرفعال بودن پرداخت آنلاین
         if payment_method == "online" and not settings.enable_online_payment:
             messages.error(request, "پرداخت آنلاین در حال حاضر غیرفعال است.", extra_tags="front")
             return redirect("reserve")
@@ -734,6 +809,14 @@ def payment_confirm(request):
             end_dt = start_dt + timedelta(minutes=duration_minutes)
             end_time = end_dt.strftime("%H:%M")
 
+        #  اعتبارسنجی نهایی: آیا این روز جزو تعطیلات هفتگی سالن است؟
+        if settings and settings.weekend_days:
+            weekend_list = settings.weekend_days
+            if weekday_fa in weekend_list:
+                messages.error(request, f"امکان رزرو در روز {weekday_fa} وجود ندارد. این روز جزو تعطیلات هفتگی سالن است.", extra_tags="front")
+                return redirect("reserve")
+
+        # چک کردن سقف نوبت‌های فعال کاربر
         today = timezone.localdate()
         active_appointments_count = Appointment.objects.select_for_update().filter(
             user=request.user,
@@ -752,36 +835,47 @@ def payment_confirm(request):
 
         # ایجاد نوبت
         with transaction.atomic():
-
             start_time_obj = datetime.strptime(start_time, "%H:%M").time()
             end_time_obj = datetime.strptime(end_time, "%H:%M").time()
-
-            print("appointment_date_gregorian:", appointment_date_gregorian, type(appointment_date_gregorian))
-            print("start_time_obj:", start_time_obj, type(start_time_obj))
-            print("end_time_obj:", end_time_obj, type(end_time_obj))
 
             final_staff = None
             selected_staff_id = request.session.get("selected_staff")
 
-            if selected_staff_id:
-                # بررسی تداخل فقط برای همان پرسنل
-                conflict_exists = Appointment.objects.filter(
-                    staff_id=selected_staff_id,
-                    appointment_date=appointment_date_gregorian,
-                    start_time__lt=end_time_obj,
-                    end_time__gt=start_time_obj,
-                    status__in=['pending', 'confirmed']
-                ).exists()
+            #حالت اول: پرسنل خاصی رو انتخاب کرده
+            if selected_staff_id:    
+                try:
+                    staff = Staff.objects.get(id=selected_staff_id)
 
-                if conflict_exists:
-                    messages.error(
-                        request,
-                        "❌ این پرسنل در این ساعت آزاد نیست.",
-                        extra_tags="front"
-                    )
+                    #  بررسی روزهای کاری پرسنل
+                    if staff.work_days:
+                        normalized_weekday = weekday_fa.replace('‌', '').replace(' ', '')
+                        normalized_work_days = [day.replace('‌', '').replace(' ', '') for day in staff.work_days]
+                        
+                        if normalized_weekday not in normalized_work_days:
+                            messages.error(request, f"❌ پرسنل انتخابی در روز {weekday_fa} کار نمی‌کند.", extra_tags="front")
+                            return redirect('select_date', service_id=service.id)
+
+                    # بررسی تداخل زمانی
+                    # آیا تو این تایم پره یا خالی؟
+                    conflict_exists = Appointment.objects.filter(
+                        staff=staff,
+                        appointment_date=appointment_date_gregorian,
+                        start_time__lt=end_time_obj,
+                        end_time__gt=start_time_obj,
+                        status__in=['pending', 'confirmed']
+                    ).exists()
+
+                    if conflict_exists:
+                        messages.error(request, "❌ این پرسنل در این ساعت آزاد نیست.", extra_tags="front")
+                        return redirect('select_date', service_id=service.id)
+
+                    final_staff = staff
+
+                except Staff.DoesNotExist:
+                    messages.error(request, "❌ پرسنل انتخابی یافت نشد.", extra_tags="front")
                     return redirect('select_date', service_id=service.id)
-                final_staff = Staff.objects.get(id=selected_staff_id)
 
+            #حالت دوم: پرسنل براش فرقی نداشت (اولین نفر آزاد رو پیدا می‌کنیم)
             else:
                 # بررسی اینکه حداقل یک پرسنل آزاد باشد
                 staff_candidates = Staff.objects.filter(
@@ -791,6 +885,14 @@ def payment_confirm(request):
                 )
 
                 for staff in staff_candidates:
+                    # چک روز کاری
+                    if staff.work_days:
+                        normalized_weekday = weekday_fa.replace('‌', '').replace(' ', '')
+                        normalized_work_days = [day.replace('‌', '').replace(' ', '') for day in staff.work_days]
+                        if normalized_weekday not in normalized_work_days:
+                            continue
+
+                    # چک تداخل زمانی
                     conflict = Appointment.objects.filter(
                         staff=staff,
                         appointment_date=appointment_date_gregorian,
@@ -811,6 +913,7 @@ def payment_confirm(request):
                     )
                     return redirect('select_date', service_id=service.id)
 
+            # مدیریت کم کردن اعتبار از پکیج
             package_id = request.session.get("package_id")
             package_booking_instance = None
             came_from_package = False
@@ -827,7 +930,7 @@ def payment_confirm(request):
                     came_from_package = True
 
 
-            # ایجاد نوبت
+            # ثبت رکورد اصلی نوبت تو دیتابیس
             appointment = Appointment.objects.create(
                 user=request.user,
                 service=service,
@@ -835,18 +938,20 @@ def payment_confirm(request):
                 appointment_date=appointment_date_gregorian,
                 start_time=start_time,
                 end_time=end_time,
-                service_name_snapshot=service.name,
+                service_name_snapshot=service.name,     
                 status='pending',
                 notes=notes,
                 phone=phone,
                 package_booking=package_booking_instance 
             )
 
+            # اگه پکیج بود، اون آیتم پکیج رو تیک می‌زنیم که استفاده شد
             if package_booking_instance:
                 package_booking_instance.is_completed = True
                 package_booking_instance.save()
 
-            # ✅ اگر همه سرویس‌های پکیج تکمیل شده، سشن پاک شود
+            # چک می‌کنیم آیا کلا پکیج تموم شد یا نه؟
+            #  اگر همه سرویس‌های پکیج تکمیل شده، سشن پاک شود
             if package_id:
                 remaining = PackageBooking.objects.filter(
                     user=request.user,
@@ -858,12 +963,9 @@ def payment_confirm(request):
                     request.session["package_completed"] = True
                     request.session.pop("package_id", None)
                 else:
-                    request.session["package_completed"] = False
+                    request.session["package_completed"] = False      
 
-
-
-       # print("BOOKING CREATED:", booking.id)
-
+            # محاسبه قیمت نهایی با احتساب تخفیف احتمالی
             final_price = service.price
             discount = None
             discount_id = request.session.get("discount_id")
@@ -875,23 +977,24 @@ def payment_confirm(request):
                 except DiscountCode.DoesNotExist:
                     discount = None
 
-            # ایجاد پرداخت
+            # ایجاد پرداخت (اگه پکیج نباشه)
             if not from_package:
                 Payment.objects.create(
                     appointment=appointment,
                     amount=final_price,
                     payment_method=payment_method,
                     status='pending' if payment_method == 'online' else 'success',
-                    paid_at=timezone.now() if payment_method != 'online' else None  # ✅ این خط جدید
+                    paid_at=timezone.now() if payment_method != 'online' else None 
                 )
 
-
+            # ثبت سابقه استفاده از کد تخفیف
             if discount:
                 DiscountUsage.objects.create(
                     user=request.user,
                     discount=discount
                 )
 
+            # بستن وضعیت نوبت معلق
             PendingAppointment.objects.filter(
                 user=request.user,
                 is_completed=False
@@ -899,17 +1002,18 @@ def payment_confirm(request):
 
 
             # پاک کردن session
-            for key in ['selected_service', 'appointment_date', 'start_time', 'end_time', 'phone', 'notes','discount_id','discounted_price','in_booking_flow',]:
+            for key in ['selected_service', 'appointment_date', 'start_time', 'end_time', 'phone', 'notes','discount_id','discounted_price','in_booking_flow', 'from_package', 'auto_finalize_package']:
                 request.session.pop(key, None)
 
             messages.success(request, "نوبت شما با موفقیت رزرو شد! 🎉", extra_tags = "front")
+            
+             # ریدایرکت به صفحه تایید نهایی همراه با کد رهگیری
             if came_from_package:
                 return redirect(f"/booking/confirmation/{appointment.tracking_code}/?from_package=1")
             else:
+                # یا به صفحه جزئیات نوبت
                 return redirect('confirmation', tracking_code=appointment.tracking_code)
-         # یا به صفحه جزئیات نوبت
-
-
+         
 
    # GET request یا اولین نمایش صفحه
     context = {
@@ -932,16 +1036,18 @@ def payment_confirm(request):
     return render(request, 'payment_confirm.html', context)
 
 
+#صفحه نمایش موفقیت‌آمیز بودن رزرو (فاکتور نهایی)
 @login_required
 def confirmation(request, tracking_code):
 
+    #دریافت نوبت بر اساس کد پیگیری
     appointment = get_object_or_404(
         Appointment,
         tracking_code=tracking_code,
         user=request.user
     )
 
-    # ✅ گرفتن اطلاعات پرداخت
+    #  گرفتن اطلاعات پرداخت
     payment = Payment.objects.filter(appointment=appointment).first()
 
     from_package = appointment.package_booking is not None
@@ -951,12 +1057,12 @@ def confirmation(request, tracking_code):
         package = appointment.package_booking.package
 
 
-    # ✅ تبدیل تاریخ میلادی ذخیره‌شده به شمسی
+    #  تبدیل تاریخ میلادی ذخیره‌شده به شمسی
     g_date = appointment.appointment_date
     j_date = jdatetime.date.fromgregorian(date=g_date)
     weekday_fa = j_date.strftime("%A")
 
-    # ✅ محاسبه اطلاعات تخفیف
+    # محاسبه قیمت و تخفیف برای نمایش در فاکتور
     original_price = appointment.service.price if appointment.service else 0
     final_price = payment.amount if payment else original_price
     final_price_words = number_to_persian_words(final_price)
@@ -965,12 +1071,16 @@ def confirmation(request, tracking_code):
     discount_amount = 0
     
     if payment and original_price > 0:
+        # میزان تخفیف(مقداری که کم شده از مبلغ)
         discount_amount = original_price - final_price
         if discount_amount > 0:
             discount_percent = round((discount_amount / original_price) * 100, 2)
 
+    # چک کردن وضعیت اتمام پکیج (و پاک کردنش از سشن)
     package_completed = request.session.pop("package_completed", False)
 
+    # تشخیص اینکه یوزر از پنل کاربریش اومده فاکتور رو ببینه یا تازه رزرو کرده
+    from_profile = request.GET.get('from_profile', '0') == '1'
 
     context = {
         'appointment': appointment,
@@ -980,61 +1090,24 @@ def confirmation(request, tracking_code):
         'discount_percent': discount_percent,
         'discount_amount': discount_amount,
         "fa_day": j_date.day,
-        "fa_month": jdatetime.date.j_months_fa[j_date.month - 1],
-        "fa_year": j_date.year,  # فقط نام ماه# تاریخ کامل
+        "fa_month": jdatetime.date.j_months_fa[j_date.month - 1],  #نام ماه
+        "fa_year": j_date.year,  # تاریخ کامل
         'tracking_code': tracking_code,
         'active_page': 'reserve',
         'fa_weekday': weekday_fa,
         "from_package": from_package,
         "package_completed": package_completed,
         "package": package,
+        "from_profile": from_profile,
         "final_price_words": final_price_words,
     }
     return render(request,'confirmation.html',context)
-
-@login_required
-def save_selected_service(request):
-    if request.method != 'POST':
-        return JsonResponse({'success': False, 'error': 'Method Not Allowed'}, status=405)
-
-    data = json.loads(request.body)
-    service_id = data.get('service_id')
-
-    if not service_id:
-        return JsonResponse({'success': False, 'error': 'No service ID provided'}, status=400)
-
-    try:
-        service = Service.objects.get(id=service_id)
-    except Service.DoesNotExist:
-        return JsonResponse({'success': False, 'error': 'Service not found'}, status=404)
-
-    # ذخیره در session
-    request.session['selected_service'] = service_id
-
-    return JsonResponse({'success': True, 'message': 'Service saved successfully'})
-
-@login_required
-def save_and_redirect(request):
-    service_id = request.GET.get('service_id')
-    if not service_id:
-        messages.error(request, "خدمت انتخاب نشده است.", extra_tags = "front")
-        return redirect('reserve')
-
-    try:
-        service = Service.objects.get(id=service_id)
-    except Service.DoesNotExist:
-        messages.error(request, "خدمت یافت نشد.", extra_tags = "front")
-        return redirect('reserve')
-
-    request.session['selected_service'] = service_id
-    # ارسال به view select_date با پارامتر service_id
-    return redirect('select_date', service_id=service_id)
-    # یا: return redirect('select_date', service_id)
 
 
 @login_required
 def get_available_times(request):
     """بارگذاری ساعت‌های در دسترس برای یک روز خاص"""
+
     if request.method != 'GET':
         return JsonResponse({'error': 'Method not allowed'}, status=405)
 
@@ -1059,7 +1132,7 @@ def get_available_times(request):
     except (ValueError, Service.DoesNotExist):
         return JsonResponse({'error': 'Invalid date or service'}, status=400)
 
-    # ✅ مرحله 1: دریافت تنظیمات سالن (اولویت اصلی)
+    # دریافت تنظیمات سالن (اولویت اصلی) (ساعت کاری و ناهار)
     salon_settings = SalonSettings.objects.first()
     
     if salon_settings:
@@ -1079,7 +1152,8 @@ def get_available_times(request):
         salon_lunch_start = time(13, 0)
         salon_lunch_end = time(14, 0)
 
-    # ⚠️ بررسی تعطیلی
+    #  بررسی تعطیلی
+    # چک کردن تقویم تعطیلات ادمین
     holiday = Holiday.objects.filter(
         date=date_gregorian,
         is_active=True
@@ -1089,40 +1163,49 @@ def get_available_times(request):
         # اگر تعطیلی نیم‌روز باشد، فقط بازه مربوطه را برگردان
         if holiday.is_half_day:
             if holiday.half_day_period == 'morning':
-                # فقط بعدازظهر آزاد است
-                start_work = time(8, 0)  # از ساعت 2 بعدازظهر
+                
+                # فقط صبح آزاد است
+                start_work = time(8, 0) # تا ساعت 12 ظهر
                 end_work = time(12, 0)
             else:  # afternoon
-                # فقط صبح آزاد است
-                start_work = time(14, 0)
-                end_work = time(18, 0)  # تا ساعت 12 ظهر
+                # فقط بعدازظهر آزاد است
+                start_work = time(14, 0) # از ساعت 2 بعدازظهر
+                end_work = time(18, 0)  
              # نیم‌روز = بدون ناهار
             has_salon_lunch = False
         else:
             # تعطیل کامل - هیچ ساعتی آزاد نیست
             return JsonResponse({'times': [], 'is_holiday': True, 'holiday_title': holiday.title})
         
-    # ⚠️ در اینجا می‌توانید منطق واقعی بررسی زمان‌های خالی را پیاده‌سازی کنید
-    # برای مثال: بررسی نوبت‌های رزرو شده از مدل Appointment
-    # ⏱ مدت زمان خدمت
+    #  مدت زمان خدمت
     duration = service.duration_minutes
 
     start_datetime = datetime.combine(date_gregorian, start_work)
     end_datetime = datetime.combine(date_gregorian, end_work)
 
-     # ✅ مرحله 1: دریافت روز هفته فارسی برای بررسی روز کاری پرسنل
+     #   دریافت روز هفته فارسی برای بررسی روز کاری پرسنل
     j_date = jdatetime.date.fromgregorian(date=date_gregorian)
     weekday_fa = j_date.strftime("%A")
+    # مهم: اسپیس و نیم‌فاصله‌ها رو پاک میکنیم که مشکل تایپی تو دیتابیس باعث باگ نشه
+    weekday_fa_clean = weekday_fa.replace("‌", "").replace(" ", "")
 
-    # ✅ مرحله 2: دریافت پرسنل‌های فعال برای این خدمت که در این روز کار می‌کنند
+    #   دریافت پرسنل‌های فعال برای این خدمت که در این روز کار می‌کنند
     staffs = Staff.objects.filter(
         services=service,
         is_active=True,
         status="active"
     )
-    # فیلتر کردن پرسنل‌هایی که در این روز هفته کار می‌کنند (در پایتون چون work_days JSONField است)
-    staffs = [staff for staff in staffs if weekday_fa in staff.work_days]
-    # ✅ مرحله 3: دریافت تمام نوبت‌های پرسنل‌ها در این تاریخ (برای هر خدمتی)
+
+    # فیلتر کردن پرسنل‌هایی که در این روز هفته کار می‌کنند 
+    valid_staffs = []
+    for staff in staffs:
+        staff_work_days_clean = [d.replace("‌", "").replace(" ", "") for d in staff.work_days]
+        if weekday_fa_clean in staff_work_days_clean:
+            valid_staffs.append(staff)
+            
+    staffs = valid_staffs
+
+    #   دریافت تمام نوبت‌های پرسنل‌ها در این تاریخ (برای هر خدمتی) تا تداخل‌ها دربیاد
     busy_intervals = {}
     if staffs:
         appointments = Appointment.objects.filter(
@@ -1138,39 +1221,45 @@ def get_available_times(request):
             busy_intervals[staff_id].append((appt['start_time'], appt['end_time']))
 
 
-    # ✅ اصلاح 2: محاسبه تاریخ امروز در تایم‌زون ایران
+    #   محاسبه تاریخ امروز در تایم‌زون ایران
+    #برای جلوگیری از رزرو در گذشته
     now = timezone.localtime(timezone.now())
     today = now.date()
     is_today = (date_gregorian == today)
     
-    # ✅ اضافه شده: محاسبه زمان مینیمم برای امروز (با بافر 60 دقیقه)
+    #   محاسبه زمان مینیمم برای امروز (با بافر 60 دقیقه)
     min_time_for_today = None
     if is_today:
+        # کاربر نتونه واسه 5 دقیقه دیگه وقت بگیره، حداقل 1 ساعت به سالن وقت بده
         now_plus_buffer = now + timedelta(minutes=60)  # بافر 60 دقیقه
         min_time_for_today = now_plus_buffer.time()
 
     available_times = []
     current=start_datetime
 
+    # حلقه اصلی تولید اسلات‌های زمانی
     while current + timedelta(minutes=duration) <= end_datetime:
         slot_start = current.time()
         slot_end = (current + timedelta(minutes=duration)).time()
 
-         # ✅ مرحله 4: فیلتر ناهار سالن (فقط اگر نیم‌روز نباشد)
+         #   فیلتر ناهار سالن (فقط اگر نیم‌روز نباشد)
+         # تایم ناهار رو رد کن
         if has_salon_lunch and not (holiday and holiday.is_half_day):
             if not (slot_end <= salon_lunch_start or slot_start >= salon_lunch_end):
                 current += timedelta(minutes=duration)
                 continue
 
-        # ✅ اضافه شده: فیلتر ساعت‌های گذشته فقط برای امروز
+        #   فیلتر ساعت‌های گذشته فقط برای امروز
+        # تایم‌های سوخته امروز رو رد کن
         if is_today and min_time_for_today and slot_start < min_time_for_today:
             current += timedelta(minutes=duration)
             continue
 
-        # ✅ بررسی وجود حداقل یک پرسنل آزاد برای این بازه زمانی
+        #  بررسی وجود حداقل یک پرسنل آزاد برای این بازه زمانی
         slot_available = False
         for staff in staffs:
             # بررسی اینکه بازه زمانی در ساعات کاری پرسنل باشد
+            
             if slot_start < staff.work_start_time or slot_end > staff.work_end_time:
                 continue
             
@@ -1180,13 +1269,13 @@ def get_available_times(request):
                 slot_start < busy_end and slot_end > busy_start
                 for busy_start, busy_end in staff_busy
             )
-    # اگر پرسنل آزاد بود، این بازه زمانی قابل رزرو است
+
+            # اگر پرسنل آزاد بود، این بازه زمانی قابل رزرو است
             if not has_conflict:
                 slot_available = True
-                print(f"✅ زمان {slot_start} برای پرسنل {staff.full_name} آزاد است", flush=True)
                 break
 
-        # ✅ اضافه کردن بازه زمانی اگر حداقل یک پرسنل آزاد وجود داشت
+        #  اضافه کردن بازه زمانی اگر حداقل یک پرسنل آزاد وجود داشت
         if slot_available:
             available_times.append(current.strftime("%H:%M"))
         else:
@@ -1200,6 +1289,7 @@ def get_available_times(request):
 
 @login_required
 def select_date_from_package(request, package_id):
+    # فلوی رزرو وقتی کاربر از روی یه پکیجی که خریده میخواد وقت بگیره
     if not request.session.get('package_paid'):
         messages.error(request, "ابتدا باید هزینه پکیج را پرداخت کنید")
         return redirect('home')
@@ -1211,7 +1301,8 @@ def select_date_from_package(request, package_id):
         messages.error(request, "این پکیج خدمتی ندارد")
         return redirect("home")
 
-    # 🔹 ساخت رکورد برای هر سرویس داخل پکیج (اگر قبلاً ساخته نشده)
+    #  ساخت رکورد برای هر سرویس داخل پکیج (اگر قبلاً ساخته نشده)
+     # اگه بار اولشه روی این پکیج کلیک میکنه، رکورد استفاده‌های پکیجش رو میسازیم
     for service in services:
         PackageBooking.objects.get_or_create(
             user=request.user,
@@ -1219,13 +1310,14 @@ def select_date_from_package(request, package_id):
             service=service
         )
 
-    # 🔹 گرفتن وضعیت رزرو هر سرویس
+    #  گرفتن وضعیت رزرو هر سرویس
     bookings = PackageBooking.objects.filter(
         user=request.user,
         package=package
     ).select_related('service')
 
     # اگر همه سرویس‌ها تکمیل شده‌اند اجازه رزرو مجدد نده
+    # اگه کل سهمیه پکیج رو سوزونده بود
     if bookings.filter(is_completed=False).count() == 0:
         messages.info(request, "تمام خدمات این پکیج قبلاً رزرو شده‌اند ✅")
         return redirect("accounts:profile")
@@ -1236,7 +1328,9 @@ def select_date_from_package(request, package_id):
 
     salon_settings = SalonSettings.objects.first()
 
+    # ایدی پکیج رو میذاریم تو سشن تا تو ویوی پرداخت (payment_confirm) بفهمیم پول نباید بگیریم
     request.session['package_id'] = package.id 
+    request.session['from_package'] = True
 
     return render(request, "package_services.html", {
         "package": package,
@@ -1246,7 +1340,6 @@ def select_date_from_package(request, package_id):
         "completed_services": completed_services,
     })
 
-# در views.py اضافه کنید
 @login_required
 def exit_booking_flow(request):
     """پاک کردن سشن وقتی کاربر از رزرو خارج می‌شود"""
@@ -1260,7 +1353,7 @@ def exit_booking_flow(request):
         for key in keys_to_clear:
             request.session.pop(key, None)
         
-        # حذف PendingAppointment
+       # پاک کردن نوبت‌های نصفه نیمه از دیتابیس
         PendingAppointment.objects.filter(
             user=request.user,
             is_completed=False
@@ -1269,38 +1362,3 @@ def exit_booking_flow(request):
         return JsonResponse({'success': True})
     
     return JsonResponse({'error': 'Method not allowed'}, status=405)
-
-#برای بررسی کد نخفیف
-
-def apply_discount(request):
-    if request.method == "POST":
-        code = request.POST.get("discount_code")
-        user = request.user
-
-        try:
-            discount = DiscountCode.objects.get(code=code)
-        except DiscountCode.DoesNotExist:
-            messages.error(request, "کد تخفیف معتبر نیست.")
-            return redirect("checkout")
-
-        # چک کردن فعال بودن کد
-        if not discount.is_active:
-            messages.error(request, "این کد تخفیف غیرفعال شده است.")
-            return redirect("checkout")
-
-        # چک کردن منقضی شدن کد
-        if discount.expires_at < timezone.now().date():
-            messages.error(request, "این کد تخفیف منقضی شده است.")
-            return redirect("checkout")
-
-        # چک کردن استفاده شده یا نشده
-        if discount.is_used:
-            messages.error(request, "این کد تخفیف قبلاً استفاده شده است.")
-            return redirect("checkout")
-
-        # اگر همه چیز درست بود، اعمال تخفیف
-        messages.success(request, f"تخفیف {discount.percent}% با موفقیت اعمال شد.")
-        # اینجا منطق اعمال تخفیف رو اضافه کن
-
-        return redirect("checkout")
-    

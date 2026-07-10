@@ -1,6 +1,7 @@
 {% extends "panel/base_panel.html" %}
 
 {% block content %}
+
 <div class="container mt-4">
     <div class="row">
         <div class="col-md-12">
@@ -21,7 +22,7 @@
                             <div class="col-12 col-md-6">
                                 <label class="form-label">نام سالن</label>
                                 <input type="text" name="salon_name" class="form-control" 
-                                       value="{{ settings.salon_name|default:'سالن زیبایی' }}" {% if is_read_only %}disabled{% endif %}>
+                                       value="{{ settings.salon_name|default:'سالن زیبایی' }}" {% if is_read_only %}disabled{% endif %} required>
                             </div>
                             <div class="col-12 col-md-6">
                                 <label class="form-label">شماره تماس</label>
@@ -34,7 +35,7 @@
                                     title="شماره معتبر وارد کنید (موبایل: 09xxxxxxxxx یا ثابت: 0xxxxxxxxxx)"
                                     placeholder="شماره معتبر وارد کنید (موبایل: 09xxxxxxxxx یا ثابت: 0xxxxxxxxxx)"
                                     value="{{ settings.phone|default:'' }}"
-                                    {% if is_read_only %}disabled{% endif %}>
+                                    {% if is_read_only %}disabled{% endif %} required>
 
                             </div>
 
@@ -55,6 +56,23 @@
                                     ✅ فرمت صحیح: کد کشور + شماره (بدون +) - مثال: 989123456789
                                 </small>
                             </div>
+
+                            <div class="col-12 col-md-6 mt-3">
+                                <label class="form-label">آیدی اینستاگرام</label>
+                                <div class="input-group">
+                                    <span class="input-group-text" dir="ltr">@</span>
+                                    <input type="text"
+                                        name="instagram"
+                                        class="form-control"
+                                        dir="ltr"
+                                        placeholder="مثال: noora_beauty"
+                                        value="{{ settings.instagram|default:'' }}"
+                                        {% if is_read_only %}disabled{% endif %}>
+                                </div>
+                                <small class="text-muted d-block mt-1">
+                                    ✅ آیدی اینستاگرام را بدون @ وارد کنید
+                                </small>
+                            </div>
                         </div>
 
                         <div class="row mb-3">
@@ -71,11 +89,37 @@
                         </div>
 
                         <div class="card mb-3">
+                            <div class="card-header bg-danger text-white">
+                                <h5 class="mb-0">📅 روزهای تعطیل هفتگی سالن</h5>
+                            </div>
+                            <div class="card-body">
+                                <p class="text-muted mb-3">
+                                    <span class="text-danger">*</span> روزهایی که سالن به طور کامل تعطیل است را انتخاب کنید (حداقل یک روز):
+                                </p>
+                                
+                                {% for day in weekdays %}
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" 
+                                        type="checkbox" 
+                                        name="weekend_days" 
+                                        value="{{ day }}"
+                                        id="day_{{ forloop.counter }}"
+                                        {% if day in settings.weekend_days %}checked{% endif %}
+                                        {% if is_read_only %}disabled{% endif %}>
+                                    <label class="form-check-label" for="day_{{ forloop.counter }}">
+                                        {{ day }}
+                                    </label>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="card mb-3">
                             <div class="card-header bg-info text-white">
                                 <h5 class="mb-0">💳 تنظیمات پرداخت آنلاین</h5>
                             </div>
                             <div class="card-body">
-
+                                <!-- سوییچ برای فعال/غیرفعال کردن درگاه پرداخت تو کل سیستم -->
                                 <div class="form-check form-switch">
                                     <input class="form-check-input"
                                         type="checkbox"
@@ -103,6 +147,7 @@
                             </div>
                             <div class="card-body">
                                 <div class="form-check form-switch mb-3">
+                                    <!-- این چک‌باکس با اسکریپت پایین صفحه در ارتباطه تا فیلدهای تایم رو نشون بده/مخفی کنه -->
                                     <input class="form-check-input" type="checkbox" 
                                            name="has_salon_lunch_break" id="has_salon_lunch_break"
                                            {% if settings.has_salon_lunch_break %}checked{% endif %}>
@@ -158,6 +203,7 @@
                             </div>
                         </div>
 
+                        <!-- فوتر و دکمه‌ها -->
                         <div class="card-footer bg-light d-flex justify-content-between">
                             {% if is_read_only %}
                                 <div class="alert alert-info mb-0">
@@ -183,8 +229,11 @@
 </div>
 
 <script>
+    // اسکریپت مربوط به تایم ناهار
+    // فقط در صورتی رندر میشه که یوزر دسترسی ویرایش داشته باشه 
     {% if not is_read_only %}
     document.getElementById('has_salon_lunch_break').addEventListener('change', function() {
+        // با تغییر سوییچ، باکس ساعت شروع و پایان رو نشون میدیم یا مخفی می‌کنیم
         document.getElementById('salon_lunch_fields').style.display = this.checked ? 'block' : 'none';
     });
     {% endif %}

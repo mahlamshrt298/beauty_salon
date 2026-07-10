@@ -1,30 +1,32 @@
 {% load static %}
 {% load salon_footer_tags %} 
 
-<!-- CSS -->
-<!--<link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">-->
-<link rel="stylesheet" href="{% static 'css/persian-datepicker.min.css' %}">
-<!--<link rel="stylesheet" href="{% static 'vendor/bootstrap/css/bootstrap.min.css' %}">-->
-<link rel="stylesheet" href="{% static 'css/bootstrap.rtl.min.css' %}">
-<!-- در بخش <head> -->
-<link rel="stylesheet" href="{% static 'css/swiper-bundle.min.css' %}">
-
 <!doctype html>
+<!-- زبان و دایرکشن پیش‌فرض روی فارسی تنظیم شده -->
 <html lang="fa" dir="rtl">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <!-- Bootstrap CSS - نسخه راست‌چین -->
-  <!-- Bootstrap CSS -->
   <!--<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.rtl.min.css" rel="stylesheet">--> 
+  <!--<link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">-->
+
+  <!--<link rel="stylesheet" href="{% static 'vendor/bootstrap/css/bootstrap.min.css' %}">-->
+   <!-- بوت‌استرپ راست‌چین و تقویم شمسی -->
+  <link rel="stylesheet" href="{% static 'css/persian-datepicker.min.css' %}">
+  <link rel="stylesheet" href="{% static 'css/bootstrap.rtl.min.css' %}">
+  
+  <!-- استایل اسلایدرها -->
+  <link rel="stylesheet" href="{% static 'css/swiper-bundle.min.css' %}">
 
   <!-- استایل‌های سفارشی پروژه -->
   <!-- Custom CSS -->
-  <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}"> 
   <!-- Font Awesome برای ایکون‌های شبکه‌های اجتماعی -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <!--<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">-->
   <!--<link rel="stylesheet" href="{% static 'css/all.min.css' %}">-->
+  <link rel="stylesheet" href="{% static 'vendor/fontawesome/css/all.min.css' %}">
+  <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}"> 
 
     <title>
       {% block title %}سالن زیبایی{% endblock %}
@@ -35,141 +37,141 @@
 
 <body>
 
-     <!-- ===== نوار ناوبری اصلی ===== -->
+     <!--  نوار ناوبری اصلی  -->
     <nav class="navbar navbar-expand-lg navbar-dark ">
-  <div class="container-fluid">
-    <!-- لوگو سالن -->
-    <a class="navbar-brand" href="{% url 'home' %}" >
-      <img src="{% static 'images/logo.png' %}" alt="beauty_salon">
-    </a>
+      <div class="container-fluid">
+        <!-- لوگو سالن -->
+        <a class="navbar-brand" href="{% url 'home' %}" >
+          <img src="{% static 'images/logo.png' %}" alt="beauty_salon">
+        </a>
 
-     <!-- دکمه همبرگری برای موبایل -->
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup"
-      aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
+        <!-- دکمه همبرگری برای موبایل -->
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup"
+          aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+    
+        <!-- منوی ناوبری -->
+        <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
 
-     <!-- منوی ناوبری -->
-    <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+          <!-- لینک‌های اصلی -->
+          <div class="navbar-nav me-auto text-center text-lg-end">  
+            <a class="nav-link {% if active_page == 'home' %}active{% endif %}" href="{% url 'home' %}">خانه</a>
+            <a class="nav-link {% if active_page == 'service' %}active{% endif %}" href="{% url 'services_app:service' %}">خدمات</a>
+            <a class="nav-link {% if active_page == 'reserve' %}active{% endif %}" href="{% url 'reserve' %}">رزرو نوبت</a>
 
-      <!-- لینک‌های اصلی -->
-      <div class="navbar-nav me-auto text-center text-lg-end">  <!-- 👈 me-auto یعنی لینک‌ها سمت راست بمونن -->
-        <a class="nav-link {% if active_page == 'home' %}active{% endif %}" href="{% url 'home' %}">خانه</a>
-        <a class="nav-link {% if active_page == 'service' %}active{% endif %}" href="{% url 'services_app:service' %}">خدمات</a>
-        <a class="nav-link {% if active_page == 'reserve' %}active{% endif %}" href="{% url 'reserve' %}">رزرو نوبت</a>
+            <!-- در هدر سایت -->
+            <a class="nav-link {% if active_page == 'reviews' %}active{% endif %}" href="{% url 'reviews' %}">نظرات مشتریان</a>
+            
 
-        <!-- در هدر سایت -->
-        <a class="nav-link {% if active_page == 'reviews' %}active{% endif %}" href="{% url 'reviews' %}">نظرات مشتریان</a>
-        
-
-        <a class="nav-link {% if active_page == 'blog' %}active{% endif %}" href="{% url 'blog' %}">بلاگ</a>
-        <a class="nav-link {% if active_page == 'about' %}active{% endif %}" href="{% url 'about' %}">درباره ما</a>
-        <a class="nav-link {% if active_page == 'contact' %}active{% endif %}" href="{% url 'contact' %}">تماس با ما</a>
-      </div>
-
-      <!-- دکمه‌های سمت چپ -->
-      <div class="d-flex flex-column flex-lg-row align-items-center gap-2 mt-3 mt-lg-0">
-        
-        {% if user.is_authenticated %}
-          {%if  user.profile.role == 'owner' or user.profile.role == 'receptionist' %}
-
-            <a href="{% url 'panel:dashboard' %}" class="header-btn header-btn-admin">
-                پنل مدیریت
-            </a>
-          {% endif %} 
-        {% endif %} 
-        
-        <!-- دکمه رزرو نوبت -->
-        <a href="{% url 'reserve' %}" class="header-btn">رزرو نوبت</a>
-
-        {% if user.is_authenticated %}
-          <div class="d-flex align-items-center gap-3">
-
-            <!-- 🔔 اعلان‌ها -->
-            <div class="dropdown">
-              <button id="notification-bell" class="btn btn-light position-relative dropdown-toggle"
-                      type="button"
-                      data-bs-toggle="dropdown" data-url="{% url 'accounts:notifications_list' %}">
-                🔔
-                {% if unread_notifications_count > 0 %}
-                  <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                    {{ unread_notifications_count }}
-                  </span>
-                {% endif %}
-              </button>
-
-              <ul class="dropdown-menu dropdown-menu-end p-2" style="min-width:260px; max-width:95vw;">
-                {% for n in latest_notifications %}
-                  <li class="{% if not n.is_read %}fw-bold{% endif %}">
-                    <a href="{% url 'accounts:notifications_list' %}" class="dropdown-item small">
-                      {{ n.message|truncatechars:50 }}
-                      <br>
-                      <small class="text-muted">{{ n.created_at|date:"Y-m-d H:i" }}</small>
-                    </a>
-                  </li>
-                  
-                {% empty %}
-                  <li class="dropdown-item text-muted text-center">اعلانی وجود ندارد</li>
-                {% endfor %}
-                <li><hr class="dropdown-divider"></li>
-                  <li>
-                    <a class="dropdown-item text-center fw-bold text-primary" 
-                      href="{% url 'accounts:notifications_list' %}">
-                      🔔 مشاهده همه اعلان‌ها
-                    </a>
-                </li>
-              </ul>
-            </div>
-
-            <!-- 👤 پروفایل -->
-            <div class="dropdown">
-              <button class="btn header-user dropdown-toggle d-flex align-items-center gap-2"
-                      type="button"
-                      data-bs-toggle="dropdown" data-url="{% url 'accounts:profile' %}">
-
-                {% if user.profile.avatar %}
-                  <img src="{{ user.profile.avatar.url }}" class="header-avatar">
-                {% else %}
-                  <img src="{% static 'images/default-avatar.jfif' %}" class="header-avatar">
-                {% endif %}
-
-
-                <span id="username-link" 
-                      class="header-username"
-                      data-url="{% url 'accounts:profile' %}">
-                    {{ user.username }}
-                </span>
-
-              </button>
-
-              <ul class="dropdown-menu dropdown-menu-end text-center">
-                <li><a class="dropdown-item" href="{% url 'accounts:profile' %}">👤 پروفایل من</a></li>
-                <li><a class="dropdown-item" href="{% url 'accounts:profile' %}">📅 نوبت‌های من</a></li>
-                <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item text-danger" href="{% url 'accounts:logout' %}">🚪 خروج</a></li>
-              </ul>
-            </div>
-
+            <a class="nav-link {% if active_page == 'blog' %}active{% endif %}" href="{% url 'blog' %}">بلاگ</a>
+            <a class="nav-link {% if active_page == 'about' %}active{% endif %}" href="{% url 'about' %}">درباره ما</a>
+            <a class="nav-link {% if active_page == 'contact' %}active{% endif %}" href="{% url 'contact' %}">تماس با ما</a>
           </div>
+        </div>
+        <!-- دکمه‌های سمت چپ -->
+        <div class="header-actions d-flex flex-column flex-lg-row align-items-center gap-2 mt-3 mt-lg-0">
+          
+          {% if user.is_authenticated %}
+            {%if  user.profile.role == 'owner' or user.profile.role == 'receptionist' %}
 
-                
-        {% else %}
-          <!-- 👤 کاربر مهمان -->
-          <a href="{% url 'accounts:login' %}" class="header-btn header-btn-login">
-            ورود
-          </a>
-          <a href="{% url 'accounts:register' %}" class="header-btn header-btn-signup">
-            ثبت نام
-          </a>
-        {% endif %}
+              <a href="{% url 'panel:dashboard' %}" class="header-btn header-btn-admin" target="_blank">
+                  پنل مدیریت
+              </a>
+            {% endif %} 
+          {% endif %} 
+          
+          <!-- دکمه رزرو نوبت -->
+          <a href="{% url 'reserve' %}" class="header-btn">رزرو نوبت</a>
+
+          {% if user.is_authenticated %}
+            <div class="d-flex align-items-center gap-3">
+
+              <!--  اعلان‌ها -->
+              <div class="dropdown">
+                <button id="notification-bell" class="btn btn-light position-relative dropdown-toggle"
+                        type="button"
+                        data-bs-toggle="dropdown" data-url="{% url 'accounts:notifications_list' %}">
+                  🔔
+                  {% if unread_notifications_count > 0 %}
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                      {{ unread_notifications_count }}
+                    </span>
+                  {% endif %}
+                </button>
+
+                <ul class="dropdown-menu dropdown-menu-end p-2" style="min-width:260px; max-width:95vw;">
+                  {% for n in latest_notifications %}
+                    <li class="{% if not n.is_read %}fw-bold{% endif %}">
+                      <a href="{% url 'accounts:notifications_list' %}" class="dropdown-item small">
+                        {{ n.message|truncatechars:50 }}
+                        <br>
+                        <small class="text-muted">{{ n.created_at|date:"Y-m-d H:i" }}</small>
+                      </a>
+                    </li>
+                    
+                  {% empty %}
+                    <li class="dropdown-item text-muted text-center">اعلانی وجود ندارد</li>
+                  {% endfor %}
+                  <li><hr class="dropdown-divider"></li>
+                    <li>
+                      <a class="dropdown-item text-center fw-bold text-primary" 
+                        href="{% url 'accounts:notifications_list' %}">
+                        🔔 مشاهده همه اعلان‌ها
+                      </a>
+                  </li>
+                </ul>
+              </div>
+
+              <!--  پروفایل -->
+              <div class="dropdown">
+                <button class="btn header-user dropdown-toggle d-flex align-items-center gap-2"
+                        type="button"
+                        data-bs-toggle="dropdown" data-url="{% url 'accounts:profile' %}">
+
+                  {% if user.profile.avatar %}
+                    <img src="{{ user.profile.avatar.url }}" class="header-avatar">
+                  {% else %}
+                    <img src="{% static 'images/default-avatar.jfif' %}" class="header-avatar">
+                  {% endif %}
+
+
+                  <span id="username-link" 
+                        class="header-username"
+                        data-url="{% url 'accounts:profile' %}">
+                      {{ user.username }}
+                  </span>
+
+                </button>
+
+                <ul class="dropdown-menu dropdown-menu-end text-center">
+                  <li><a class="dropdown-item" href="{% url 'accounts:profile' %}">👤 پروفایل من</a></li>
+                  <li><a class="dropdown-item" href="{% url 'accounts:profile' %}">📅 نوبت‌های من</a></li>
+                  <li><hr class="dropdown-divider"></li>
+                  <li><a class="dropdown-item text-danger" href="{% url 'accounts:logout' %}">🚪 خروج</a></li>
+                </ul>
+              </div>
+
+            </div>
+
+                  
+          {% else %}
+            <!--  کاربر مهمان -->
+            <a href="{% url 'accounts:login' %}" class="header-btn header-btn-login">
+              ورود
+            </a>
+            <a href="{% url 'accounts:register' %}" class="header-btn header-btn-signup">
+              ثبت نام
+            </a>
+          {% endif %}
+
+        </div>  
 
       </div>
-
-    </div>
-
-  </div>
+      
 </nav>
 
+    <!-- پیام‌های سیستم -->
     {% if messages %}
       <div class="container mt-3">
         {% for message in messages %}
@@ -190,15 +192,14 @@
       </div>
     {% endif %}
 
-    <!-- ===== محتوای اصلی صفحات ===== -->
+    <!--  محتوای اصلی صفحات  -->
     {% block content %}
     {% endblock content %}
         
- <!-- ===== فوتر سایت ===== -->
+      <!--  فوتر سایت  -->
       <footer class="bg-dark text-light py-5 mt-5">
         <div class="container">
           <div class="row">
-            <!-- لینک‌های سریع -->
             <div class="col-md-4 mb-4">
               <h5>لینک‌های سریع</h5>
               <ul class="list-unstyled">
@@ -227,31 +228,31 @@
             </div>
 
             <!-- شبکه‌های اجتماعی -->
-            <!-- ✅ تغییر لینک واتس‌اپ در فوتر -->
             <div class="col-md-4 mb-4">
                 <h5>ما را دنبال کنید</h5>
                 <br>
-                <div class="social-icons">
+                <div class="social-icons d-flex gap-3 align-items-center">
                     {% get_salon_footer_info as footer_info %} 
-                    <a href="https://instagram.com/{{ footer_info.instagram }}" target="_blank" class="social-icon-link">
-                        <i class="fab fa-instagram fa-2x"></i>
+                    <a href="https://instagram.com/{{ footer_info.instagram }}" target="_blank" class="social-icon-link" title="اینستاگرام">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                        </svg>
                     </a>
-                    &nbsp;&nbsp;&nbsp;
-                    <a href="https://t.me/saloon_nora" target="_blank" class="social-icon-link">
-                        <i class="fab fa-telegram fa-2x"></i>
+                    <!-- تلگرام -->
+                    <a href="https://t.me/saloon_nora" target="_blank" class="social-icon-link" title="تلگرام">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+                        </svg>
                     </a>
-                    &nbsp;&nbsp;&nbsp;
-                    <!-- ✅ لینک واتس‌اپ پویا -->
-                    <a href="https://wa.me/{{ footer_info.whatsapp }}?text=سلام،%20برای%20رزرو%20سوال%20دارم" 
-                      target="_blank" 
-                      class="social-icon-link"
-                      title="ارتباط از طریق واتس‌اپ">
-                        <i class="fab fa-whatsapp fa-2x"></i>
+                    <!-- واتس‌اپ -->
+                    <a href="https://wa.me/{{ footer_info.whatsapp }}?text=سلام،%20برای%20رزرو%20سوال%20دارم" target="_blank" class="social-icon-link" title="واتس‌اپ">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/>
+                        </svg>
                     </a>
                 </div>
             </div>
           </div>
-            <!-- خط جداکننده و کپی رایت -->
           <hr class="border-secondary my-4">
           <div class="text-center">
             <p>&copy; ۱۴۰۴ سالن زیبایی نورا. تمامی حقوق محفوظ است.</p>
@@ -259,10 +260,6 @@
         </div>
       </footer>
 
-  
-  {% block scripts %}
-  
-    <!-- ✅ اسکریپت JS بوت‌استرپ -->
    <!--<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>--> 
         <!-- JS -->
   <script src="{% static 'js/jquery-3.6.0.min.js' %}"></script>
@@ -271,53 +268,84 @@
   <script src="{% static 'js/persian-datepicker.min.js' %}"></script>
  <!--<script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>--> 
   <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
-  <!-- قبل از </body> -->
   <script src="{% static 'js/swiper-bundle.min.js' %}"></script>
 
   <script src="{% static 'js/disable-submit.js' %}"></script>
 
-  <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const bell = document.getElementById('notification-bell');
-    if (bell) {
-        bell.addEventListener('dblclick', function(e) {
-            e.preventDefault();
-            // جلوگیری از باز شدن منو در دابل کلیک
-            e.stopPropagation();
-            // هدایت به صفحه اعلانات
-            window.location.href = this.getAttribute('data-url');
-        });
-    }
-});
-</script>
+  {% block scripts %}
+      
+    <!-- باز کردن لینک‌ها با دابل‌کلیک -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const bell = document.getElementById('notification-bell');
+        
+        if (bell) {
+            let lastTap = 0;
 
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    const alerts = document.querySelectorAll('.alert.auto-dismiss');
+            // دسکتاپ: دابل‌کلیک
+            bell.addEventListener('dblclick', function(e) {
+                e.preventDefault();
+                e.stopPropagation(); // نذار دراپ‌داون الکی باز شه
+                window.location.href = this.getAttribute('data-url');
+            });
 
-    alerts.forEach(function (alert) {
-        const delay = parseInt(alert.getAttribute('data-bs-delay')) || 6000;
-
-        setTimeout(function () {
-            const bsAlert = new bootstrap.Alert(alert);
-            bsAlert.close();
-        }, delay);
+            // موبایل: دو ضربه سریع (double tap)
+            bell.addEventListener('touchend', function(e) {
+                const now = Date.now();
+                if (now - lastTap < 300) {
+                    e.preventDefault();
+                    e.stopPropagation(); // جلوگیری از باز شدن dropdown
+                    window.location.href = this.getAttribute('data-url');
+                }
+                lastTap = now;
+            });
+        }
     });
-});
-</script>
+    </script>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const username = document.getElementById('username-link');
+    <!-- بستن خودکار الرت‌های جنگو بعد از زمان مشخص شده -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const alerts = document.querySelectorAll('.alert.auto-dismiss');
 
-    if (username) {
-        username.addEventListener('dblclick', function(e) {
-            e.preventDefault();
-            window.location.href = this.getAttribute('data-url');
+        alerts.forEach(function (alert) {
+            const delay = parseInt(alert.getAttribute('data-bs-delay')) || 6000;
+
+            setTimeout(function () {
+                const bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            }, delay);
         });
-    }
-});
-</script>
+    });
+    </script>
+
+    <!-- باز شدن پروفایل با دوبار زدن روی اسم کاربر -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const username = document.getElementById('username-link');
+
+        if (username) {
+            let lastTap = 0;
+
+            // دسکتاپ: دابل‌کلیک
+            username.addEventListener('dblclick', function(e) {
+                e.preventDefault();
+                window.location.href = this.getAttribute('data-url');
+            });
+
+            // موبایل: دو ضربه سریع (double tap)
+            username.addEventListener('touchend', function(e) {
+                const now = Date.now();
+                if (now - lastTap < 300) {
+                    e.preventDefault();
+                    window.location.href = this.getAttribute('data-url');
+                }
+                lastTap = now;
+            });
+        }
+    });
+    </script>
+
 
 {% endblock scripts %}
 

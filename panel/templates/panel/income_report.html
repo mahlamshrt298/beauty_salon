@@ -1,11 +1,11 @@
 {% extends "panel/base_panel.html" %}
-{% load humanize %}
 
 {% block content %}
 <div class="container mt-4">
 
     <h3 class="mb-4">💲 گزارش درآمد</h3>
 
+    <!-- بخش فیلترهای سریع (امروز، هفته، ماه، سال)  -->
     <div class="mb-4 d-flex gap-2 flex-wrap">
         <a href="?filter=today {% if selected_staff %}&staff={{ selected_staff }}{% endif %}
         {% if selected_method %}&method={{ selected_method }}{% endif %}
@@ -39,16 +39,24 @@
             این سال
         </a>
 
+         <!-- دکمه ریست کل کوئری‌استرینگ‌ها رو پاک میکنه و برمیگرده به دیتای خام -->
         <a href="{% url 'panel:income_report' %}" class="btn btn-secondary">
             ریست
         </a>
     </div>
 
-
-
-    <!-- فیلتر تاریخ -->
+    <!-- فرم فیلترهای پیشرفته (تاریخ، پرسنل، متد پرداخت) -->
     <form method="get" class="row g-3 mb-4">
 
+        <!-- نمایش ارورهای ولیدیشن تاریخی که از سمت ویو (بک‌اند) پاس داده میشه -->
+        {% if date_error %}
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            ⚠️ {{ date_error }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endif %}
+
+        <!-- تاریخ -->
         <div class="col-md-3">
             <label>از تاریخ</label>
             <input type="text" id="start_date" class="form-control">
@@ -87,19 +95,18 @@
         </div>
 
         <div class="col-md-3 align-self-end">
-            <button class="btn btn-primary w-100">اعمال فیلتر</button>
+            <button class="btn btn-primary filter-btn-income-mobile w-100">اعمال فیلتر</button>
         </div>
 
     </form>
-
-    
 
     <!-- کارت‌ها -->
     <div class="row">
         <div class="col-md-4">
             <div class="card p-3 text-center">
                 <h6>درآمد خدمات</h6>
-                <h4>{{ services_income|intcomma }} تومان</h4>
+                <h4>{{ services_income_formatted }} تومان</h4>
+                <small class="text-muted">({{ services_income_words }} تومان)</small>
 
             </div>
         </div>
@@ -107,19 +114,22 @@
         <div class="col-md-4">
             <div class="card p-3 text-center">
                 <h6>درآمد پکیج‌ها</h6>
-                <h4>{{ packages_income|intcomma }} تومان</h4>
-
+                <h4>{{ packages_income_formatted }} تومان</h4>
+                <small class="text-muted">({{ packages_income_words }} تومان)</small>
             </div>
         </div>
 
         <div class="col-md-4">
+            <!-- کارت کل درآمد با رنگ سبز متمایز شده -->
             <div class="card bg-success text-white p-3 text-center">
                 <h6>کل درآمد</h6>
-                <h3>{{ total_income|intcomma }} تومان</h3>
+                <h3>{{ total_income_formatted }} تومان</h3>
+                <small>({{ total_income_words }} تومان)</small>
             </div>
         </div>
     </div>
 
+    <!-- گزارش‌های تحلیلی و تفکیکی -->
     <div class="row mt-4">
 
         <div class="col-md-4">
@@ -140,29 +150,46 @@
                 {% for staff in top_staff %}
                     <div class="d-flex justify-content-between">
                         <span>{{ staff.appointment__staff__full_name }}</span>
-                        <span>{{ staff.total_income|intcomma }} تومان</span>
+                        <span>
+                            <strong class="text-success">{{ staff.total_income_formatted }}</strong>
+                            <small class="text-muted">({{ staff.total_income_words }})</small>
+                            تومان
+                        </span>
                     </div>
                 {% endfor %}
             </div>
         </div>
 
+        <!-- گزارش تفکیک درگاه/نقدی/کارتخوان -->
         <div class="col-md-4">
             <div class="card p-3">
                 <h6>📊 تفکیک روش پرداخت</h6>
 
                 <div class="d-flex justify-content-between">
                     <span>آنلاین</span>
-                    <span>{{ online_income|intcomma }} تومان</span>
+                    <span>
+                        <strong class="text-success">{{ online_income_formatted }}</strong>
+                        <small class="text-muted">({{ online_income_words }})</small>
+                        تومان
+                    </span>
                 </div>
 
                 <div class="d-flex justify-content-between">
                     <span>نقدی</span>
-                    <span>{{ cash_income|intcomma }} تومان</span>
+                    <span>
+                        <strong class="text-success">{{ cash_income_formatted }}</strong>
+                        <small class="text-muted">({{ cash_income_words }})</small>
+                        تومان
+                    </span>
                 </div>
 
                 <div class="d-flex justify-content-between">
                     <span>کارتخوان</span>
-                    <span>{{ card_income|intcomma }} تومان</span>
+                    <span>
+                        <strong class="text-success">{{ card_income_formatted }}</strong>
+                        <small class="text-muted">({{ card_income_words }})</small>
+                        تومان
+                    </span>
                 </div>
             </div>
         </div>
@@ -174,21 +201,111 @@
 </div>
 
 <script>
-$("#start_date").persianDatepicker({
-    format: 'YYYY/MM/DD',
-    onSelect: function(unix){
-        var date = new persianDate(unix).toCalendar('gregorian').format('YYYY-MM-DD');
-        $("#start_date_gregorian").val(date);
+    // وقتی کاربر با کیبورد فارسی تو اینپوت‌ها عدد میزنه، این تابع به انگلیسی تبدیلشون میکنه
+    function persianToEnglishDigits(str) {
+        var persianDigits = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
+        var englishDigits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+        for (var i = 0; i < 10; i++) {
+            str = str.replace(new RegExp(persianDigits[i], 'g'), englishDigits[i]);
+        }
+        return str;
     }
-});
 
-$("#end_date").persianDatepicker({
-    format: 'YYYY/MM/DD',
-    onSelect: function(unix){
-        var date = new persianDate(unix).toCalendar('gregorian').format('YYYY-MM-DD');
-        $("#end_date_gregorian").val(date);
-    }
-});
+    $(document).ready(function () {
+
+        //  بستن خودکار alert خطای Django بعد از 7 ثانیه
+        if ($(".alert-danger").length) {
+            setTimeout(function() {
+                $(".alert-danger").fadeOut(500, function() {
+                    $(this).remove();
+                });
+            }, 7000); 
+        }
+
+        // مقداردهی دیت‌پیکر شمسی برای تاریخ شروع
+        $("#start_date").persianDatepicker({
+            format: 'YYYY/MM/DD',
+            onSelect: function (unix) {
+                // تبدیل مقدار شمسی به فرمت میلادی برای ذخیره تو اینپوت مخفی
+                var date = new persianDate(unix)
+                    .toCalendar('gregorian')
+                    .toLocale('en')
+                    .format('YYYY-MM-DD');
+                $("#start_date_gregorian").val(date);
+            }
+        });
+
+        // مقداردهی دیت‌پیکر شمسی برای تاریخ پایان
+        $("#end_date").persianDatepicker({
+            format: 'YYYY/MM/DD',
+            onSelect: function (unix) {
+                var date = new persianDate(unix)
+                    .toCalendar('gregorian')
+                    .toLocale('en')
+                    .format('YYYY-MM-DD');
+                $("#end_date_gregorian").val(date);
+            }
+        });
+
+        //بخش پایین برای زمانیه که صفحه رفرش میشه (یا فرم سابمیت میشه)
+        var startGregorian = $("#start_date_gregorian").val();
+        if (startGregorian) {
+            startGregorian = persianToEnglishDigits(startGregorian);
+            var pStart = new persianDate(new Date(startGregorian));
+            $("#start_date").val(pStart.format("YYYY/MM/DD"));
+        }
+
+        var endGregorian = $("#end_date_gregorian").val();
+        if (endGregorian) {
+            endGregorian = persianToEnglishDigits(endGregorian);
+            var pEnd = new persianDate(new Date(endGregorian));
+            $("#end_date").val(pEnd.format("YYYY/MM/DD"));
+        }
+
+        // ولیدیشن سمت کلاینت موقع سابمیت فرم
+        $("form").on("submit", function (e) {
+            var start = $("#start_date_gregorian").val();
+            var end = $("#end_date_gregorian").val();
+
+            // چک میکنیم اگه هر دو تاریخ ست شده بودن، تاریخ شروع نباید از پایان بزرگتر باشه
+            if (start && end) {
+                var startDate = new Date(persianToEnglishDigits(start));
+                var endDate = new Date(persianToEnglishDigits(end));
+
+                
+                if (startDate > endDate) {
+                    e.preventDefault();     // متوقف کردن ارسال فرم به سرور
+                    
+                    // اگه اروری از کلیک‌های قبلی مونده پاکش میکنیم
+                    $(".date-validation-error").remove();
+                    
+                    // اضافه کردن پیام خطا به صفحه
+                    var errorHtml = `
+                        <div class="alert alert-danger alert-dismissible fade show date-validation-error" role="alert">
+                            <strong>❌ خطا در بازه تاریخ!</strong><br>
+                            تاریخ شروع نمی‌تواند از تاریخ پایان بزرگتر باشد. لطفاً بازه تاریخ را اصلاح کنید.
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    `;
+                    
+                    $("form").prepend(errorHtml);
+                    
+                    // اسکرول نرم به بالا که کاربر ارور رو ببینه
+                    $("form")[0].scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    
+                    // پاک کردن خودکار ارور بعد از ۵ ثانیه
+                    setTimeout(function() {
+                        $(".date-validation-error").fadeOut(500, function() {
+                            $(this).remove();
+                        });
+                    }, 5000);
+                    
+                    return false;
+                }
+            }
+        });
+
+    });
 </script>
 
 

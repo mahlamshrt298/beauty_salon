@@ -1,6 +1,7 @@
-// booking-flow.js - مدیریت خروج از فرآیند رزرو
+//  مدیریت خروج از فرآیند رزرو
 
-// تابع کمکی برای تشخیص کلیک روی dropdown-toggle
+// یه تابع کمکی برای اینکه وقتی کاربر روی دکمه‌های دراپ‌داون (مثل منوی پروفایل) کلیک کرد، 
+// سیستم فکر نکنه طرف میخواد از صفحه بره بیرون.
 function isDropdownToggleClick(e) {
     const btn = e.currentTarget;
     return btn.hasAttribute('data-bs-toggle') && 
@@ -14,12 +15,14 @@ class BookingExitGuard {
         this.popupShown = false;
         this.exitTargetUrl = null;
         this.allowBrowserUnload = false;
+        //لیست آدرس‌هایی که جزو مراحل رزرو حساب میشن
         this.bookingPages = [
             '/reserve',
             '/select-date',
             '/contact-info',
             '/payment-confirm'
         ];
+        // چک میکنیم ببینیم اصلا الان تو یکی از صفحات رزرو هستیم یا نه
         this.isBookingPage = this.bookingPages.some(page => 
             window.location.pathname.includes(page)
         );
@@ -34,12 +37,14 @@ class BookingExitGuard {
         this.createModal();
         this.attachLinkListeners();
         this.attachFormListeners();
-        this.attachBackButtonListener();
+        this.attachBackButtonListener();     // مدیریت دکمه بکِ خود مرورگر
     }
 
     createModal() {
+        // اگه مدال از قبل تو صفحه هست که هیچی، دوباره نمیسازیمش
         if (document.getElementById('exit-confirmation-modal')) return;
 
+        // ظاهر مدال رو همینجا با جاوا اسکریپت می‌سازیم و میندازیمش ته body
         const modal = document.createElement('div');
         modal.id = 'exit-confirmation-modal';
         modal.style.cssText = `
@@ -89,10 +94,12 @@ class BookingExitGuard {
         document.body.appendChild(modal);
         this.setupModalButtons();
     }
+
     setupModalButtons() {
+        //هر دکمه توی مدال چه کاری باید انجام بده
         document.getElementById('close-exit-modal').onclick = () => this.closeModal();
-        document.getElementById('btn-stay').onclick = () => this.closeModal();
-        document.getElementById('btn-exit').onclick = () => this.confirmExit();
+        document.getElementById('btn-stay').onclick = () => this.closeModal();      // پشیمون شد، می‌خواد بمونه
+        document.getElementById('btn-exit').onclick = () => this.confirmExit();     // واقعاً می‌خواد بره
     }
 
     closeModal() {
@@ -109,10 +116,11 @@ class BookingExitGuard {
                 'Content-Type': 'application/json'
             }
         }).finally(() => {
+            //وقتی کار بک اند تموم شد، کاربر رو میفرستیم به همون لینکی که از اول میخواست بره
             if (this.exitTargetUrl) {
                 window.location.href = this.exitTargetUrl;
             } else {
-                window.location.href = '/';
+                window.location.href = '/'; // اگه لینکی نبود، بندازش صفحه اصلی
             }
         });
     }
@@ -123,22 +131,23 @@ class BookingExitGuard {
     }
 
     attachLinkListeners() {
-        // 1. برای همه لینک‌های <a>
+        // ۱. شنود تمام لینک‌های <a> تو صفحه
         document.querySelectorAll('a').forEach(link => {
             link.addEventListener('click', (e) => {
+                // اگه این لینک مجازه (مثلا دکمه‌های داخلی خود فرآیند رزروه)، کاریش نداشته باش
                 if (this.shouldAllowNavigation(link)) {
-                    this.allowBrowserUnload = true; // 👈 اضافه شود
+                    this.allowBrowserUnload = true; 
                     return;
                 }
 
-                
+                // در غیر این صورت، جلوی رفتنش رو بگیر و پاپ‌آپ رو نشون بده
                 e.preventDefault();
                 this.exitTargetUrl = link.href;
                 this.showModal();
             });
         });
         
-        // 2. برای دکمه اعلان (notification-bell)
+        // ۲. شنود دکمه زنگوله (اعلانات)
         const notificationBell = document.getElementById('notification-bell');
         if (notificationBell) {
             notificationBell.addEventListener('click', (e) => {
@@ -185,7 +194,7 @@ class BookingExitGuard {
             });
         });
         
-        // 4. برای آیتم‌های داخل dropdown منوی پروفایل
+        // ۴. آیتم‌های داخل همون منوی کشویی پروفایل
         document.querySelectorAll('.dropdown-menu a').forEach(dropdownItem => {
             dropdownItem.addEventListener('click', (e) => {
                 if (this.shouldAllowNavigation(dropdownItem)) {
@@ -204,7 +213,7 @@ class BookingExitGuard {
         // اجازه دادن به سابمیت فرم‌ها بدون پاپ‌آپ
         document.querySelectorAll('form').forEach(form => {
             form.addEventListener('submit', () => {
-                this.popupShown = true; // غیرفعال کردن پاپ‌آپ برای فرم
+                this.popupShown = true;  // با این کار، موقع رفرش شدن صفحه واسه سابمیت، اخطار نمیده
             });
         });
     }
@@ -218,25 +227,26 @@ class BookingExitGuard {
         });
     }
 
-
+    //اینجا تصمیم میگیریم که با کلیک روی یه دکمه، اخطار بدیم یا نه
     shouldAllowNavigation(element) {
-        // ✅ اگر عنصر دکمه خاص رزرو است (مثل انتخاب سرویس)
+        //  اگر عنصر دکمه خاص رزرو است (مثل انتخاب سرویس)
+        //  اگه خودمون به دکمه گفتیم data-no-exit یعنی کاری به کارش نداشته باش
         if (element.hasAttribute('data-no-exit') || 
             element.classList.contains('booking-exit-link')) {
             return true;
         }
         
-        // ✅ اگر داخل فرم است
+        //  اگه کلیک روی یه دکمه‌ای داخل فرم بوده
         if (element.closest('form')) {
             return true;
         }
         
-        // ✅ اگر anchor داخلی است
+        //  اگه لینک از نوع anchor (پیمایش تو همون صفحه با #) هست
         if (element.getAttribute('href') && element.getAttribute('href').startsWith('#')) {
             return true;
         }
         
-        // ✅ دریافت مسیر مقصد
+        //  دریافت مسیر مقصد
         let targetUrl = null;
         
         // برای <a> تگ‌ها
@@ -252,12 +262,12 @@ class BookingExitGuard {
             targetUrl = element.getAttribute('href');
         }
         
-        // اگر هیچ URLی ندارد، اجازه بده
+         // اگه اصلا لینکی نداره، بی‌خیالش شو
         if (!targetUrl || targetUrl.trim() === '') {
             return true;
         }
         
-        // ✅ مسیر کنونی و مقصد
+        // مسیر الانمون چیه و کجا میخواد بره
         const currentPath = window.location.pathname;
         let targetPath = '';
         
@@ -267,12 +277,12 @@ class BookingExitGuard {
             targetPath = targetUrl;
         }
         
-        // ✅ اگر همان صفحه است اجازه بده
+        // اگه داره به همون صفحه‌ای که توش هستیم رفرش میشه
         if (targetPath === currentPath) {
             return true;
         }
         
-        // ✅ اگر صفحه مقصد هم جزو صفحات رزرو است (هدایت به صفحات دیگر رزرو)
+        //  اگه داره میره به مرحله بعدی یا قبلی رزرو (یعنی هنوز تو چرخه رزرو هست)
         const isBookingPageLink = this.bookingPages.some(page => 
             targetPath.startsWith(page)
         );
@@ -281,7 +291,7 @@ class BookingExitGuard {
             return true;
         }
         
-        // در غیر این صورت پاپ‌آپ نشان بده
+        // اگه به هیچ کدوم از شرط‌های بالا نخورد،  پاپ‌آپ رو بیار بالا.
         return false;
     }
     showModal() {
@@ -292,7 +302,7 @@ class BookingExitGuard {
     }
 }
 
-// اجرای خودکار
+// وقتی کل HTML صفحه لود شد، گارد ما استارت میخوره
 document.addEventListener('DOMContentLoaded', () => {
     window.bookingExitGuard = new BookingExitGuard();
 });

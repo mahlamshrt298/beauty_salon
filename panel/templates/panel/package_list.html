@@ -3,12 +3,13 @@
 
 {% block content %}
 <div class="container-fluid mt-4">
+    <!-- هدر ریسپانسیو -->
     <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3 mb-4">
         <div>
             <h2 class="fw-bold mb-1" style="color: #2c3e50;">🎁 پکیج‌های ویژه</h2>
         </div>
-        <a href="{% url 'panel:package_add' %}" class="btn btn-primary d-flex align-items-center gap-2">
-            <i class="fas fa-plus"></i>
+        <a href="{% url 'panel:package_add' %}" class="btn btn-primary d-inline-flex align-items-center mobile-add-package-btn">
+            ➕
             <span>افزودن پکیج جدید</span>
         </a>
     </div>
@@ -40,10 +41,13 @@
                                     <i class="fas fa-image text-muted fa-2x"></i>
                                 {% endif %}
                             </td>
+
                             <td class="text-center">
                                 <strong>{{ package.title }}</strong><br>
+                                <!-- کوتاه کردن توضیحات تا ۳۰ کاراکتر -->
                                 <small class="text-muted">{{ package.description|truncatechars:30 }}</small>
                             </td>
+
                             <td class="text-center">
                                 {% if package.service.exists %}
                                     {% for s in package.service.all|slice:":3" %}
@@ -56,12 +60,15 @@
                                     <span class="text-muted">-</span>
                                 {% endif %}
                             </td>
+
                             <td class="text-center">
+                                <!-- نمایش قیمت خط‌خورده فقط در صورتی که قیمت اصلی ست شده باشه -->
                                 {% if package.original_price %}
                                     <del class="text-muted">{{ package.original_price|intcomma }}</del><br>
                                 {% endif %}
                                 <strong>{{ package.discounted_price|intcomma }} تومان</strong>
                             </td>
+                            
                             <td class="text-center">
                                 {% if package.discount_badge %}
                                     <span class="badge bg-danger">{{ package.discount_badge }}</span>
@@ -86,8 +93,8 @@
                                 {% endif %}
                             </td>
 
-                            <!-- در بدنه جدول -->
                             <td class="text-center">
+                                <!-- چک کردن همزمان تایمر داشتن پکیج و ست بودن تاریخ شروع -->
                                 {% if package.is_limited_time and package.start_time %}
                                     {% if package.time_remaining %}
                                         <span class="badge bg-warning">{{ package.time_remaining }}</span>
@@ -102,7 +109,7 @@
                             <td class="text-center">
                                 <div class="d-flex justify-content-center gap-2">
                                     <a href="{% url 'panel:package_edit' package.id %}" class="btn btn-sm btn-warning me-2">
-                                        <i class="fas fa-edit"></i>
+                                        ✏️
                                     </a>
                                     <form method="post"
                                         action="{% url 'panel:package_delete' package.id %}"
@@ -111,7 +118,7 @@
                                         <button type="submit"
                                                 class="btn btn-sm btn-danger"
                                                 onclick="return confirm('آیا از حذف این پکیج مطمئن هستید؟')">
-                                            <i class="fas fa-trash"></i>
+                                            🗑️
                                         </button>
                                     </form>
 
@@ -123,7 +130,7 @@
                                         <button type="submit"
                                                 class="btn btn-sm btn-info"
                                                 onclick="return confirm('اعلان مجدد برای همه کاربران ارسال شود؟')">
-                                            <i class="fas fa-bell"></i>
+                                            🔔
                                         </button>
                                     </form>
 
@@ -135,7 +142,7 @@
                         <tr>
                             <td colspan="9" class="text-center py-5">
                                 <div class="text-muted">
-                                    <i class="fas fa-box-open fa-3x mb-3"></i>
+                                    <div style="font-size:3rem;">📦</div>
                                     <h5>هیچ پکیجی وجود ندارد</h5>
                                     <p class="mb-0">برای افزودن پکیج جدید روی دکمه "افزودن پکیج جدید" کلیک کنید</p>
                                 </div>
@@ -148,7 +155,7 @@
         </div>
     </div>
 
-    <!-- قبل از بسته شدن </div> کانتینر، این کد را اضافه کنید -->
+    <!-- صفحه‌بندی  -->
     {% if packages.has_other_pages %}
     <nav aria-label="صفحه‌بندی پکیج‌ها" class="mt-4">
         <ul class="pagination justify-content-center">

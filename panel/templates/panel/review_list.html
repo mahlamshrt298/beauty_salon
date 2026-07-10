@@ -1,8 +1,10 @@
 {% extends "panel/base_panel.html" %}
 
 {% block content %}
-<h2 class="fw-bold mb-1" style="color: #2c3e50;">📝 نظرات مشتریان</h2>
+
+<h2 class="fw-bold mb-1" style="color: #2c3e50;">💬 نظرات مشتریان</h2>
 </br>
+<!-- بخش فیلتر وضعیت کامنت‌ها -->
 <div class="d-flex flex-wrap gap-2 mb-4">
     <a href="?status=all" class="btn btn-outline-secondary px-2">همه</a>
     <a href="?status=pending" class="btn btn-outline-warning px-2">در انتظار</a>
@@ -30,6 +32,7 @@
                 <td class="text-center">{{ r.user.username|default:"مهمان" }}</td>
 
                 <td class="text-center">
+                    <!-- چک می‌کنیم نظر واسه سرویس خاصیه یا کلیه. اگه سرویس نداشت یه خط تیره می‌ذاریم. -->
                     {% if r.service %}
                         {{ r.service.name }}
                     {% else %}
@@ -39,11 +42,12 @@
 
                 <td class="text-center">{{ r.rating }}/5</td>
 
+                <!-- روی ۸ کلمه محدودش می‌کنیم که جدول دفورمه نشه -->
                 <td class="text-center">{{ r.comment|truncatewords:8 }}</td>
 
                 <td class="text-muted small text-center">
                     {{ r.jalali_date_str }} <br>  {# تاریخ شمسی #}
-                    {{ r.jalali_time_str }}        {# زمان شمسی (همان زمان واقعی) #}
+                    {{ r.jalali_time_str }}        {# زمان #}
                 </td>
 
 
@@ -58,8 +62,9 @@
                 </td>
 
 
-                <td class="text-center">
+                <td class="text-center review-actions-td">
                     {% if r.status == 'pending' %}
+                        <!-- اگه "در انتظار" باشه، هم دکمه تایید می‌خواد هم رد -->
 
                         <!-- تأیید -->
                         <form method="post"
@@ -85,7 +90,7 @@
                         </form>
 
                     {% elif r.status == 'approved' %}
-
+                        <!-- اگه قبلا تایید شده، فقط آپشن "رد کردن" بهش می‌دیم -->
                         <!-- فقط رد -->
                         <form method="post"
                             action="{% url 'panel:review_reject' r.id %}"
@@ -99,14 +104,14 @@
                         </form>
 
                     {% else %}
+                    <!-- اگه کلا رد شده بود که هیچی، عملیاتی روش نداریم -->
                         <span class="text-muted">—</span>
                     {% endif %}
                 </td>
 
 
-                <td class="text-center">
-                    {% if r.status != 'rejected' %}
-
+                <td class="text-center review-reply-td">
+                    <!-- ثبت پاسخ ادمین -->
                         <form method="post"
                             action="{% url 'panel:review_reply' r.id %}"
                             class="mt-1">
@@ -115,16 +120,12 @@
                             <textarea name="admin_reply"
                                     rows="2"
                                     class="form-control form-control-sm mb-1"
-                                    placeholder="پاسخ منشی...">{{ r.admin_reply|default_if_none:"" }}</textarea>
+                                    placeholder="پاسخ یا دلیل رد...">{{ r.admin_reply|default_if_none:"" }}</textarea>
 
                             <button class="btn  btn-outline-primary">
                                 ثبت پاسخ
                             </button>
                         </form>
-
-                    {% else %}
-                        <span class="text-muted small">—</span>
-                    {% endif %}
                 </td>
 
 
@@ -134,6 +135,7 @@
     </table>
 </div>
 
+<!-- بخش صفحه‌بندی -->
     {% if reviews.has_other_pages %}
     <nav aria-label="صفحه‌بندی نظرات" class="mt-4">
         <ul class="pagination justify-content-center">

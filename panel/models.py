@@ -1,22 +1,13 @@
 from django.db import models
 
-class ContactMessage(models.Model):
-    name = models.CharField(max_length=150)
-    phone = models.CharField(max_length=20, blank=True)
-    email = models.EmailField(blank=True)
-    message = models.TextField()
-    created_at = models.DateTimeField(auto_now_add=True)
-    is_read = models.BooleanField(default=False)
-
-    def __str__(self):
-        return self.name
-
-
 class SalonSettings(models.Model):
+    #کمپین تولد فعال باشه یا نه؟
     birthday_discount_enabled = models.BooleanField(default=True)
 
+    #مبلغ تخفیف برای کمپین تولد چقدر باشه؟
     birthday_discount_percent = models.PositiveIntegerField(default=20)
 
+    #کد تخفیف کمپین تولد تا چند روز بعد از صدور اعتبار داشته باشه؟
     birthday_discount_valid_days = models.PositiveIntegerField(
         default=3,
         help_text="اعتبار کد تخفیف (روز)"

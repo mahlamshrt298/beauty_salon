@@ -1,5 +1,4 @@
 {% extends 'base.html' %}
-{% load crispy_forms_tags %}
 
 {%block title%}
 صفحه خروج - سالن زیبایی
@@ -19,8 +18,11 @@
 
 
 <script>
+  // گوش دادن به رویداد فشردن کلیدهای کیبورد در کل صفحه
   document.addEventListener("keydown", function (event) {
+    // اگر کلیدی که فشرده شده "Enter" بود
     if (event.key === "Enter") {
+      // کاربر را به صورت خودکار به آدرس صفحه ورود (Login) هدایت کن
       window.location.href = "{% url 'accounts:login' %}";
     }
   });

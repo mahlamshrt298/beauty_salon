@@ -8,11 +8,12 @@ from django.db.models import Q , Count
 from django.utils import timezone
 from django.urls import reverse
 from django.views.decorators.http import require_POST
-from .models import ContactMessage
 from core.models import SalonSettings
 from accounts.models import Profile, Notification, DiscountCode
-from datetime import datetime, timedelta , date
+from datetime import datetime, timedelta , date , time
 import jdatetime
+from django.http import JsonResponse
+from services_app.models import number_to_persian_words
 import pytz
 from blog_app.models import (Article, Category as BlogCategory,)
 import re
@@ -25,6 +26,7 @@ from django.conf import settings
 from django.db import transaction
 import logging
 logger = logging.getLogger(__name__)  
+
 from django.core.mail import send_mass_mail
 from booking.models import Payment , Holiday
 from django.db.models import Q
@@ -38,7 +40,20 @@ from django.forms import modelformset_factory
 from reviews_app.models import Review
 from .forms import DiscountCodeForm
 from functools import wraps
+from django.core.cache import cache
+from django.db.models import Case, When, IntegerField
+from django.db.models import Sum, Q, Count, F
+from django.utils import timezone
+from booking.models import Payment, PackagePayment , Staff
+from datetime import datetime , timedelta
+from django.db.models import Count
+from django.shortcuts import get_object_or_404
+from booking.models import Staff, Appointment
+from django.utils import timezone
 
+
+#برای محدود کردن دسترسی به پنل
+# مطمئن بشیم طرف هم لاگین کرده و هم حتما ادمین یا منشی هست.
 def panel_access_required(view_func):
     @wraps(view_func)
     def _wrapped_view(request, *args, **kwargs):
@@ -51,7 +66,6 @@ def panel_access_required(view_func):
         return view_func(request, *args, **kwargs)
 
     return _wrapped_view
-
 
 # داشبورد
 # -----------------------------
@@ -73,42 +87,71 @@ def dashboard(request):
         "12": "اسفند",
     }
 
-    # دریافت ماه و سال از querystring
+    # خوندن مقادیر فیلتر از url
     year = request.GET.get("year")
     month = request.GET.get("month")
 
     appointments = Appointment.objects.all()
 
-    if year and month:
-        jy = int(year)
-        jm = int(month)
-
-        start_j = jdatetime.date(jy, jm, 1)
-
-        # ✅ محاسبه امن انتهای ماه شمسی
-        end_j = start_j.replace(day=1) + jdatetime.timedelta(days=32)
-        end_j = end_j.replace(day=1)
-
-        start_g = start_j.togregorian()
-        end_g = end_j.togregorian()
-
-        appointments = appointments.filter(
-            appointment_date__gte=start_g,
-            appointment_date__lt=end_g
-        )
+    #  فیلتر بر اساس سال و ماه (جداگانه یا ترکیبی)
+    if year or month:
+        if year and month:
+            # هر دو انتخاب شده‌اند ،، فیلتر دقیق ماه
+            jy = int(year)
+            jm = int(month)
+            start_j = jdatetime.date(jy, jm, 1)
+            
+            #هندل کردن ماه اسفند
+            if jm == 12:
+                end_j = jdatetime.date(jy + 1, 1, 1)
+            else:
+                end_j = jdatetime.date(jy, jm + 1, 1)
+            
+            #تبدیل شمسی به میلادی
+            start_g = start_j.togregorian()
+            end_g = end_j.togregorian()
+            
+            appointments = appointments.filter(
+                appointment_date__gte=start_g,
+                appointment_date__lt=end_g
+            )
+        
+        elif year:
+            # فقط سال انتخاب شده ،، کل سال
+            jy = int(year)
+            start_j = jdatetime.date(jy, 1, 1)
+            end_j = jdatetime.date(jy + 1, 1, 1)
+            
+            start_g = start_j.togregorian()
+            end_g = end_j.togregorian()
+            
+            appointments = appointments.filter(
+                appointment_date__gte=start_g,
+                appointment_date__lt=end_g
+            )
 
     total_appointments = appointments.count()
-    total_services = Service.objects.count()
-    total_staff = User.objects.filter(groups__name="receptionist").count()
+    
+    #آمار کلی
+    #دیتای ثابت کش میشه، به مدت 5دقیقه
+    total_services = cache.get('total_services')
+    if total_services is None:
+        total_services = Service.objects.count()
+        cache.set('total_services', total_services, 300)
 
-    # شمارش وضعیت‌ها
+    total_staff = cache.get('total_staff')
+    if total_staff is None:
+        total_staff = User.objects.filter(groups__name="receptionist").count()
+        cache.set('total_staff', total_staff, 300)
+        
+    # آمار وضعیت‌ها
     pending_bookings = appointments.filter(status="pending").count()
     confirmed = appointments.filter(status="confirmed").count()
     pending = appointments.filter(status="pending").count()
     cancelled = appointments.filter(status="cancelled").count()
     completed = appointments.filter(status="completed").count()
 
-    # ✅ این دو خط جدید
+    #برای دراپ دوون
     years = [str(y) for y in range(1404, 1412)]
     months = [str(i).zfill(2) for i in range(1, 13)]
 
@@ -125,6 +168,7 @@ def dashboard(request):
         "pending": pending,
         "cancelled": cancelled,
         "completed": completed,
+        "JALALI_MONTHS": JALALI_MONTHS,
 
         # برای حفظ انتخاب فیلتر
         "years": years,
@@ -133,6 +177,7 @@ def dashboard(request):
         "selected_month": month,
         })
 
+
 # مدیریت نوبت‌ها
 # -----------------------------
 
@@ -140,27 +185,33 @@ def dashboard(request):
 @panel_access_required
 def booking_list(request):
     appointments = Appointment.objects.select_related("user", "service").order_by("-id")
-   # 🔍 سرچ متنی
+   
+   #  سرچ متنی
     q = request.GET.get("q")
     if q:
         appointments = appointments.filter(
             Q(user__username__icontains=q) |
             Q(service__name__icontains=q) |
-            Q(status__icontains=q)
+            Q(status__icontains=q)|
+            Q(staff__full_name__icontains=q)
         )
 
-    # 🔽 فیلتر وضعیت
+    #  فیلتر وضعیت ( دراپ دوون)
     status = request.GET.get("status")
     if status:
         appointments = appointments.filter(status=status)
 
-    # ✅ فیلتر بازه زمانی تاریخ شمسی
+    tracking = request.GET.get("tracking", "").strip()
+    if tracking:
+        appointments = appointments.filter(tracking_code__iexact=tracking)
+
+    #  فیلتر بازه زمانی
     start_date = request.GET.get('start_date', '').strip()
     end_date = request.GET.get('end_date', '').strip()
 
     if start_date and end_date:
         try:
-            # تبدیل تاریخ شمسی به میلادی برای فیلتر
+            # تبدیل شمسی به میلادی برای فیلتر
             start_parts = start_date.split('/')
             end_parts = end_date.split('/')
             
@@ -175,6 +226,7 @@ def booking_list(request):
                 start_jalali_date = jdatetime.date(start_year, start_month, start_day)
                 end_jalali_date = jdatetime.date(end_year, end_month, end_day)
                 
+                #تبدیل شمسی به میلادی
                 start_gregorian_date = start_jalali_date.togregorian()
                 end_gregorian_date = end_jalali_date.togregorian()
                 
@@ -183,12 +235,11 @@ def booking_list(request):
                     appointment_date__lte=end_gregorian_date
                 )
         except (ValueError, IndexError, jdatetime.datetime.DateError):
-            # در صورت خطا، فیلتر تاریخ نادیده گرفته می‌شود
+            # اگر خطا داد، فیلتر تاریخ رو نادیده بگیر
             pass 
 
-    # در ویو booking_list، در بخش پردازش appointments
     converted_appointments = []
-    month_names = {  # ← تغییر از "month1:" به "month_names ="
+    month_names = {  
         1: "فروردین",
         2: "اردیبهشت",
         3: "خرداد",
@@ -204,13 +255,11 @@ def booking_list(request):
     }
 
     for item in appointments:
-        # ✅ تبدیل کامل تاریخ میلادی به شمسی
+        #  تبدیل میلادی به شمسی برای نمایش
         j_date = jdatetime.date.fromgregorian(date=item.appointment_date)
-        
-        # ✅ ایجاد تاریخ شمسی کامل (روز، ماه، سال)
+
         item.shamsi_date = f"{j_date.day} {month_names[j_date.month]} {j_date.year}"
         
-        # --- بقیه کد‌ها (ساعت و ...)
         t = item.start_time
         hour = t.hour
         minute = t.minute
@@ -221,22 +270,24 @@ def booking_list(request):
         item.fixed_time = f"{hour12}:{minute:02d} {suffix}"
         
         item.is_past = item.is_past_and_not_completed()
+
         item.notes_preview = item.notes[:30] + '...' if item.notes and len(item.notes) > 30 else item.notes
         
-        # ✅ محاسبه شماره‌های تماس برای هر نوبت
+        #  پیدا کردن شماره‌های تماس برای هر نوبت
         profile_phone = None
         if hasattr(item.user, 'profile') and item.user.profile.phone:
             profile_phone = item.user.profile.phone
         
         appt_phone = item.phone
         
-        # ✅ اگر هر دو وجود دارند و متفاوت هستند
+        #  اگر هر دو وجود دارند و متفاوت هستند
         if profile_phone and appt_phone and profile_phone != appt_phone:
             item.display_phones = [
                 {'number': profile_phone, 'label': 'پروفایل'},
                 {'number': appt_phone, 'label': 'رزرو'}
             ]
-         # ✅ اگر فقط یکی وجود دارد
+
+         #  اگر فقط یکی وجود دارد
         elif profile_phone:
             item.display_phones = [{'number': profile_phone, 'label': 'پروفایل'}]
         elif appt_phone:
@@ -246,7 +297,7 @@ def booking_list(request):
             
         converted_appointments.append(item)
         
-    paginator = Paginator(converted_appointments, 10)  # 10 نوبت در هر صفحه
+    paginator = Paginator(converted_appointments, 10)  
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
@@ -254,9 +305,11 @@ def booking_list(request):
         request,
         "panel/booking_list.html",
         {"appointments": page_obj,  "q": q, "status": status,"start_date": start_date, 
-        "end_date": end_date  },
+        "end_date": end_date,
+        "tracking": tracking,  },
     )
 
+#تایید نوبت
 @require_POST
 @login_required
 @panel_access_required
@@ -266,8 +319,11 @@ def booking_approve(request, pk):
     appointment.save()
 
     messages.success(request, "نوبت تأیید شد.", extra_tags = "panel")
-    return redirect("panel:booking_list")
+    #برگرده همونجایی که بوده
+    next_url = request.GET.get('next') or request.META.get('HTTP_REFERER') or reverse('panel:booking_list')
+    return redirect(next_url)
 
+#لغو نوبت
 @require_POST
 @login_required
 @panel_access_required
@@ -277,18 +333,19 @@ def booking_cancel(request, pk):
     appointment.save()
 
     messages.error(request, "نوبت لغو شد.", extra_tags = "panel")
+    next_url = request.GET.get('next')
+    if next_url:
+        return redirect(next_url)
     return redirect("panel:booking_list")
 
 @login_required
 @panel_access_required
 def booking_update(request, booking_id):
     appointment = get_object_or_404(Appointment, id=booking_id)
-    # 🔒 فقط نوبت‌های pending و confirmed قابل ویرایش هستند
     if appointment.status not in ["pending", "confirmed"]:
         messages.warning(request, "این نوبت قابل ویرایش نیست.", extra_tags="panel")
         return redirect("panel:booking_list")
   
-    # 🔒 قفل ویرایش نوبت تأییدشده برای غیر مدیر
     if appointment.status == "confirmed" and request.user.profile.role not in ["owner", "receptionist"]:
         messages.warning(
             request,
@@ -299,121 +356,154 @@ def booking_update(request, booking_id):
     if request.user.profile.role not in ["owner", "receptionist"]:
         messages.error(request, "شما اجازه ویرایش ندارید" , extra_tags = "front")
         return redirect("panel:booking_list")
-    else:
-        if request.method == "POST":
-            new_date_str = request.POST.get("date")  # مثال: "1404/12/16"
-            new_time_str = request.POST.get("start_time")
-            service_id = request.POST.get("service")
-            staff_id = request.POST.get("staff")
-
-            if not new_time_str:
-                messages.error(request, "ساعت نوبت ارسال نشده است", extra_tags="panel")
-                return redirect("panel:booking_update", booking_id=booking_id)
-
-            # ✅ تبدیل تاریخ شمسی به میلادی
-            try:
-                jy, jm, jd = map(int, new_date_str.split("/"))
-                new_date_gregorian = jdatetime.date(jy, jm, jd).togregorian()
-
-                # ✅ اعتبارسنجی: تاریخ نباید دیروز یا قبل‌تر باشد
-                today_jalali = jdatetime.date.today()
-                yesterday_jalali = today_jalali - jdatetime.timedelta(days=1)
-                selected_jalali = jdatetime.date(jy, jm, jd)
-                
-                if selected_jalali <= yesterday_jalali:
-                    messages.error(
-                        request, 
-                        "تاریخ نمی‌تواند دیروز یا قبل‌تر باشد. لطفاً تاریخ امروز یا آینده را انتخاب کنید.",
-                        extra_tags="panel"
-                    )
-                    return redirect("panel:booking_update", booking_id=booking_id)
-
-            except (ValueError, AttributeError):
-                messages.error(request, "فرمت تاریخ نامعتبر است. لطفاً از فرمت 1404/12/16 استفاده کنید.", extra_tags="panel")
-                return redirect("panel:booking_update", booking_id=booking_id)
-
-            # 🔹 گرفتن سرویس
-            service = get_object_or_404(Service, id=service_id)
-
-            # 🔹 تبدیل ساعت
-            start_time = datetime.strptime(new_time_str, "%H:%M").time()
-
-            # 🔹 محاسبه end_time
-            dt = datetime.combine(new_date_gregorian, start_time)  # ✅ تاریخ میلادی
-            end_dt = dt + timedelta(minutes=service.duration_minutes)
-            end_time = end_dt.time()
-
-            # 🔴 بررسی تداخل (با تاریخ میلادی)
-            conflict = Appointment.objects.filter(
-                appointment_date=new_date_gregorian,  # ✅ تاریخ میلادی
-                start_time=start_time
-            ).exclude(id=appointment.id).exists()
-
-            if conflict:
-                messages.error(
-                    request,
-                    "در این تاریخ و ساعت قبلاً نوبت ثبت شده است.",
-                    extra_tags="panel"
-                )
-                return redirect("panel:booking_update", booking_id=booking_id)
-
-            # ✅ ذخیره تغییرات (با تاریخ میلادی)
-            appointment.appointment_date = new_date_gregorian  # ✅ تاریخ میلادی
-            appointment.start_time = start_time
-            appointment.end_time = end_time
-            appointment.service = service
-            appointment.notes = request.POST.get("notes", "")
-            appointment.staff_id = staff_id
-
-            # اگر تغییر داشت → برگرده به pending
-            appointment.status = "pending"
-
-            appointment.save()
-
-            messages.success(request, "نوبت با موفقیت ویرایش شد.", extra_tags="panel")
-            return redirect("panel:booking_list")
-
-    services = Service.objects.all()
-    # ✅ دریافت پرسنل‌های فعال مرتبط با خدمت فعلی نوبت
-    staff_members = Staff.objects.filter(
-        services=appointment.service,
-        is_active=True,
-        status="active"
-    )
-
-   # ✅ به جای آن این کد جدید را قرار دهید:
-    jalali_date = jdatetime.date.fromgregorian(date=appointment.appointment_date)
     
-    # رشته تاریخ شمسی برای نمایش در فیلد ورودی
+    services = Service.objects.all()
+    staff_members = Staff.objects.all()
+
+    jalali_date = jdatetime.date.fromgregorian(date=appointment.appointment_date)
     jalali_date_str = f"{jalali_date.year}/{jalali_date.month:02d}/{jalali_date.day:02d}"
-
-
-    # در تابع booking_update
     today_jalali = jdatetime.date.today()
-    jalali_today_str = f"{today_jalali.year}{today_jalali.month:02d}{today_jalali.day:02d}"
-
-    jalali_today_formatted = f"{today_jalali.year}/{today_jalali.month:02d}/{today_jalali.day:02d}"
-
-    # در تابع booking_update
     yesterday_jalali = today_jalali - jdatetime.timedelta(days=1)
-    jalali_yesterday_formatted = f"{yesterday_jalali.year}/{yesterday_jalali.month:02d}/{yesterday_jalali.day:02d}"
 
-    yesterday_jalali_str = f"{yesterday_jalali.year}{yesterday_jalali.month:02d}{yesterday_jalali.day:02d}"
-
-    return render(request, "panel/booking_update.html", {
+    context = {
         "appointment": appointment,
         "services": services,
         "staff": staff_members,
         "jalali_date_str": jalali_date_str,
         "jalali_year": jalali_date.year,
         "jalali_month": jalali_date.month,
-        "jalali_day": jalali_date.day, 
-        "jalali_today_str": jalali_today_str,
-        "jalali_today_formatted": jalali_today_formatted, 
-        "jalali_yesterday_formatted": jalali_yesterday_formatted,
-         "jalali_yesterday_str": yesterday_jalali_str,
-    })
+        "jalali_day": jalali_date.day,
+        "jalali_today_str": f"{today_jalali.year}{today_jalali.month:02d}{today_jalali.day:02d}",
+        "jalali_today_formatted": f"{today_jalali.year}/{today_jalali.month:02d}/{today_jalali.day:02d}",
+        "jalali_yesterday_formatted": f"{yesterday_jalali.year}/{yesterday_jalali.month:02d}/{yesterday_jalali.day:02d}",
+        "jalali_yesterday_str": f"{yesterday_jalali.year}{yesterday_jalali.month:02d}{yesterday_jalali.day:02d}",
+    }
 
+    if request.method == "POST":
+        new_date_str = request.POST.get("date") 
+        new_time_str = request.POST.get("start_time")
+        service_id = request.POST.get("service")
+        staff_id = request.POST.get("staff")
+
+        if not new_time_str:
+            messages.error(request, "ساعت نوبت ارسال نشده است", extra_tags="panel")
+            return render(request, "panel/booking_update.html", context)
+
+        #  اعتبار سنجی و تبدیل شمسی به میلادی
+        try:
+            jy, jm, jd = map(int, new_date_str.split("/"))
+            new_date_gregorian = jdatetime.date(jy, jm, jd).togregorian()
+
+            selected_jalali = jdatetime.date(jy, jm, jd)
+                
+            if selected_jalali < today_jalali:
+                messages.error(
+                        request, 
+                        "تاریخ نمی‌تواند دیروز یا قبل‌تر باشد. لطفاً تاریخ امروز یا آینده را انتخاب کنید.",
+                        extra_tags="panel"
+                )
+                return render(request, "panel/booking_update.html", context)
+
+        except (ValueError, AttributeError):
+            messages.error(request, "فرمت تاریخ نامعتبر است. لطفاً از فرمت 1404/12/16 استفاده کنید.", extra_tags="panel")
+            return render(request, "panel/booking_update.html", context)
+        
+        if not service_id or not staff_id:
+            messages.error(request, "سرویس و پرسنل را انتخاب کنید.", extra_tags="panel")
+            return render(request, "panel/booking_update.html", context)
+
+        service = get_object_or_404(Service, id=service_id)
+        staff = get_object_or_404(Staff, id=staff_id)
+
+        start_time = datetime.strptime(new_time_str, "%H:%M").time()
+
+        #  محاسبه end_time
+        dt = datetime.combine(new_date_gregorian, start_time)  
+        end_dt = dt + timedelta(minutes=service.duration_minutes)
+        end_time = end_dt.time()
+
+        # بررسی روز کاری پرسنل 
+        days_map = {0: 'شنبه', 1: 'یکشنبه', 2: 'دوشنبه', 3: 'سه‌شنبه', 4: 'چهارشنبه', 5: 'پنج‌شنبه', 6: 'جمعه'}
+        
+        selected_day_name = days_map[selected_jalali.weekday()]
+        
+        if selected_day_name not in staff.work_days:
+            messages.error(request, f"پرسنل انتخابی در روز {selected_day_name} حضور ندارد.", extra_tags="panel")
+            return render(request, "panel/booking_update.html", context)
+
+        #ساعت نوبت تو بازه شیفت کاریش هست؟ 
+        if start_time < staff.work_start_time or end_time > staff.work_end_time:
+            messages.error(
+                request, 
+                f"ساعت انتخابی خارج از شیفت پرسنل است. (شیفت کاری: {staff.work_start_time.strftime('%H:%M')} تا {staff.work_end_time.strftime('%H:%M')})", 
+                extra_tags="panel"
+            )
+            return render(request, "panel/booking_update.html", context)
+        
+        # تداخل با ساعت ناهار نداشته باشه
+        if staff.has_lunch_break:
+            if start_time < staff.lunch_end and end_time > staff.lunch_start:
+                messages.error(
+                    request, 
+                    f"این ساعت با زمان استراحت/ناهار پرسنل تداخل دارد. (ناهار: {staff.lunch_start.strftime('%H:%M')} تا {staff.lunch_end.strftime('%H:%M')})", 
+                    extra_tags="panel"
+                )
+                return render(request, "panel/booking_update.html", context)
+            
+        #  بررسی تداخل (با نوبت کس دیگه‌ای تو همون تایم تداخل نداشته باشه)
+        #برای زمان:شروع ما قبل از پایان اونا باشه و پایان ما بعد از شروع اونا
+        conflict = Appointment.objects.filter(
+            staff_id=staff.id,
+            appointment_date=new_date_gregorian,
+            status__in=['pending', 'confirmed'],
+            start_time__lt=end_time,
+            end_time__gt=start_time
+        ).exclude(id=appointment.id).exists()
+
+        if conflict:
+            messages.error(
+                    request,
+                    "در این تاریخ و ساعت قبلاً نوبت ثبت شده است.",
+                    extra_tags="panel"
+                )
+            return render(request, "panel/booking_update.html", context)
+        
+        # اگر همه چی اوکی بود،  ذخیره میکنیم
+        # دریافت وضعیت انتخاب شده از فرم
+        new_status = request.POST.get("status")
+
+        appointment.appointment_date = new_date_gregorian  
+        appointment.start_time = start_time
+        appointment.end_time = end_time
+        appointment.service = service
+        appointment.notes = request.POST.get("notes", "")
+        appointment.staff_id = staff_id
+
+        if new_status:
+            appointment.status = new_status
+
+        appointment.save()
+
+        messages.success(request, "نوبت با موفقیت ویرایش شد.", extra_tags="panel")
+        return redirect("panel:booking_list")
+
+    return render(request, "panel/booking_update.html", context)
+
+
+
+@login_required
+@panel_access_required
+def get_staff_by_service(request):
+    service_id = request.GET.get('service_id')
+    if service_id:
+        staff_members = Staff.objects.filter(services__id=service_id, is_active=True, status="active")
+        data = [{"id": s.id, "name": s.full_name} for s in staff_members]
+        return JsonResponse({"staff": data})
+    return JsonResponse({"staff": []})
+
+
+
+#ثبت وضعیت انجام شده
 @require_POST
 @login_required
 @panel_access_required
@@ -426,6 +516,7 @@ def booking_complete(request, pk):
         messages.success(request, f"نوبت {appointment.user.username} به «انجام شده» تغییر کرد.", extra_tags="panel")
     return redirect('panel:today_appointments')
 
+#ثبت وضعیت عدم حضور
 @require_POST
 @login_required
 @panel_access_required
@@ -444,14 +535,20 @@ def booking_no_show(request, pk):
 @panel_access_required
 def today_appointments(request):
     today = date.today()
+    #اول تاییدشده‌ها بیان بالا،بعد در انتظار تایید ها
     appointments = Appointment.objects.filter(
         appointment_date=today,
-        status='confirmed'  # فقط نوبت‌های فعال امروز
-    ).select_related(
-        'user', 'service', 'staff', 'user__profile'
-    ).order_by('start_time')
+        status__in=['pending', 'confirmed']
+    ).order_by(
+        Case(
+            When(status='confirmed', then=0),
+            When(status='pending', then=1),
+            output_field=IntegerField()
+        ),
+        'start_time'
+    )
     
-    # ✅ محاسبه شماره‌های تماس برای هر نوبت
+    #   شماره‌های تماس برای هر نوبت
     appointments_list = []
     for appt in appointments:
         profile_phone = appt.user.profile.phone if hasattr(appt.user, 'profile') else None
@@ -470,8 +567,7 @@ def today_appointments(request):
         
         appointments_list.append(appt)
 
-# ✅ اضافه کردن صفحه‌بندی
-    paginator = Paginator(appointments_list, 10)  # 10 نوبت در هر صفحه
+    paginator = Paginator(appointments_list, 10) 
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
@@ -483,6 +579,7 @@ def today_appointments(request):
         'today_jalali': today_jalali,
     })
 
+
 @login_required
 @panel_access_required
 def tomorrow_appointments(request):
@@ -490,16 +587,16 @@ def tomorrow_appointments(request):
     tomorrow = date.today() + timedelta(days=1)
     appointments = Appointment.objects.filter(
         appointment_date=tomorrow,
-        status__in=['pending', 'confirmed']  # فقط نوبت‌های معتبر
+        status__in=['pending', 'confirmed']  
     ).select_related('user', 'service', 'staff', 'user__profile').order_by('start_time')
     
-    # ✅ مرتب‌سازی هوشمند: اول نوبت‌های در انتظار، بعد تأیید شده، سپس بر اساس ساعت
+    # اول نوبت‌های در انتظار، بعد تأیید شده، سپس بر اساس ساعت
     appointments = appointments.order_by(
-        '-status',  # pending قبل از confirmed (چون 'p' بعد از 'c' می‌آید)
+        '-status',  
         'start_time'
     )
 
-    # ✅ محاسبه شماره‌های تماس برای هر نوبت (همان کد بالا)
+    #   شماره‌های تماس برای هر نوبت 
     appointments_list = []
     for appt in appointments:
         profile_phone = appt.user.profile.phone if hasattr(appt.user, 'profile') else None
@@ -516,7 +613,6 @@ def tomorrow_appointments(request):
         
         appointments_list.append(appt)
 
-    # ✅ اضافه کردن صفحه‌بندی
     paginator = Paginator(appointments_list, 10)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)   
@@ -533,9 +629,9 @@ def tomorrow_appointments(request):
 # مدیریت خدمات
 # -----------------------------
 
-from django.http import JsonResponse
-
+#در اضافه یا ویرایش خدمت استفاده شده
 @login_required
+@panel_access_required
 def load_subcategories(request):
     category_id = request.GET.get('category_id')
     subcategories = Subcategory.objects.filter(category_id=category_id).values('id', 'name')
@@ -544,36 +640,47 @@ def load_subcategories(request):
 @login_required
 @panel_access_required
 def services_list(request):
+
+    # خوندن پارامترهای فیلتر از URL
     category_id = request.GET.get("category")
     subcategory_id = request.GET.get("subcategory")
+    status_filter = request.GET.get("status")
+    
+    #واسه باز کردن مودال ویرایش و حذف دسته‌بندی‌
     danger_category_id = request.GET.get("danger_category")
     if danger_category_id in ["", "None", None]:
         danger_category_id = None
 
-    services = Service.objects.all()
+    services = Service.objects.all().order_by('-id')
     
+    #اعمال فیلترها
     if category_id:
         services = services.filter(subcategory__category_id=category_id)
 
     if subcategory_id:
         services = services.filter(subcategory_id=subcategory_id)
 
-    # ✅ اضافه کردن صفحه‌بندی
-    paginator = Paginator(services, 15)  # 15 خدمت در هر صفحه (بهینه برای جدول)
+    if status_filter == "active":
+        services = services.filter(is_active=True)
+    elif status_filter == "inactive":
+        services = services.filter(is_active=False)
+
+    paginator = Paginator(services, 15)  
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
+    #گرفتن لیست دسته‌ها همراه با تعداد زیردسته‌هاشون
     categories = ServiceCategory.objects.annotate(
         sub_count=Count("subcategories")
     )
 
-    # 🔹 برای فیلتر پایین صفحه
+    #  واسه دراپ‌داون فیلتر زیردسته‌ها
     if category_id:
         subcategories = Subcategory.objects.filter(category_id=category_id)
     else:
         subcategories = Subcategory.objects.none()
 
-    # 🔹 برای کارت مدیریت زیردسته‌ها
+    #  برای کارت مدیریت زیردسته‌ها
     if danger_category_id and danger_category_id.isdigit():
         danger_subcategories = Subcategory.objects.filter(category_id=danger_category_id).annotate(service_count=Count("services"))
     else:
@@ -585,6 +692,7 @@ def services_list(request):
             "subcategories": subcategories,
             "selected_category": category_id,
             "selected_subcategory": subcategory_id,
+            "selected_status": status_filter,
             "danger_subcategories": danger_subcategories,
             "selected_danger_category": danger_category_id,
             })
@@ -592,15 +700,19 @@ def services_list(request):
 @login_required
 @panel_access_required
 def service_add(request):
-    
+    #آماده‌سازی فرم‌ست واسه آپلود چندتایی عکس
+    #گالری سرویس
     GalleryFormSet = modelformset_factory(ServiceImage, form=ServiceGalleryForm, extra=1, can_delete=True)
 
     if request.method == "POST":
+        # چون عکس داریم، حتما باید request.FILES رو پاس بدیم
         form = ServiceForm(request.POST, request.FILES)
 
         if form.is_valid() :
             service = form.save()
 
+            #  لوپ میزنیم روی عکس‌هایی که کاربر آپلود کرده 
+            # و اون‌ها رو به گالری همین سرویس متصل میکنیم
             for f in request.FILES.getlist('form-0-image'):
                 ServiceImage.objects.create(
                     service=service,
@@ -637,6 +749,7 @@ def service_edit(request, id):
         if form.is_valid() :
             service = form.save()
 
+            # اضافه کردن عکس‌های جدید به گالری
             for f in request.FILES.getlist('form-0-image'):
                 ServiceImage.objects.create(
                     service=service,
@@ -663,12 +776,15 @@ def delete_service_image(request, image_id):
     image.delete()
     messages.success(request, "عکس با موفقیت حذف شد.", extra_tags="panel")
     
+    #برمیگردونیم به همون صفحه‌ای که توش بوده
     next_url = request.META.get("HTTP_REFERER")
     if next_url:
         return redirect(next_url)
 
     return redirect("panel:service_edit", id=service_id)
 
+
+# مدیریت دسته‌ها و زیردسته‌ها
 @login_required
 @panel_access_required
 def category_add(request):
@@ -713,9 +829,11 @@ def category_edit(request, id):
 
         if name:
             category.name = name
-            category.slug = ""  # برای ساخت اسلاگ جدید
+            category.slug = ""  
             category.save()
             messages.success(request, "دسته با موفقیت ویرایش شد.", extra_tags="panel")
+
+            #اگه از مودالِ بخش دسته‌ها اومده، دوباره برش گردونیم همونجا
             danger_category = request.POST.get("danger_category")
 
             if danger_category and danger_category.isdigit():
@@ -745,6 +863,7 @@ def subcategory_edit(request, id):
             subcategory.slug = ""
             subcategory.save()
             messages.success(request, "زیردسته با موفقیت ویرایش شد.", extra_tags="panel")
+            
             danger_category = request.POST.get("danger_category")
 
             if danger_category and danger_category.isdigit():
@@ -765,6 +884,7 @@ def subcategory_edit(request, id):
 @panel_access_required
 def service_delete_category(request, id):
     category = get_object_or_404(ServiceCategory, id=id)
+    #نباید دسته‌ای رو که زیردسته یا سرویس داره پاک کنیم
     if category.subcategories.exists() or Service.objects.filter(subcategory__category=category).exists():
         messages.error(request, "این دسته دارای زیردسته یا خدمت است و قابل حذف نیست.", extra_tags="panel")
     else:
@@ -782,6 +902,7 @@ def service_delete_category(request, id):
 @panel_access_required
 def service_delete_subcategory(request, id):
     subcategory = get_object_or_404(Subcategory, id=id)
+    #اگر زیر دسته خودش سرویس داشت،جلوی حذفش رو میگیریم
     if subcategory.services.exists():
         messages.error(request, "این زیردسته دارای خدمت است و قابل حذف نیست.", extra_tags="panel")
     else:
@@ -799,6 +920,7 @@ def service_delete_subcategory(request, id):
 def service_toggle_status(request, pk):
     service = get_object_or_404(Service, pk=pk)
 
+    #فقط مدیر میتونه اینکار رو انجام بده
     if request.user.profile.role != "owner":
         return redirect("panel:services_list")
 
@@ -806,6 +928,7 @@ def service_toggle_status(request, pk):
     service.save()
 
     return redirect("panel:services_list")
+
 
 # مدیریت منشی‌ها
 # -----------------------------
@@ -816,7 +939,7 @@ def staff_list(request):
 
     personnel = []
 
-    # 👤 مالک + منشی‌ها (از Profile)
+    #  واکشی مدیر و منشی‌ها از مدل Profile
     profiles = Profile.objects.filter(
         role__in=["owner", "receptionist"]
     ).select_related("user")
@@ -835,7 +958,7 @@ def staff_list(request):
             "type": "system",
         })
 
-    # 💇‍♀️ پرسنل سالن (Staff)
+    # واکشی پرسنل سالن 
     staff_members = Staff.objects.all()
 
     if status_filter:
@@ -856,8 +979,7 @@ def staff_list(request):
     can_manage_staff = request.user.profile.role in ["owner", "receptionist"]
 
 
-    # ✅ اضافه کردن صفحه‌بندی (بعد از ساخت لیست کامل)
-    paginator = Paginator(personnel, 12)  # 12 پرسنل در هر صفحه (بهینه برای جدول)
+    paginator = Paginator(personnel, 12)  
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
@@ -871,6 +993,7 @@ def staff_list(request):
 @panel_access_required
 def staff_add(request):
     if request.method == "POST":
+        # اول مطمئن میشیم فیلدهای ضروری حتما پر شده باشن
         required_fields = ["username","first_name","last_name","phone","password","confirm_password"]
         for f in required_fields:
             if not request.POST.get(f):
@@ -883,7 +1006,7 @@ def staff_add(request):
         phone = request.POST.get("phone", '').strip()
         
         if phone:
-            # اعتبارسنجی شماره موبایل ایران
+            # اعتبارسنجی شماره موبایل 
             if not re.fullmatch(r'09\d{9}', phone):
                 messages.error(
                         request,
@@ -915,7 +1038,6 @@ def staff_add(request):
          # تنظیم پروفایل
         user.profile.phone = phone
         user.profile.status = "active"
-        # تعیین نقش در پروفایل
         user.profile.role = "receptionist"
         user.profile.save()
 
@@ -923,14 +1045,14 @@ def staff_add(request):
         group = Group.objects.get(name="receptionist")
         user.groups.add(group)
 
-        # منشی باید دسترسی staff داشته باشد
+        # فعال‌سازی دسترسی به پنل مدیریت
         user.is_staff = True
         user.save()
 
         messages.success(request, "منشی با موفقیت اضافه شد." , extra_tags = "panel")
-        return redirect("panel:staff_list")  # بعد از ثبت به لیست منشی‌ها می‌رود
+        return redirect("panel:staff_list")  
 
-    return render(request, "panel/staff_list.html")
+    return render(request, "panel/staff_add.html")
 
 @login_required
 @panel_access_required
@@ -943,14 +1065,22 @@ def staff_edit(request, id):
 
 
     if request.method == "POST":
-        required_fields = ["username","first_name","last_name","phone","password","confirm_password"]
+        required_fields = ["username","first_name","last_name","phone"]
         for f in required_fields:
             if not request.POST.get(f):
                 messages.error(request, f"فیلد {f} نمی‌تواند خالی باشد.", extra_tags="panel")
                 return redirect("panel:staff_add")
             
         username = request.POST.get("username")
-        password = request.POST.get("password")
+        password = request.POST.get("password", "").strip()
+        confirm_password = request.POST.get("confirm_password", "").strip()
+
+        #چک کردن تغییر پسورد
+        if password:
+            if password != confirm_password:
+                messages.error(request, "رمز عبور و تکرار آن یکسان نیست.", extra_tags="panel")
+                return redirect("panel:staff_edit", id=id)
+            staff.set_password(password)
 
         # بررسی نام کاربری تکراری
         if User.objects.filter(username=username).exclude(id=staff.id).exists():
@@ -959,13 +1089,12 @@ def staff_edit(request, id):
 
         staff.username = username
 
-        # اگر رمز جدید وارد شده باشد تغییرش می‌دهیم
         if password and password.strip() != "":
             staff.set_password(password)
 
         staff.save()
 
-        # نقش و گروه اطمینان از reception بودن
+        # آپدیت کردن پروفایل
         staff.profile.role = "receptionist"
         staff.first_name = request.POST.get("first_name")
         staff.last_name = request.POST.get("last_name")
@@ -993,7 +1122,6 @@ def staff_edit(request, id):
 @panel_access_required
 def staff_change_status(request, user_id, status):
 
-    # فقط owner اجازه دارد
     if request.user.profile.role not in ["owner", "receptionist"]:
         messages.error(request, "شما اجازه این عملیات را ندارید" , extra_tags = "panel")
         return redirect("panel:staff_list")
@@ -1013,11 +1141,9 @@ def staff_change_status(request, user_id, status):
         messages.error(request, "وضعیت نامعتبر است" , extra_tags = "panel")
         return redirect("panel:staff_list")
     
-    # تغییر وضعیت
     profile.status = status
-    profile.save()   # 🔥 اینجا sync با User.is_active انجام می‌شود
+    profile.save()   
 
-    # همگام‌سازی با User.is_active
     if status == "inactive":
         profile.user.is_active = False
     else:
@@ -1025,9 +1151,7 @@ def staff_change_status(request, user_id, status):
 
     profile.user.save()
 
-    # --------------------
-    # 🔔 ساخت اعلان
-    # --------------------
+    #  ساخت اعلان
     status_labels = {
         "active": "فعال",
         "inactive": "غیرفعال",
@@ -1037,11 +1161,11 @@ def staff_change_status(request, user_id, status):
     Notification.objects.create(
         user=profile.user,
         type="status_change",
-        channel="email",  # یا sms / whatsapp
+        channel="email", 
         message=f"وضعیت شما توسط مدیر به «{status_labels[status]}» تغییر یافت."
     )
 
-
+    #ارسال ایمیل
     send_mail(
         subject="تغییر وضعیت حساب کاربری",
         message=f"وضعیت شما به «{status_labels[status]}» تغییر یافت.",
@@ -1053,6 +1177,7 @@ def staff_change_status(request, user_id, status):
     messages.success(request, "وضعیت پرسنل با موفقیت تغییر کرد", extra_tags = "panel")
     return redirect("panel:staff_list")
 
+
 WEEK_DAYS_FA = [
     "شنبه",
     "یکشنبه",
@@ -1062,6 +1187,7 @@ WEEK_DAYS_FA = [
     "پنجشنبه",
     "جمعه",
     ]
+
 
 # مدیریت پرسنل سالن
 # -----------------------------
@@ -1074,20 +1200,19 @@ def salon_staff_add(request):
     )
 
     if request.method == "POST":
-        full_name = request.POST.get("full_name")
-        role = request.POST.get("role")
-        phone = request.POST.get("phone")
-        work_days = request.POST.getlist("work_days")
+        full_name = request.POST.get("full_name", "").strip()
+        role = request.POST.get("role", "").strip()
+        phone = request.POST.get("phone", "").strip()
         work_start_time = request.POST.get("work_start_time")
         work_end_time = request.POST.get("work_end_time")
-        service_ids = request.POST.getlist("services")
         photo = request.FILES.get("photo")
-
-        # ✅ خدمات جدید - از فیلد مخفی
-        services_str = request.POST.get("services", "")
-        service_ids = services_str.split(",") if services_str else []
-
-        # ✅ اعتبارسنجی شماره تماس
+        show_in_about_page = request.POST.get("show_in_about_page") == "on"
+        
+        #  اعتبارسنجی شماره تماس
+        if not phone:
+            messages.error(request, "شماره تماس الزامی است.", extra_tags="panel")
+            return redirect("panel:salon_staff_add")
+        
         if not re.match(r"^09\d{9}$", phone):
             messages.error(
                 request,
@@ -1096,8 +1221,28 @@ def salon_staff_add(request):
             )
             return redirect("panel:salon_staff_add")
         
-        show_in_about_page = request.POST.get("show_in_about_page") == "on"
+        #  اعتبارسنجی روزهای کاری
+        work_days = request.POST.getlist("work_days")
+        if not work_days:
+            messages.error(
+                request,
+                "لطفاً حداقل یک روز کاری انتخاب کنید.",
+                extra_tags="panel"
+            )
+            return redirect("panel:salon_staff_add")
 
+        #  اعتبارسنجی خدمات
+        service_ids = request.POST.getlist("services")
+
+        if not service_ids:
+            messages.error(
+                request,
+                "لطفاً حداقل یک خدمت انتخاب کنید.",
+                extra_tags="panel"
+            )
+            return redirect("panel:salon_staff_add")
+
+        # ثبت خود شخص
         staff = Staff.objects.create(
             full_name=full_name,
             role=role,
@@ -1111,11 +1256,10 @@ def salon_staff_add(request):
             show_in_about_page=show_in_about_page
         )
 
-        # ✅ ذخیره خدمات
-        if service_ids:
-            staff.services.set(service_ids)
+        valid_ids = [int(sid) for sid in service_ids if sid.isdigit()]
+        services_qs = Service.objects.filter(id__in=valid_ids)
+        staff.services.set(services_qs)
         
-        staff.save()
         messages.success(request, "پرسنل سالن با موفقیت اضافه شد", extra_tags="panel")
         return redirect("panel:staff_list")
 
@@ -1150,7 +1294,7 @@ def salon_staff_change_status(request, staff_id, status):
     if status == "inactive":
         staff.is_active = False
     else:
-        staff.is_active = True  # active و leave هر دو فعال‌اند
+        staff.is_active = True  
 
     staff.save()
 
@@ -1183,20 +1327,20 @@ def salon_staff_edit(request, id):
             )
             return redirect("panel:salon_staff_edit", id=staff.id)
 
-        # ✅ روزهای کاری (خیلی مهم)
+        #  روزهای کاری 
         staff.work_days = request.POST.getlist("work_days")
 
-        # ✅ ساعت کاری
+        #  ساعت کاری
         staff.work_start_time = request.POST.get("work_start_time")
         staff.work_end_time = request.POST.get("work_end_time")
 
-        # ✅ وضعیت
+        #  وضعیت
         staff.status = request.POST.get("status")
 
-        # ✅ فعال / غیرفعال
+        #  فعال / غیرفعال
         staff.is_active = "is_active" in request.POST
 
-        # ✅ عکس
+        # اگر عکس جدید آپلود شده باشد، جایگزین می‌شود
         if request.FILES.get("photo"):
             staff.photo = request.FILES.get("photo")
         
@@ -1204,11 +1348,11 @@ def salon_staff_edit(request, id):
 
         staff.save()
 
-         # ✅ خدمات جدید - فقط از فیلد مخفی استفاده کن
+         #  خدمات جدید 
         services_str = request.POST.get("services", "")
         service_ids = services_str.split(",") if services_str else []
         
-        # ✅ ذخیره خدمات
+        #  ذخیره خدمات
         if service_ids:
             staff.services.set(service_ids)
         else:
@@ -1227,40 +1371,16 @@ def salon_staff_edit(request, id):
         "week_days": WEEK_DAYS_FA,
     })
 
-# پیام‌ها
-# -----------------------------
 
-@login_required
-@panel_access_required
-def messages_manage(request):
-
-    # حذف پیام
-    if "delete" in request.GET:
-        msg = get_object_or_404(ContactMessage, id=request.GET.get("delete"))
-        msg.delete()
-        messages.success(request, "پیام حذف شد.",PANEL_TAG = "panel")
-        return redirect("panel:messages_manage")
-
-    # علامت‌گذاری پیام به‌عنوان خوانده شده
-    if "read" in request.GET:
-        msg = get_object_or_404(ContactMessage, id=request.GET.get("read"))
-        msg.is_read = True
-        msg.save()
-        return redirect("panel:messages_manage")
-
-    # نمایش پیام‌ها
-    msgs = ContactMessage.objects.all().order_by("-created_at")
-
-    return render(request, "panel/messages.html", {
-        "messages_list": msgs
-    })
-
+#برای کسایی که خواستن وارد مسیری بشن که دسترسی بهش رو ندارن
 @panel_access_required
 def no_access(request):
     return render(request, "panel/no_access.html")
 
+
 #بخش خدمات پرطرفدار
 # -----------------------------
+
 @login_required
 @panel_access_required
 def popular_services_list(request):
@@ -1275,16 +1395,31 @@ def popular_service_add(request):
     categories = ServiceCategory.objects.all()
 
     if request.method == 'POST':
-        category = ServiceCategory.objects.get(id=request.POST['category'])
+        title = request.POST.get('title', '').strip()
+        description = request.POST.get('description', '').strip()
+        category_id = request.POST.get('category')
+        order = request.POST.get('order', '').strip()
+        image = request.FILES.get('image')
+
+        #اعتبار سنجی فرم
+        if not title or not description or not category_id or not image or order == '':
+            messages.error(request, 'لطفاً همه فیلدهای اجباری را پر کنید.')
+            return render(request, 'panel/popular_service_form.html', {
+                'categories': categories
+            })
+        
+        category = get_object_or_404(ServiceCategory, id=category_id)
 
         PopularService.objects.create(
-            title=request.POST['title'],
-            description=request.POST['description'],
-            image=request.FILES['image'],
+            title=title,
+            description=description,
+            image=image,
             category=category,
-            order=request.POST.get('order', 0),
+            order=order,
+            # چک باکس‌ها تو ریکوئست POST فقط در صورتی میان که تیک خورده باشن
             is_active='is_active' in request.POST
         )
+        messages.success(request, 'خدمت پرطرفدار با موفقیت اضافه شد.')
         return redirect('panel:popular_services_list')
 
     return render(request, 'panel/popular_service_form.html',{'categories': categories})
@@ -1296,16 +1431,30 @@ def popular_service_edit(request, pk):
     categories = ServiceCategory.objects.all()
 
     if request.method == 'POST':
-        service.title = request.POST['title']
-        service.description = request.POST['description']
-        service.category = ServiceCategory.objects.get(id=request.POST['category'])
-        service.order = request.POST.get('order', 0)
+        title = request.POST.get('title', '').strip()
+        description = request.POST.get('description', '').strip()
+        category_id = request.POST.get('category')
+        order = request.POST.get('order', '').strip()
+
+        if not title or not description or not category_id or order == '':
+            messages.error(request, 'لطفاً همه فیلدهای اجباری را پر کنید.')
+            return render(request, 'panel/popular_service_form.html', {
+                'service': service,
+                'categories': categories
+            })
+        
+        service.title = title
+        service.description = description
+        service.category = get_object_or_404(ServiceCategory, id=category_id)
+        service.order = order
         service.is_active = 'is_active' in request.POST
 
+        # فقط اگه عکس جدید آپلود شده بود، فیلد عکس رو آپدیت کن
         if 'image' in request.FILES:
             service.image = request.FILES['image']
 
         service.save()
+        messages.success(request, 'خدمت پرطرفدار با موفقیت ویرایش شد.')
         return redirect('panel:popular_services_list')
 
     return render(request, 'panel/popular_service_form.html', {
@@ -1320,6 +1469,7 @@ def popular_service_delete(request, pk):
     service.delete()
     return redirect('panel:popular_services_list')
 
+
 #بخش مقالات
 # -----------------------------
 @login_required
@@ -1327,8 +1477,7 @@ def popular_service_delete(request, pk):
 def article_list(request):
     articles = Article.objects.select_related('category', 'author').order_by('-created_at')
     
-    # ✅ اضافه کردن صفحه‌بندی
-    paginator = Paginator(articles, 12)  # 12 مقاله در هر صفحه
+    paginator = Paginator(articles, 12) 
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
@@ -1344,12 +1493,42 @@ def article_add(request):
     subcategories = Subcategory.objects.all()
     services = Service.objects.filter(is_active=True)
 
+    context = {
+        'categories': categories,
+        'services': services,
+        'service_categories': service_categories,
+        'subcategories': subcategories,
+        'article': None,
+    }
+
     if request.method == "POST":
+        title   = request.POST.get('title', '').strip()
+        content = request.POST.get('content', '').strip()
+        category = request.POST.get('category', '').strip()
+
+        #برای اینکه تو فرانت بتونیم زیر هر فیلد ارور خودش رو نشون بدیم
+        errors = {}
+        if not title:
+            errors['title'] = "عنوان مقاله الزامی است."
+        if not content:
+            errors['content'] = "محتوای مقاله الزامی است."
+        if not category:
+            errors['category'] = "دسته‌بندی الزامی است."
+        if not request.FILES.get('image'):
+            errors['image'] = "تصویر مقاله الزامی است."
+
+        # اگه اروری داشتیم، دوباره همون فرم رو رندر کن ولی دیتای قبلی رو هم بفرست
+        if errors:
+            messages.error(request, "لطفاً خطاهای زیر را برطرف کنید.", extra_tags="panel")
+            context['errors'] = errors
+            context['old'] = request.POST  
+            return render(request, 'panel/article_form.html', context)
+        
         Article.objects.create(
-            title=request.POST['title'],
-            content=request.POST['content'],
+            title=title,
+            content=content,
             image=request.FILES.get('image'),
-            category_id=request.POST['category'],
+            category_id=category,
             author=request.user,
             tags=request.POST.get('tags', ''),
             Key_points=request.POST.get('Key_points', ''),
@@ -1359,12 +1538,7 @@ def article_add(request):
         messages.success(request, "مقاله با موفقیت اضافه شد", extra_tags="panel")
         return redirect('panel:article_list')
 
-    return render(request, 'panel/article_form.html', {
-        'categories': categories,
-        'services': services,
-        'service_categories': service_categories,
-        'subcategories': subcategories,
-    })
+    return render(request, 'panel/article_form.html', context)
 
 @login_required
 @panel_access_required
@@ -1375,10 +1549,38 @@ def article_edit(request, pk):
     subcategories = Subcategory.objects.all()
     services = Service.objects.filter(is_active=True)
 
+    context = {
+        'article': article,
+        'categories': categories,
+        'services': services,
+        'service_categories': service_categories,
+        'subcategories': subcategories,
+    }
+
     if request.method == "POST":
-        article.title = request.POST['title']
-        article.content = request.POST['content']
-        article.category_id = request.POST['category']
+        title   = request.POST.get('title', '').strip()
+        content = request.POST.get('content', '').strip()
+        category = request.POST.get('category', '').strip()
+
+        errors = {}
+        if not title:
+            errors['title'] = "عنوان مقاله الزامی است."
+        if not content:
+            errors['content'] = "محتوای مقاله الزامی است."
+        if not category:
+            errors['category'] = "دسته‌بندی الزامی است."
+        # اگه عکس جدید آپلود نشده و عکس قبلی هم نداریم ارور بده
+        if not request.FILES.get('image') and not article.image:
+            errors['image'] = "تصویر مقاله الزامی است."
+
+        if errors:
+            messages.error(request, "لطفاً خطاهای زیر را برطرف کنید.", extra_tags="panel")
+            context['errors'] = errors
+            return render(request, 'panel/article_form.html', context)
+        
+        article.title = title
+        article.content = content
+        article.category_id = category
         article.tags = request.POST.get('tags', '')
         article.Key_points = request.POST.get('Key_points', '')
         article.for_reserve_id = request.POST.get('for_reserve') or None
@@ -1391,13 +1593,7 @@ def article_edit(request, pk):
         messages.success(request, "مقاله ویرایش شد", extra_tags="panel")
         return redirect('panel:article_list')
 
-    return render(request, 'panel/article_form.html', {
-        'article': article,
-        'categories': categories,
-        'services': services,
-         'service_categories': service_categories,
-        'subcategories': subcategories,
-    })
+    return render(request, 'panel/article_form.html', context)
 
 @require_POST
 @login_required
@@ -1420,7 +1616,18 @@ def article_category_list(request):
 @panel_access_required
 def article_category_add(request):
     if request.method == "POST":
-        BlogCategory.objects.create(name=request.POST['name'])
+        name = request.POST.get('name', '').strip()
+        
+        if not name:
+            messages.error(request, "نام دسته‌بندی الزامی است", extra_tags="panel")
+            return render(request, 'panel/article_category_form.html')
+        
+        #دسته با این اسم تکراری نباشه
+        if BlogCategory.objects.filter(name=name).exists():
+            messages.error(request, "این دسته‌بندی قبلاً ثبت شده است", extra_tags="panel")
+            return render(request, 'panel/article_category_form.html', {'name': name})
+        
+        BlogCategory.objects.create(name=name)
         messages.success(request, "دسته‌بندی اضافه شد", extra_tags="panel")
         return redirect('panel:article_category_list')
 
@@ -1432,7 +1639,19 @@ def article_category_edit(request, pk):
     category = get_object_or_404(BlogCategory, pk=pk)
 
     if request.method == "POST":
-        category.name = request.POST['name']
+        name = request.POST.get('name', '').strip()
+        
+        if not name:
+            messages.error(request, "نام دسته‌بندی الزامی است", extra_tags="panel")
+            return render(request, 'panel/article_category_form.html', {'category': category})
+        
+        #  خودش رو از چک تکراری حذف می‌کنه
+        #وگرنه اگه کاربر روی دکمه سیو بزنه بدون اینکه اسم رو عوض کنه، بهش ارور میده
+        if BlogCategory.objects.filter(name=name).exclude(pk=pk).exists():
+            messages.error(request, "این دسته‌بندی قبلاً ثبت شده است", extra_tags="panel")
+            return render(request, 'panel/article_category_form.html', {'category': category})
+        
+        category.name = name
         category.save()
         messages.success(request, "دسته‌بندی ویرایش شد", extra_tags="panel")
         return redirect('panel:article_category_list')
@@ -1450,6 +1669,7 @@ def article_category_delete(request, pk):
     messages.error(request, "دسته‌بندی حذف شد", extra_tags="panel")
     return redirect('panel:article_category_list')
 
+
 #بخش نظرات
 # -----------------------------
 @login_required
@@ -1458,6 +1678,7 @@ def panel_review_list(request):
     status = request.GET.get('status', 'all')
     reviews = Review.objects.select_related('user', 'service').order_by('-created_at')
     
+    #فیلتر کردن نظرات
     if status == 'approved':
         reviews = reviews.filter(status = 'approved')
 
@@ -1467,20 +1688,17 @@ def panel_review_list(request):
     elif status == 'pending':
         reviews = reviews.filter(status = 'pending')
         
-    # ✅ اول صفحه‌بندی، بعد پردازش تاریخ شمسی (فقط برای صفحه فعلی)
-    paginator = Paginator(reviews, 10)  # 10 نظر در هر صفحه
+    paginator = Paginator(reviews, 10)  
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
-    # ✅ تبدیل تاریخ ایجاد نظر به شمسی (همان روش booking_list)
+    #  تبدیل تاریخ ایجاد نظر به شمسی 
     for review in page_obj:
         # تبدیل به زمان محلی پروژه (برای جلوگیری از اختلاف تاریخ)
         local_time = timezone.localtime(review.created_at)
-        # تبدیل به تاریخ شمسی
         jalali_dt = jdatetime.datetime.fromgregorian(datetime=local_time)
-        # ذخیره فرمت شمسی در خود المان برای استفاده در تمپلیت
         review.jalali_date_str = jalali_dt.strftime('%Y/%m/%d')
-        review.jalali_time_str = jalali_dt.strftime('%H:%M')  # زمان هم شمسی (اختیاری اما پیشنهادی)
+        review.jalali_time_str = jalali_dt.strftime('%H:%M') 
 
     return render(request, 'panel/review_list.html', {
         'reviews': page_obj,
@@ -1494,7 +1712,7 @@ def review_approve(request, pk):
     review = get_object_or_404(Review, pk=pk)
     old_status = review.status
     
-    # ⛔ اگر قبلاً تأیید شده
+    # اگه از قبل تایید شده بود، الکی پردازش نکن
     if review.status == 'approved':
         messages.info(request, 'این نظر قبلاً تأیید شده است.', extra_tags='panel')
         return redirect('panel:review_list')
@@ -1503,43 +1721,35 @@ def review_approve(request, pk):
     review.save(update_fields=['status'])
     messages.success(request, 'نظر تأیید شد', extra_tags='panel')
     
-    # ✅ ارسال ایمیل به کاربر
+    #  ارسال ایمیل به کاربر
     email_sent = False
     if review.user and review.user.email:
         try:
-             # ✅ بررسی ایمن وجود سرویس
             service_name = review.service.name if review.service else "خدمات سالن"
             
             subject = 'نظر شما تأیید شد ✅'
             message = f"""سلام {review.user.get_full_name() or review.user.username} عزیز،
 
-نظر شما برای خدمت «{service_name}» در سالن زیبایی نورا تأیید شد و به زودی در سایت نمایش داده خواهد شد.
+            نظر شما برای خدمت «{service_name}» در سالن زیبایی نورا تأیید شد و به زودی در سایت نمایش داده خواهد شد.
 
-از اینکه وقت خود را برای اشتراک‌گذاری نظرتان گذاشتید، سپاسگزاریم.
+            از اینکه وقت خود را برای اشتراک‌گذاری نظرتان گذاشتید، سپاسگزاریم.
 
-با احترام،
-تیم سالن زیبایی نورا
-"""
+            با احترام،
+            تیم سالن زیبایی نورا
+            """
+
             send_mail(
                 subject,
                 message,
                 settings.DEFAULT_FROM_EMAIL,
                 [review.user.email],
-                fail_silently=False,
+                fail_silently=True,
             )
             email_sent = True
             logger.info(f"ایمیل تأیید نظر به {review.user.email} برای نظر #{review.id} ارسال شد")
         except Exception as e:
             logger.error(f"خطا در ارسال ایمیل تأیید نظر به {review.user.email}: {str(e)}")
     
-    # ✅ نمایش پیام مناسب به مدیر
-  #  if email_sent:
-   #     messages.success(request, f'نظر تأیید شد و ایمیل به {review.user.username} ارسال گردید ✉️', extra_tags='panel')
-    #elif review.user.email:
-     #   messages.warning(request, f'نظر تأیید شد اما ارسال ایمیل به {review.user.username} با خطا مواجه شد!', extra_tags='panel')
-  #  else:
-   #     messages.info(request, f'نظر تأیید شد (کاربر {review.user.username} ایمیل ندارد)', extra_tags='panel')
-     
     return redirect('panel:review_list')
 
 @require_POST
@@ -1549,53 +1759,48 @@ def review_reject(request, pk):
     review = get_object_or_404(Review, pk=pk)
     old_status = review.status
     
-     # ⛔ اگر قبلاً رد شده
+     #  اگر قبلاً رد شده
     if review.status == 'rejected':
         messages.info(request, 'این نظر قبلاً رد شده است.', extra_tags='panel')
         return redirect('panel:review_list')
     
     review.status = 'rejected'
+    
     review.save(update_fields=['status'])
     messages.warning(request, 'نظر رد شد', extra_tags='panel')
     
-     # ✅ ارسال ایمیل به کاربر
+     # ارسال ایمیل به کاربر
     email_sent = False
     if review.user and review.user.email:
         try:
-            # ✅ بررسی ایمن وجود سرویس
             service_name = review.service.name if review.service else "خدمات سالن"
+            
+            #  اضافه کردن دلیل به متن ایمیل
+            reason_text = f"\nدلیل رد نظر: {review.admin_reply}\n" if review.admin_reply else ""
             
             subject = 'نظر شما بررسی شد ❌'
             message = f"""سلام {review.user.get_full_name() or review.user.username} عزیز،
 
-با تشکر از نظر ارزشمند شما برای خدمت «{service_name}»، 
-متأسفانه نظر شما مطابق با سیاست‌های سایت نبود و پس از بررسی، قابل نمایش نیست.
+            با تشکر از نظر ارزشمند شما برای خدمت «{service_name}»، 
+            متأسفانه نظر شما مطابق با سیاست‌های سایت نبود و پس از بررسی، قابل نمایش نیست.
+            {reason_text}
+            هرگونه پیشنهاد یا انتقاد دیگری دارید، خوشحال می‌شویم در پنل کاربری یا از طریق تماس با ما با ما در میان بگذارید.
 
-هرگونه پیشنهاد یا انتقاد دیگری دارید، خوشحال می‌شویم در پنل کاربری یا از طریق تماس با ما با ما در میان بگذارید.
+            با احترام،
+            تیم سالن زیبایی نورا
+            """
 
-با احترام،
-تیم سالن زیبایی نورا
-"""
             send_mail(
                     subject,
                     message,
                     settings.DEFAULT_FROM_EMAIL,
                     [review.user.email],
-                    fail_silently=False,
+                    fail_silently=True,
                 )
             email_sent = True
-            logger.info(f"ایمیل رد نظر به {review.user.email} برای نظر #{review.id} ارسال شد")
         except Exception as e:
             logger.error(f"خطا در ارسال ایمیل رد نظر به {review.user.email}: {str(e)}")
-    
-    # ✅ نمایش پیام مناسب به مدیر
-#    if email_sent:
- #       messages.success(request, f'نظر رد شد و ایمیل به {review.user.username} ارسال گردید ✉️', extra_tags='panel')
-  #  elif review.user.email:
-   #     messages.warning(request, f'نظر رد شد اما ارسال ایمیل به {review.user.username} با خطا مواجه شد!', extra_tags='panel')
-    #else:
-     #   messages.info(request, f'نظر رد شد (کاربر {review.user.username} ایمیل ندارد)', extra_tags='panel')
-        
+  
     return redirect('panel:review_list')
 
 @login_required
@@ -1618,11 +1823,13 @@ def review_reply(request, pk):
         message="پاسخی برای نظر شما ثبت شد."
     )
 
-
     return redirect("panel:review_list")
+
 
 #کد تخفیف
 # -----------------------------
+
+#واسه شمسی کردن تاریخ انقضا
 def to_jalali(date):
     if not date:
         return ""
@@ -1636,26 +1843,31 @@ def discount_codes(request):
         return redirect("panel:dashboard")
 
     if request.method == "POST":
+        #حذف کد تخفیف
         if "delete_id" in request.POST:
             DiscountCode.objects.filter(id=request.POST["delete_id"]).delete()
             return redirect("panel:discount_codes")
 
+        #فعال/غیرفعال کردن
+        # اگه دکمه تغییر وضعیت زده شده بود
         if "toggle_active" in request.POST:
             code_id = request.POST["toggle_active"]
             code = DiscountCode.objects.get(id=code_id)
             code.is_active = not code.is_active
             code.save()
 
-                # وقتی فعال شد اعلان بفرست
+            # وقتی فعال شد اعلان بفرست
             if code.is_active and not code.notification_sent:
                 code.notification_sent = True
+                code.notification_sent_at = timezone.now()
                 code.save()
 
                 target_users = User.objects.filter(is_active=True)
 
-                # ❗ اعلان‌های قبلی این کد تخفیف حذف شود
+                #  اعلان‌های قبلی این کد تخفیف حذف شود
                 Notification.objects.filter(discount=code).delete()
 
+                # ساخت نوتیفیکیشن برای همه کاربرا
                 notifications = [
                     Notification(
                         user=u,
@@ -1691,7 +1903,7 @@ def discount_codes(request):
                     )
                     try:
                         send_mail(
-                            subject, body, None, [user.email], fail_silently=False
+                            subject, body, None, [user.email], fail_silently=True
                         )
                         Notification.objects.filter(
                             user=user, discount=code
@@ -1700,12 +1912,15 @@ def discount_codes(request):
                         logger.warning(f"ارسال ایمیل به {user.email} شکست: {e}")
 
                 return redirect("panel:discount_codes")
-        # **ارسال دوباره اعلان**
+        
+        # ارسال دوباره اعلان
         if "resend_notify" in request.POST:
             code = DiscountCode.objects.get(id=request.POST["resend_notify"])
             code.notification_sent = True
+            code.notification_sent_at = timezone.now()
             code.save()
             
+            #نوتیف‌های قبلی رو پاک میکنه و از نو میسازه و ایمیل می‌فرسته
             Notification.objects.filter(discount=code).delete()
 
             target_users = User.objects.filter(is_active=True)
@@ -1740,10 +1955,11 @@ def discount_codes(request):
                         code=code.code,
                         percent=code.percent,
                         expires=to_jalali(code.expires_at),
+                        extra=code.extra_message,
                     )
                 try:
                     send_mail(
-                            subject, body, None, [user.email], fail_silently=False
+                            subject, body, None, [user.email], fail_silently=True
                         )
                     Notification.objects.filter(
                             user=user, discount=code
@@ -1755,19 +1971,27 @@ def discount_codes(request):
         
     # جستجو
     query = request.GET.get("search", "")
-    if query:
-        codes = DiscountCode.objects.filter(code__icontains=query)
-    else:
-        codes = DiscountCode.objects.all().order_by('-id')
+    
+    status = request.GET.get("status", "") 
 
-    # ✅ اضافه کردن صفحه‌بندی (فقط این بخش جدید است)
-    paginator = Paginator(codes, 10)  # 10 کد در هر صفحه
+    codes = DiscountCode.objects.all().order_by('-id')
+
+    if query:
+        codes = codes.filter(code__icontains=query)
+
+    if status == "active":
+        codes = codes.filter(is_active=True)
+    elif status == "inactive":
+        codes = codes.filter(is_active=False)
+        
+    paginator = Paginator(codes, 10)  
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
     return render(request, "panel/discount_codes.html", {
         "codes": page_obj,
         "query": query,
+        "status": status,
     })
 
 
@@ -1779,26 +2003,24 @@ def discount_code_create(request):
     if request.method == "POST":
         form = DiscountCodeForm(request.POST)
         if form.is_valid():
-            discount = form.save(commit=False)   # نهایی‌سازی نکن
+            discount = form.save(commit=False)   # نهایی‌سازی نکن ،  تو دیتابیس سیو نشه
             discount.user = request.user 
-            # ⬇️  قبل از ذخیره‌سازی فیلد اعلان را علامت بزنید
-            # فقط وقتی فعال است اعلان می‌فرستیم
+
+            # اگر موقع ساختن تیک فعال رو زده باشه، همون لحظه ایمیل‌ها رو براش می‌فرستیم
             if discount.is_active:
                 discount.notification_sent = True
-                        # اضافه کردن کاربر
+                discount.notification_sent_at = timezone.now()
                 discount.save()
             
-                # ---- کاربران هدف را انتخاب کنید ----
-                # مثال: همه کاربران فعال یا فیلتر دلخواه
+                # کاربران هدف  
                 target_users = User.objects.filter(is_active=True)
 
-                # ---- اعلان برای هر کاربر ----
                 # ایجاد اعلان‌ها
                 notifications = [
                     Notification(
                         user=u,
                         discount=discount,   
-                        type="promotion",                # مقدار الزامی
+                        type="promotion",                
                         channel="email", 
                         status='pending',
                         message=(
@@ -1810,7 +2032,6 @@ def discount_code_create(request):
                 ]
                 Notification.objects.bulk_create(notifications)
 
-                # ارسال ایمیل به هر کاربر
                 subject = f'کد تخفیف جدید: {discount.code}'
                 body_template = (
                     "سلام {username},\n\n"
@@ -1833,22 +2054,19 @@ def discount_code_create(request):
                         send_mail(
                             subject,
                             body,
-                            None,               # from DEFAULT_FROM_EMAIL
+                            None,               
                             [user.email],
-                            fail_silently=False,
+                            fail_silently=True,
                         )
-                        # به‌روزرسانی فیلد sent_mail
                         Notification.objects.filter(user=user, discount_id=discount.id,).update(status="sent", sent_at=timezone.now())
-                    except Exception as e:          # شامل TimeoutError، BadHeaderError و غیره
-                        # فقط لاگ می‌کنیم؛ عملیات اصلی (ساخت کد) خراب نمی‌شود
+                    except Exception as e:         
                         logger.warning(
                             f"ارسال ایمیل به {user.email} شکست: {e}"
                         )
-                        # وضعیت اعلان به pending می‌ماند تا بعداً بررسی شود
                         continue
                 messages.success(request, "کد تخفیف با موفقیت ثبت شد و اعلان برای کاربران ارسال شد.")
             else:
-                # غیر فعال → فقط ذخیره می‌کنیم
+                # غیر فعال → فقط ذخیره می‌کنیم و ایمیل نمیفرستیم
                 discount.notification_sent = False
                 discount.save()
                 messages.success(request, "کد تخفیف غیر فعال ثبت شد.")
@@ -1863,24 +2081,21 @@ def discount_code_create(request):
 @panel_access_required
 def discount_code_edit(request, pk):
     code = get_object_or_404(DiscountCode, pk=pk)
+
     if request.method == "POST":
         form = DiscountCodeForm(request.POST, instance=code)
         if form.is_valid():
-            discount = form.save(commit=False)   # نهایی‌سازی نکن
+            discount = form.save(commit=False) 
             discount.user = request.user  
-            # اگر هنوز اعلان برای این کد تنظیم نشده باشد:
-              # اگر وضعیت فعال شد و قبلاً اعلان ندیده باشد
+              # اگر وضعیت فعال شد و قبلاً اعلان نرفته بود،حالا ایمیل میفرستیم
             if discount.is_active and not discount.notification_sent:
                 discount.notification_sent = True
+                code.notification_sent_at = timezone.now()
 
-                    # اضافه کردن کاربر
                 discount.save()
-                # ---- کاربران هدف را انتخاب کنید ----
-                # مثال: همه کاربران فعال یا فیلتر دلخواه
+                #  کاربران هدف  
                 target_users = User.objects.filter(is_active=True)
 
-                # ---- اعلان برای هر کاربر ----
-                # اعلان‌ها (همان منطق بالا)
                 notifications = [
                     Notification(
                         user=u,
@@ -1897,7 +2112,6 @@ def discount_code_edit(request, pk):
                 ]
                 Notification.objects.bulk_create(notifications)
 
-                # ---------- ارسال ایمیل ----------
                 subject = f'کد تخفیف جدید: {discount.code}'
                 body_template = (
                     "سلام {username},\n\n"
@@ -1919,11 +2133,10 @@ def discount_code_edit(request, pk):
                         send_mail(
                             subject,
                             body,
-                            None,                 # استفاده از DEFAULT_FROM_EMAIL
+                            None,                 
                             [user.email],
-                            fail_silently=False,
+                            fail_silently=True,
                         )
-                        # وضعیت اعلان را به «sent» بروز می‑کنیم
                         Notification.objects.filter(
                             user=user,
                             discount_id=discount.id,
@@ -1933,17 +2146,17 @@ def discount_code_edit(request, pk):
                         logger.warning(
                             f"ارسال ایمیل به {user.email} شکست: {exc}"
                         )
-                        # حالت pending می‌ماند تا بعداً بررسی شود
 
                 messages.success(request, "کد تخفیف با موفقیت ثبت شد و اعلان برای کاربران ارسال شد.")
             else:
-                # غیرفعال یا قبلاً اعلان ارسال شده → فقط ذخیره
+                # غیرفعال یا قبلاً اعلان ارسال شده ،، فقط ذخیره
                 discount.save()
                 messages.success(request, "کد تخفیف به‌روز شد.")
             return redirect("panel:discount_codes")
     else:
         form = DiscountCodeForm(instance=code)
     return render(request, "panel/discount_code_form.html", {"form": form, "code": code})
+
 
 #تعطیلات
 # -----------------------------
@@ -1952,7 +2165,7 @@ def discount_code_edit(request, pk):
 def holiday_list(request):
     holidays = Holiday.objects.all().order_by('-date')
     
-    # 📅 گرفتن ماه و سال جاری شمسی
+    #  گرفتن ماه و سال جاری شمسی
     today = jdatetime.date.today()
     current_year = today.year
     current_month = today.month
@@ -1968,7 +2181,6 @@ def holiday_list(request):
             except:
                 pass
 
-    # برای هر تعطیلی، مطمئن شویم jalali_date وجود دارد
     for holiday in holidays:
         if not holiday.jalali_date:
             try:
@@ -1989,8 +2201,7 @@ def holiday_list(request):
     if is_active:
         holidays = holidays.filter(is_active=(is_active == 'true'))
     
-    # ✅ اضافه کردن صفحه‌بندی (فقط این بخش جدید است)
-    paginator = Paginator(holidays, 10)  # 10 تعطیلی در هر صفحه
+    paginator = Paginator(holidays, 10)  
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
@@ -2004,14 +2215,32 @@ def holiday_list(request):
 @login_required
 @panel_access_required
 def holiday_create(request):
+
     if request.method == 'POST':
-        date_str = request.POST.get('date')  # فرمت: 1404/02/15
-        title = request.POST.get('title')
+        date_str = request.POST.get('date', '').strip()  
+        title = request.POST.get('title', '').strip()
         description = request.POST.get('description', '')
-        holiday_type = request.POST.get('holiday_type', 'custom')
+        holiday_type = request.POST.get('holiday_type', '').strip()
+        # چک باکس‌ها تو ریکوئست POST اگه تیک خورده باشن مقدار 'on' میفرستن
         is_active = request.POST.get('is_active') == 'on'
         is_half_day = request.POST.get('is_half_day') == 'on'
         half_day_period = request.POST.get('half_day_period', '')
+        
+        #اعتبارسنجی
+        errors = []
+        if not date_str:
+            errors.append("تاریخ شمسی الزامی است.")
+        if not title:
+            errors.append("عنوان تعطیلی الزامی است.")
+        if not holiday_type or holiday_type not in ['official', 'religious', 'custom']:
+            errors.append("نوع تعطیلی الزامی است.")
+
+        if errors:
+            for err in errors:
+                messages.error(request, err, extra_tags="panel")
+            return render(request, 'panel/holiday_form.html', {
+                'post_data': request.POST       # برای نگه داشتن مقادیر قبلی
+            })
         
         try:
             # تبدیل تاریخ شمسی به میلادی
@@ -2019,7 +2248,6 @@ def holiday_create(request):
             jalali_date = jdatetime.date(year, month, day)
             gregorian_date = jalali_date.togregorian()
             
-            # ✅ اضافه کردن jalali_date_str برای ذخیره‌سازی
             jalali_date_str = f"{year}/{month:02d}/{day:02d}"  # نرمال‌سازی فرمت
     
             # ایجاد تعطیلی جدید
@@ -2048,13 +2276,30 @@ def holiday_edit(request, pk):
     holiday = get_object_or_404(Holiday, pk=pk)
     
     if request.method == 'POST':
-        date_str = request.POST.get('date')
-        title = request.POST.get('title')
+        date_str = request.POST.get('date', '').strip()
+        title = request.POST.get('title', '').strip()
         description = request.POST.get('description', '')
-        holiday_type = request.POST.get('holiday_type', 'custom')
+        holiday_type = request.POST.get('holiday_type', '').strip()
         is_active = request.POST.get('is_active') == 'on'
         is_half_day = request.POST.get('is_half_day') == 'on'
         half_day_period = request.POST.get('half_day_period', '')
+        
+        errors = []
+        if not date_str:
+            errors.append("تاریخ شمسی الزامی است.")
+        if not title:
+            errors.append("عنوان تعطیلی الزامی است.")
+        if not holiday_type or holiday_type not in ['official', 'religious', 'custom']:
+            errors.append("نوع تعطیلی الزامی است.")
+
+        if errors:
+            for err in errors:
+                messages.error(request, err, extra_tags="panel")
+            return render(request, 'panel/holiday_form.html', {
+                'holiday': holiday,
+                'jalali_date_str': date_str,
+                'post_data': request.POST  
+            })
         
         try:
             # تبدیل تاریخ شمسی به میلادی
@@ -2062,10 +2307,8 @@ def holiday_edit(request, pk):
             jalali_date = jdatetime.date(year, month, day)
             gregorian_date = jalali_date.togregorian()
             
-            # ✅ اضافه کردن jalali_date_str
             jalali_date_str = f"{year}/{month:02d}/{day:02d}"
             
-
             # بروزرسانی تعطیلی
             holiday.date = gregorian_date
             holiday.jalali_date = jalali_date_str
@@ -2105,6 +2348,7 @@ def holiday_delete(request, pk):
 @login_required
 @panel_access_required
 def holiday_toggle_active(request, pk):
+    #برای تغییر وضعیت
     holiday = get_object_or_404(Holiday, pk=pk)
     holiday.is_active = not holiday.is_active
     holiday.save()
@@ -2112,28 +2356,39 @@ def holiday_toggle_active(request, pk):
     messages.success(request, f"تعطیلی {status} شد", extra_tags="panel")
     return redirect('panel:holiday_list')
 
+
 #تنظیمات سالن
 # -----------------------------
 @login_required
 @panel_access_required
 def salon_settings(request):
-    # فقط مالک دسترسی داشته باشد
     if request.user.profile.role not in ["owner", "receptionist"]:
         messages.error(request, "شما مجوز دسترسی ندارید" , extra_tags="panel")
         return redirect('panel:dashboard')
     
     settings, created = SalonSettings.objects.get_or_create(id=1)
     
-    # ✅ تعیین حالت فقط-خواندنی برای منشی
+    #  منشی حق ویرایش نداره، فقط میتونه ببینه
     is_read_only = (request.user.profile.role == "receptionist")
-    
+
+    weekdays = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنج‌شنبه', 'جمعه']
 
     if request.method == 'POST':
         if request.user.profile.role != "owner":
             messages.error(request, "فقط مالک سالن می‌تواند تنظیمات را ویرایش کند", extra_tags="panel")
             return redirect('panel:salon_settings')
 
-        settings.salon_name = request.POST.get('salon_name', '')
+        salon_name = request.POST.get('salon_name', '').strip()
+        if not salon_name:
+            messages.error(request, "نام سالن الزامی است", extra_tags="panel")
+            return redirect('panel:salon_settings')
+
+        weekend_days = request.POST.getlist('weekend_days')
+        if not weekend_days:
+            messages.error(request, "حداقل یک روز تعطیل هفتگی باید انتخاب شود", extra_tags="panel")
+            return redirect('panel:salon_settings')
+        
+        settings.salon_name = salon_name
         settings.open_time = request.POST.get('open_time', '09:00')
         settings.close_time = request.POST.get('close_time', '18:00')
         settings.has_salon_lunch_break = request.POST.get('has_salon_lunch_break') == 'on'
@@ -2142,6 +2397,8 @@ def salon_settings(request):
         settings.enable_online_payment = request.POST.get('enable_online_payment') == 'on'
         settings.global_duration_note = request.POST.get('global_duration_note', '').strip()
         settings.global_price_note = request.POST.get('global_price_note', '').strip()
+
+        settings.weekend_days = weekend_days
 
         phone = request.POST.get('phone', '').strip()
 
@@ -2162,12 +2419,14 @@ def salon_settings(request):
                 return redirect('panel:salon_settings')
 
         settings.whatsapp = whatsapp
+        instagram = request.POST.get('instagram', '').strip()
+        settings.instagram = instagram
 
         settings.save()
         messages.success(request, "تنظیمات ذخیره شد", extra_tags="panel")
         return redirect('panel:salon_settings')
     
-    return render(request, 'panel/salon_settings.html', {'settings': settings , 'is_read_only': is_read_only})
+    return render(request, 'panel/salon_settings.html', {'settings': settings , 'is_read_only': is_read_only,'weekdays': weekdays})
 
 
 #پکیج ها-پیشنهاد های ویژه
@@ -2179,8 +2438,7 @@ def salon_settings(request):
 def package_list(request):
     packages = Package.objects.all().prefetch_related('service').order_by('-created_at')
     
-    # ✅ اضافه کردن صفحه‌بندی
-    paginator = Paginator(packages, 10)  # 10 پکیج در هر صفحه
+    paginator = Paginator(packages, 10)  
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
@@ -2220,15 +2478,12 @@ def package_add(request):
 
             try:
                 naive_start = datetime.strptime(start_time_str, '%Y-%m-%dT%H:%M')
-                print(f"🟡 naive_start: {naive_start}")
 
                 tehran_tz = pytz.timezone('Asia/Tehran')
                 start_time = tehran_tz.localize(naive_start)
                 now = timezone.now().astimezone(tehran_tz)
                 
-                print(f"DEBUG - Start time: {start_time}, Now: {now}")
-                print(f"DEBUG - Is future: {start_time > now}")
-
+                #زمان شروع تخفییف نمیتونه توی گذشته باشه
                 if start_time <= now:
                     messages.error(request, "زمان شروع تخفیف باید در آینده باشد", extra_tags="panel")
                     return render(request, 'panel/package_form.html', {
@@ -2261,7 +2516,6 @@ def package_add(request):
 
         package.save()
         
-        # ارتباط با خدمت
         service_ids = request.POST.getlist('services[]')
         if service_ids:
             services = Service.objects.filter(id__in=service_ids)
@@ -2306,45 +2560,36 @@ def package_edit(request, pk):
             package.duration_days = int(request.POST.get('duration_days', 3))
 
             start_time_str = request.POST.get('start_time')
-            print(f"🎯 start_time_str: '{start_time_str}'")
 
             if not start_time_str:
                 messages.error(request, "لطفاً زمان شروع تخفیف را انتخاب کنید", extra_tags="panel")
                 return render(request, 'panel/package_form.html', {
-                    'package': package,      # اضافه کن
+                    'package': package,      
                     'categories': categories,
-                    'action': 'edit'         # edit باشه
+                    'action': 'edit'         
                 })
 
             try:
-                # تبدیل به datetime
                 naive_start = datetime.strptime(start_time_str, '%Y-%m-%dT%H:%M')
-                print(f"🟡 naive_start: {naive_start}")
                 
-                # timezone تهران
                 tehran_tz = pytz.timezone('Asia/Tehran')
+                #ساعت رو تو تایم‌زون تهران بومی‌سازی می‌کنه که اختلاف ساعت سرور باعث نشه تخفیف زودتر یا دیرتر فعال بشه.
                 start_time = tehran_tz.localize(naive_start)
-                print(f"🟢 start_time: {start_time}")
                 
-                # now با timezone تهران
                 now = timezone.now().astimezone(tehran_tz)
-                print(f"🔵 now: {now}")
                 
-                print(f"🟣 start_time <= now? {start_time <= now}")
 
                 if start_time <= now:
                     messages.add_message(request, messages.ERROR, "زمان شروع تخفیف باید در آینده باشد", extra_tags='panel')
-                    print("✅ پیام اضافه شد")
                     return render(request, 'panel/package_form.html', {
-                        'package': package,  # 👈 این خط رو اضافه کن
+                        'package': package,  
                         'categories': categories,
-                        'action': 'edit'     # 👈 'edit' باشه نه 'add'
+                        'action': 'edit'    
                     })
 
                 package.start_time = start_time
 
             except ValueError as e:
-                print(f"❌ ValueError: {e}")
                 messages.error(request, "فرمت تاریخ نامعتبر است", extra_tags="panel")
                 return render(request, 'panel/package_form.html', {
                     'package': package,
@@ -2365,14 +2610,13 @@ def package_edit(request, pk):
 
         package.save()
         
-        # ارتباط با خدمت
         service_ids = request.POST.getlist('services[]')
         if service_ids:
             services = Service.objects.filter(id__in=service_ids)
             package.service.set(services)
         else:
             package.service.clear()
-        print(f"📅 start_time در دیتابیس: {package.start_time}")
+
         messages.success(request, "پکیج با موفقیت ویرایش شد", extra_tags="panel")
         return redirect('panel:package_list')
     
@@ -2425,13 +2669,13 @@ def send_package_notification(package):
     success_count = 0
     for user in users:
         try:
-            from django.core.mail import send_mail
+            
             send_mail(
                 subject,
                 message,
                 settings.DEFAULT_FROM_EMAIL,
                 [user.email],
-                fail_silently=False,  # True بذار تا کرش نکنه
+                fail_silently=True,  
             )
             success_count += 1
             print(f"✅ ایمیل به {user.email} ارسال شد")
@@ -2442,6 +2686,7 @@ def send_package_notification(package):
     print(f"📊 نتیجه: {success_count} از {len(users)} ایمیل ارسال شد")
     
 
+#برای ارسال دوباره ایمیل: دکمه اش توسط ادمین زده میشه
 @require_POST
 @login_required
 @panel_access_required
@@ -2467,55 +2712,107 @@ def payment_list(request):
         "appointment__package_booking__package",
     ).all().order_by("-paid_at")
 
+    # گرفتن فیلترها از URL
     payment_method = request.GET.get("method")
     status = request.GET.get("status")
+    start_date_str = request.GET.get("start_date") 
+    end_date_str = request.GET.get("end_date")
 
+    #بررسی بازه تاریخ
+    if start_date_str and end_date_str:
+        try:
+            jalali_start = jdatetime.datetime.strptime(start_date_str, "%Y/%m/%d")
+            jalali_end = jdatetime.datetime.strptime(end_date_str, "%Y/%m/%d")
+
+            if jalali_start > jalali_end:
+                messages.error(request, "لطفاً دقت کنید که “تاریخ شروع” باید قبل از “تاریخ پایان” انتخاب شود")
+                # اگر تاریخ نامعتبر بود، فیلتر تاریخ را اعمال نمی‌کنیم
+                start_date_str = None
+                end_date_str = None
+        except ValueError:
+            # اگر فرمت تاریخ اشتباه بود، در ادامه کد نادیده گرفته می‌شود
+            pass
+
+    #اعمال فیلتر روش پرداخت و وضعیت
     if payment_method:
         payments = payments.filter(payment_method=payment_method)
 
     if status:
         payments = payments.filter(status=status)
 
-    # ✅ اول صفحه‌بندی، بعد پردازش تاریخ (فقط برای صفحه فعلی - بهینه‌سازی حیاتی!)
-    paginator = Paginator(payments, 10)  # 10 پرداخت در هر صفحه
+    if start_date_str:
+        try:
+            # تبدیل تاریخ شمسی ورودی به میلادی
+            jalali_start = jdatetime.datetime.strptime(start_date_str, "%Y/%m/%d")
+            gregorian_start_dt = jalali_start.togregorian()
+            #تاریخ رو با تایم‌زون محلی (تهران) تنظیم می‌کنیم (aware)برای مقایسه صحیح، 
+            aware_start_dt = timezone.make_aware(gregorian_start_dt)
+            payments = payments.filter(paid_at__gte=aware_start_dt)
+        except ValueError:
+            pass 
+
+    if end_date_str:
+        try:
+            jalali_end = jdatetime.datetime.strptime(end_date_str, "%Y/%m/%d")
+            # ساعت رو می‌ذاریم رو آخرین لحظه روز (۲۳:۵۹:۵۹) که کل اون روز رو شامل بشه
+            gregorian_end_dt = datetime.combine(jalali_end.togregorian().date(), time.max)
+            aware_end_dt = timezone.make_aware(gregorian_end_dt)
+            payments = payments.filter(paid_at__lte=aware_end_dt)
+        except ValueError:
+            pass
+
+    paginator = Paginator(payments, 10)  
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
-    # ✅ تبدیل تاریخ پرداخت به شمسی
+    
     for payment in page_obj:
         if payment.paid_at:
+            #  تبدیل تاریخ پرداخت به شمسی
+            # زمان رو به تایم لوکال (تهران) برمی‌گردونیم و بعد شمسی می‌کنیم
             local_time = timezone.localtime(payment.paid_at)
             jalali = jdatetime.datetime.fromgregorian(datetime=local_time)
             payment.paid_at_jalali = jalali.strftime("%Y/%m/%d - %H:%M")
         else:
             payment.paid_at_jalali = "-"
 
+        amount_int = int(payment.amount)
+        payment.amount_display = f"{amount_int:,}"      
+        payment.amount_words = number_to_persian_words(amount_int)
+
     context = {
         "payments": page_obj,
         "selected_method": payment_method,
         "selected_status": status,
+        "selected_start_date": start_date_str, 
+        "selected_end_date": end_date_str,
     }
 
     return render(request, "panel/payment_list.html", context)
 
 
 #گزارش درامد
-from django.db.models import Sum, Q
-from django.utils import timezone
-from booking.models import Payment, PackagePayment , Staff
-from datetime import datetime , timedelta
-from django.db.models import Count
-from django.db.models import F
+
+# تابع کمکی برای فرمت‌بندی اعداد با کاما
+def format_number_with_comma(number):
+    if number is None:
+        return "0"
+    try:
+        num_int = int(number)
+    except (ValueError, TypeError):
+        return str(number) 
+
+    return "{:,}".format(num_int)
 
 @panel_access_required
 def income_report(request):
 
-    payments = Payment.objects.filter(status='success')
+    payments = Payment.objects.filter(status='success', appointment__status='completed')
     package_payments = PackagePayment.objects.filter(status='success')
 
     today = timezone.localdate()
 
-    # 📌 فیلترهای سریع
+    #  فیلترهای سریع
     filter_type = request.GET.get('filter')
 
     if filter_type == 'today':
@@ -2523,47 +2820,74 @@ def income_report(request):
         package_payments = package_payments.filter(created_at__date=today)
 
     elif filter_type == 'week':
-        start_week = today - timedelta(days=today.weekday())
+        # شنبه در پایتون = 5
+        days_since_saturday = (today.weekday() - 5) % 7
+        start_week = today - timedelta(days=days_since_saturday)
         payments = payments.filter(paid_at__date__gte=start_week)
         package_payments = package_payments.filter(created_at__date__gte=start_week)
 
     elif filter_type == 'month':
-        payments = payments.filter(
-            paid_at__year=today.year,
-            paid_at__month=today.month
-        )
-        package_payments = package_payments.filter(
-            created_at__year=today.year,
-            created_at__month=today.month
-        )
+        # روز اول ماه شمسی جاری رو پیدا می‌کنیم و بعد واسه دیتابیس میلادی‌اش می‌کنیم.
+        jalali_today = jdatetime.date.today()
+        jalali_first = jdatetime.date(jalali_today.year, jalali_today.month, 1)
+        gregorian_first = jalali_first.togregorian()
+
+        payments = payments.filter(paid_at__date__gte=gregorian_first)
+        package_payments = package_payments.filter(created_at__date__gte=gregorian_first)
 
     elif filter_type == 'year':
-        payments = payments.filter(paid_at__year=today.year)
-        package_payments = package_payments.filter(created_at__year=today.year)
+        # روز اول فروردین امسال
+        jalali_today = jdatetime.date.today()
+        jalali_first = jdatetime.date(jalali_today.year, 1, 1)
+        gregorian_first = jalali_first.togregorian()
 
-    # 📅 بازه دلخواه
-    start_date = request.GET.get('start_date')
-    end_date = request.GET.get('end_date')
+        payments = payments.filter(paid_at__date__gte=gregorian_first)
+        package_payments = package_payments.filter(created_at__date__gte=gregorian_first)
 
-    if start_date:
-        payments = payments.filter(paid_at__date__gte=start_date)
-        package_payments = package_payments.filter(created_at__date__gte=start_date)
+    #  بازه دلخواه
+    start_date_str = request.GET.get('start_date')
+    end_date_str = request.GET.get('end_date')
 
-    if end_date:
-        payments = payments.filter(paid_at__date__lte=end_date)
-        package_payments = package_payments.filter(created_at__date__lte=end_date)
+    start_date = None
+    end_date = None
+    date_error = None 
 
-    # 👩‍🔧 فیلتر پرسنل
+    # برای اطمینان از فرمت صحیح تاریخ و جلوگیری از خطا
+    if start_date_str:
+        try:
+            start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
+            payments = payments.filter(paid_at__isnull=False, paid_at__date__gte=start_date)
+            package_payments = package_payments.filter(created_at__date__gte=start_date)
+        except ValueError:
+            pass
+
+    if end_date_str:
+        try:
+            end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
+            payments = payments.filter(paid_at__isnull=False, paid_at__date__lte=end_date)
+            package_payments = package_payments.filter(created_at__date__lte=end_date)
+        except ValueError:
+            pass
+
+    #  بررسی منطقی بودن بازه تاریخ
+    if start_date and end_date and start_date > end_date:
+        date_error = "تاریخ شروع نمی‌تواند بزرگ‌تر از تاریخ پایان باشد!"
+
+
+    #  فیلتر پرسنل
     staff_id = request.GET.get('staff')
     if staff_id:
         payments = payments.filter(appointment__staff_id=staff_id)
-        package_payments = package_payments.filter(appointment__staff_id=staff_id)
+        
 
-    # 💳 فیلتر روش پرداخت
+    #  فیلتر روش پرداخت
     payment_method = request.GET.get('method')
     if payment_method:
         payments = payments.filter(payment_method=payment_method)
-
+        package_payments = package_payments.filter(payment_method=payment_method)
+        
+    #کدوم سرویس هم از نظر تعداد و هم مبلغ، پرفروش‌ترین بوده
+    #پرداخت‌ها رو بر اساس اسم سرویس گروه‌بندی کن، بعد تعداد و جمع درآمد هر گروه رو حساب کن و در نهایت پرفروش‌ترین رو برگردون.
     top_service = payments.values(
         service_name=F('appointment__service__name')
     ).annotate(
@@ -2572,23 +2896,30 @@ def income_report(request):
     ).order_by('-total_sales').first()
 
 
-    # 💰 محاسبه درآمد
+    #  محاسبه درآمد،،جمع کل پولایی که از سرویس‌ها و پکیج‌ها درومده
+    #Aggregate یه دیکشنری میده که مقدارش تو کلید total هست
     services_income = payments.aggregate(total=Sum('amount'))['total'] or 0
     packages_income = package_payments.aggregate(total=Sum('amount'))['total'] or 0
     total_income = services_income + packages_income
 
+    #پرسنلی که بیشترین درآمد رو دارن
+    #جمع درآمد هر پرسنل رو محاسبه کرده و ۵ نفر اول رو جدا می‌کنیم.
     top_staff = payments.values(
         'appointment__staff__full_name'
     ).annotate(
         total_income=Sum('amount')
     ).order_by('-total_income')
 
-    online_income = payments.filter(payment_method='online').aggregate(total=Sum('amount'))['total'] or 0
-    cash_income = payments.filter(payment_method='cash').aggregate(total=Sum('amount'))['total'] or 0
-    card_income = payments.filter(payment_method='card').aggregate(total=Sum('amount'))['total'] or 0
-
+    online_income = (payments.filter(payment_method='online').aggregate(total=Sum('amount'))['total'] or 0) + \
+                (package_payments.filter(payment_method='online').aggregate(total=Sum('amount'))['total'] or 0)
+                
+    cash_income = (payments.filter(payment_method='cash').aggregate(total=Sum('amount'))['total'] or 0) + \
+                (package_payments.filter(payment_method='cash').aggregate(total=Sum('amount'))['total'] or 0)
+                
+    card_income = (payments.filter(payment_method='card').aggregate(total=Sum('amount'))['total'] or 0) + \
+                (package_payments.filter(payment_method='card').aggregate(total=Sum('amount'))['total'] or 0)
+    
     total_payment_income = online_income + cash_income + card_income
-
 
     context = {
         'total_income': total_income,
@@ -2605,40 +2936,113 @@ def income_report(request):
         'card_income': card_income,
         'total_payment_income': total_payment_income,
 
+        'total_income_formatted': format_number_with_comma(total_income),
+        'total_income_words': number_to_persian_words(total_income),
+
+        'services_income_formatted': format_number_with_comma(services_income),
+        'services_income_words': number_to_persian_words(services_income),
+
+        'packages_income_formatted': format_number_with_comma(packages_income),
+        'packages_income_words': number_to_persian_words(packages_income),
+
+        'online_income_formatted': format_number_with_comma(online_income),
+        'online_income_words': number_to_persian_words(online_income),
+
+        'cash_income_formatted': format_number_with_comma(cash_income),
+        'cash_income_words': number_to_persian_words(cash_income),
+
+        'card_income_formatted': format_number_with_comma(card_income),
+        'card_income_words': number_to_persian_words(card_income),
+
+        'total_payment_income_formatted': format_number_with_comma(total_payment_income),
+        'total_payment_income_words': number_to_persian_words(total_payment_income),
+        'date_error': date_error,
     }
+
+    if top_service and 'total_income' in top_service:
+        context['top_service_income_formatted'] = format_number_with_comma(top_service['total_income'])
+        context['top_service_income_words'] = number_to_persian_words(top_service['total_income'])
+
+    if top_staff:
+        for staff_data in context['top_staff']:
+            if 'total_income' in staff_data:
+                staff_data['total_income_formatted'] = format_number_with_comma(staff_data['total_income'])
+                staff_data['total_income_words'] = number_to_persian_words(staff_data['total_income'])
+
 
     return render(request, 'panel/income_report.html', context)
 
 
-from django.shortcuts import get_object_or_404
-from booking.models import Staff, Appointment
-from django.utils import timezone
-
+# برنامه کاری پرسنل
 @panel_access_required
 def staff_plan(request):
 
     staffs = Staff.objects.filter(is_active=True)
 
     staff_id = request.GET.get("staff")
+    date_str = request.GET.get("date")
 
     staff = None
     appointments = None
+    is_working_day = True
     today = timezone.localdate()
+
+    # اگه تاریخی انتخاب نشده بود، امروز رو در نظر میگیریم
+    if date_str:
+        try:
+            selected_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+        except ValueError:
+            selected_date = today
+    else:
+        selected_date = today
+
+    jalali = jdatetime.date.fromgregorian(date=selected_date)
+    selected_date_jalali = f"{jalali.year}/{jalali.month:02d}/{jalali.day:02d}"
+
+    #برای دکمه روز قبل و بعد
+    prev_date = selected_date - timedelta(days=1)
+    next_date = selected_date + timedelta(days=1)
 
     if staff_id:
         staff = get_object_or_404(Staff, id=staff_id)
+        
+        DAY_MAP = {
+            'monday':    'دوشنبه',
+            'tuesday':   'سه‌شنبه',
+            'wednesday': 'چهارشنبه',
+            'thursday':  'پنجشنبه',
+            'friday':    'جمعه',
+            'saturday':  'شنبه',
+            'sunday':    'یکشنبه',
+        }
+        day_name_en = selected_date.strftime("%A").lower()
+        day_name_fa = DAY_MAP.get(day_name_en, '')
+    
+        # این پرسنل در این روز هفته ایا کار میکنه یا نه
+        is_working_day = day_name_fa in staff.work_days
 
         appointments = Appointment.objects.filter(
             staff=staff,
-            appointment_date=today
+            appointment_date=selected_date  
         ).order_by('start_time')
-
+        
+        confirmed_count = appointments.filter(status='confirmed').count()
+        cancelled_count = appointments.filter(status='cancelled').count()
+    
     context = {
         "staffs": staffs,
         "staff": staff,
         "appointments": appointments,
         "today": today,
+        "selected_date": selected_date,
+        "selected_date_jalali": selected_date_jalali,
         "selected_staff": staff_id,
+        "is_working_day": is_working_day,
+        "confirmed_count": confirmed_count if staff_id else 0,
+        "cancelled_count": cancelled_count if staff_id else 0,
+        "prev_date": prev_date,
+        "next_date": next_date,
     }
 
     return render(request, "panel/staff_plan.html", context)
+

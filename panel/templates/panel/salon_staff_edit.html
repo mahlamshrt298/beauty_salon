@@ -10,7 +10,7 @@
   {% if request.user.profile.role == "receptionist" %}
   
     <div class="alert alert-warning">
-      <i class="bi bi-info-circle"></i>
+      <i class="fas fa-info-circle"></i>
       شما فقط می‌توانید اطلاعات را مشاهده کنید. برای ویرایش، با حساب مالک وارد شوید.
     </div>
 
@@ -106,7 +106,7 @@
       </div>
 
       <div class="card-body">
-        <form method="post" enctype="multipart/form-data">
+        <form method="post" enctype="multipart/form-data" id="staff-edit-form">
           {% csrf_token %}
 
           <!-- نام کامل -->
@@ -159,28 +159,27 @@
               class="form-control"
               accept="image/*"
             >
-
-            
-              <div class="mt-2">
-                <img src="{{ staff.photo_url }}" width="120" class="rounded border">
-              </div>
+            <!-- عکس قبلی رو اینجا نشون میدیم که بدونه الان چی رو سیستمه -->
+            <div class="mt-2">
+              <img src="{{ staff.photo_url }}" width="120" class="rounded border">
+            </div>
           </div>
 
           <!-- روزهای کاری -->
           <div class="mb-3">
             <label class="form-label">روزهای کاری</label>
-            <div class="d-flex flex-wrap gap-3">
+            <div class="work-days-chips">
               {% for day in week_days %}
-                <div class="form-check">
+                <label class="day-chip">
+                  <!-- چک میکنه اگه این روز تو دیتابیس واسه این پرسنل بود، تیکش رو پیش‌فرض بزنه -->
                   <input
-                    class="form-check-input"
                     type="checkbox"
                     name="work_days"
                     value="{{ day }}"
                     {% if day in staff.work_days %}checked{% endif %}
                   >
-                  <label class="form-check-label">{{ day }}</label>
-                </div>
+                  <span class="chip-box">{{ day }}</span>
+                </label>
               {% endfor %}
             </div>
           </div>
@@ -210,7 +209,6 @@
             </div>
           </div>
 
-          <!-- خدمات -->
           <!-- خدمات قابل ارائه - سیستم سه سطحی -->
           <div class="mb-4">
             <label class="form-label fw-bold">خدمات قابل ارائه</label>
@@ -245,7 +243,7 @@
             <!-- دکمه افزودن خدمت به لیست -->
             <div class="mb-3">
               <button type="button" id="add-service-btn" class="btn btn-primary" disabled>
-                <i class="bi bi-plus-circle"></i> افزودن خدمت
+                <i class="fas fa-plus-circle"></i> افزودن خدمت
               </button>
             </div>
             
@@ -266,6 +264,7 @@
                     <p class="text-muted mb-0" id="no-services-message">هیچ خدمتی انتخاب نشده است</p>
                   {% endif %}
                 </div>
+
               </div>
               <input type="hidden" name="services" id="services-input" 
                     value="{% for service in staff.services.all %}{{ service.id }}{% if not forloop.last %},{% endif %}{% endfor %}">
@@ -276,258 +275,290 @@
             </small>
           </div>
 
-          <style>
-          .service-badge {
-            display: inline-block;
-            background: #e3f2fd;
-            border: 1px solid #2196f3;
-            border-radius: 20px;
-            padding: 5px 15px;
-            margin: 5px;
-            position: relative;
-          }
-          .service-badge .remove-btn {
-            background: none;
-            border: none;
-            color: #f44336;
-            cursor: pointer;
-            margin-right: 8px;
-            font-weight: bold;
-            padding: 0;
-          }
-          </style>
-
-          <script>
-          // داده‌های سرویس‌ها از سرور
-          const categoriesData = {
-            {% for category in categories %}
-            "{{ category.id }}": {
-              name: "{{ category.name }}",
-              subcategories: {
-                {% for sub in category.subcategories.all %}
-                "{{ sub.id }}": {
-                  name: "{{ sub.name }}",
-                  services: [
-                    {% for service in sub.services.all %}
-                    {% if service.is_active %}
-                    {id: "{{ service.id }}", name: "{{ service.name }}"},
-                    {% endif %}
-                    {% endfor %}
-                  ]
-                },
-                {% endfor %}
-              }
-            },
-            {% endfor %}
-          };
-
-          // بارگذاری خدمات انتخاب شده قبلی
-          let selectedServices = document.getElementById('services-input').value.split(',').filter(id => id);
-
-          // تغییر دسته
-          document.getElementById('category-select').addEventListener('change', function() {
-            const categoryId = this.value;
-            const subcategorySelect = document.getElementById('subcategory-select');
-            const serviceSelect = document.getElementById('service-select');
-            const addServiceBtn = document.getElementById('add-service-btn');
-            
-            subcategorySelect.innerHTML = '<option value="">انتخاب کنید...</option>';
-            serviceSelect.innerHTML = '<option value="">ابتدا زیردسته را انتخاب کنید</option>';
-            serviceSelect.disabled = true;
-            addServiceBtn.disabled = true;
-            
-            if (categoryId) {
-              const category = categoriesData[categoryId];
-              if (category && Object.keys(category.subcategories).length > 0) {
-                for (const [subId, subData] of Object.entries(category.subcategories)) {
-                  const option = document.createElement('option');
-                  option.value = subId;
-                  option.textContent = subData.name;
-                  subcategorySelect.appendChild(option);
-                }
-                subcategorySelect.disabled = false;
-              } else {
-                subcategorySelect.disabled = true;
-                subcategorySelect.innerHTML = '<option value="">زیردسته‌ای وجود ندارد</option>';
-              }
-            } else {
-              subcategorySelect.disabled = true;
-            }
-          });
-
-          // تغییر زیردسته
-          document.getElementById('subcategory-select').addEventListener('change', function() {
-            const subcategoryId = this.value;
-            const categoryId = document.getElementById('category-select').value;
-            const serviceSelect = document.getElementById('service-select');
-            const addServiceBtn = document.getElementById('add-service-btn');
-            
-            serviceSelect.innerHTML = '<option value="">انتخاب کنید...</option>';
-            addServiceBtn.disabled = true;
-            
-            if (subcategoryId && categoryId) {
-              const services = categoriesData[categoryId].subcategories[subcategoryId].services;
-              if (services && services.length > 0) {
-                services.forEach(service => {
-                  const option = document.createElement('option');
-                  option.value = service.id;
-                  option.textContent = service.name;
-                  serviceSelect.appendChild(option);
-                });
-                serviceSelect.disabled = false;
-              } else {
-                serviceSelect.disabled = true;
-                serviceSelect.innerHTML = '<option value="">خدمتی وجود ندارد</option>';
-              }
-            } else {
-              serviceSelect.disabled = true;
-            }
-          });
-
-          // تغییر خدمت
-          document.getElementById('service-select').addEventListener('change', function() {
-            const addServiceBtn = document.getElementById('add-service-btn');
-            addServiceBtn.disabled = !this.value;
-          });
-
-          // افزودن خدمت به لیست
-          document.getElementById('add-service-btn').addEventListener('click', function() {
-            const categoryId = document.getElementById('category-select').value;
-            const subcategoryId = document.getElementById('subcategory-select').value;
-            const serviceId = document.getElementById('service-select').value;
-            
-            if (!categoryId || !subcategoryId || !serviceId) return;
-            
-            const categoryName = categoriesData[categoryId].name;
-            const subcategoryName = categoriesData[categoryId].subcategories[subcategoryId].name;
-            const serviceName = categoriesData[categoryId].subcategories[subcategoryId].services
-              .find(s => s.id === serviceId).name;
-            
-            // بررسی تکراری نبودن
-            if (selectedServices.includes(serviceId)) {
-              alert('این خدمت قبلاً اضافه شده است!');
-              return;
-            }
-            
-            // اضافه کردن به لیست
-            selectedServices.push(serviceId);
-            
-            // نمایش در لیست
-            const servicesContainer = document.getElementById('services-container');
-            const noServicesMsg = document.getElementById('no-services-message');
-            
-            if (noServicesMsg) {
-              noServicesMsg.remove();
-            }
-            
-            const badge = document.createElement('div');
-            badge.className = 'service-badge';
-            badge.setAttribute('data-service-id', serviceId);
-            badge.innerHTML = `
-              <button type="button" class="remove-btn" data-service-id="${serviceId}">×</button>
-              ${serviceName}
-              <small class="text-muted">(${subcategoryName})</small>
-            `;
-            
-            servicesContainer.appendChild(badge);
-            
-            // آپدیت فیلد مخفی
-            document.getElementById('services-input').value = selectedServices.join(',');
-            
-            // ریست انتخاب‌ها
-            document.getElementById('service-select').value = '';
-            document.getElementById('add-service-btn').disabled = true;
-          });
-
-          // حذف خدمت از لیست
-          document.getElementById('services-container').addEventListener('click', function(e) {
-            if (e.target.classList.contains('remove-btn')) {
-              const serviceId = e.target.getAttribute('data-service-id');
-              
-              // حذف از آرایه
-              selectedServices = selectedServices.filter(id => id !== serviceId);
-              
-              // حذف از نمایش
-              const badge = e.target.closest('.service-badge');
-              if (badge) {
-                badge.remove();
-              }
-              
-              // آپدیت فیلد مخفی
-              document.getElementById('services-input').value = selectedServices.join(',');
-              
-              // نمایش پیام "هیچ خدمتی انتخاب نشده"
-              if (selectedServices.length === 0) {
-                const servicesContainer = document.getElementById('services-container');
-                const noMsg = document.createElement('p');
-                noMsg.id = 'no-services-message';
-                noMsg.className = 'text-muted mb-0';
-                noMsg.textContent = 'هیچ خدمتی انتخاب نشده است';
-                servicesContainer.parentNode.insertBefore(noMsg, servicesContainer);
-              }
-            }
-          });
-          </script>
-
-          <!-- وضعیت -->
+          <!-- وضعیت پرسنل -->
           <div class="mb-3">
             <label class="form-label">وضعیت پرسنل</label>
-            <select name="status" class="form-select">
-              {% for key, value in staff.STATUS_CHOICES %}
-                <option value="{{ key }}" {% if staff.status == key %}selected{% endif %}>
-                  {{ value }}
-                </option>
-              {% endfor %}
+            <select name="status" class="form-select" required>
+              <option value="active" {% if staff.status == 'active' %}selected{% endif %}>فعال</option>
+              <option value="inactive" {% if staff.status == 'inactive' %}selected{% endif %}>غیرفعال</option>
+              <option value="leave" {% if staff.status == 'leave' %}selected{% endif %}>مرخصی</option>
             </select>
           </div>
 
-          <!-- فعال / غیرفعال -->
-          <div class="form-check mb-3">
-            <input
-              class="form-check-input"
-              type="checkbox"
-              name="is_active"
-              id="is_active"
-              {% if staff.is_active %}checked{% endif %}
-            >
-            <label class="form-check-label" for="is_active">
-              پرسنل فعال است
-            </label>
+          <!-- فعال/غیرفعال بودن در سیستم -->
+          <div class="mobile-active-box mb-3">
+            <div class="form-check mb-0">
+              <input 
+                class="form-check-input" 
+                type="checkbox" 
+                id="is_active" 
+                name="is_active"
+                {% if staff.is_active %}checked{% endif %}
+              >
+              <label class="form-check-label" for="is_active">
+                فعال در سیستم (نمایش در لیست رزرو)
+              </label>
+            </div>
+            <small class="text-muted">
+              اگر غیرفعال باشد، این پرسنل در صفحه رزرو نمایش داده نمی‌شود
+            </small>
           </div>
-
+          
           <!-- نمایش در صفحه درباره ما -->
-          <div class="form-check mb-4">
-            <input
-              class="form-check-input"
-              type="checkbox"
-              name="show_in_about_page"
-              id="show_in_about_page"
-              {% if staff.show_in_about_page %}checked{% endif %}
-            >
-            <label class="form-check-label" for="show_in_about_page">
-              نمایش در صفحه درباره ما
-            </label>
+          <div class="mobile-active-box mb-4">
+            <div class="form-check mb-0">
+              <input
+                class="form-check-input"
+                type="checkbox"
+                name="show_in_about_page"
+                id="show_in_about_page"
+                {% if staff.show_in_about_page %}checked{% endif %}
+              >
+              <label class="form-check-label" for="show_in_about_page">
+                نمایش در صفحه درباره ما
+              </label>
+            </div>
             <small class="text-muted d-block mt-1">
               اگر انتخاب شود، این پرسنل در صفحه "درباره ما" نمایش داده می‌شود
             </small>
           </div>
 
           <!-- دکمه‌ها -->
-          <div  class="d-flex flex-column flex-md-row justify-content-between gap-2">
-            <a href="{% url 'panel:staff_list' %}" class="btn btn-secondary">
-              ↩ بازگشت
-            </a>
-
-            <button type="submit" class="btn btn-success">
+          <div class="d-flex flex-column flex-md-row justify-content-md-between gap-2 mt-4 mobile-form-buttons w-100">
+            <button type="submit" id="save-btn" class="btn btn-success px-4">
               💾 ذخیره تغییرات
             </button>
+
+            <a href="{% url 'panel:staff_list' %}" class="btn btn-secondary px-4">
+              ↩ بازگشت
+            </a>
           </div>
 
         </form>
       </div>
     </div>
-
   {% endif %}
 
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  //  بخش ۱: مدیریت خدمات 
+  const categoriesData = {
+    {% for category in categories %}
+    "{{ category.id }}": {
+      name: "{{ category.name }}",
+      subcategories: {
+        {% for sub in category.subcategories.all %}
+        "{{ sub.id }}": {
+          name: "{{ sub.name }}",
+          services: [
+            {% for service in sub.services.all %}
+            { id: "{{ service.id }}", name: "{{ service.name }}" },
+            {% endfor %}
+          ]
+        },
+        {% endfor %}
+      }
+    },
+    {% endfor %}
+  };
+
+  let selectedServices = document
+    .getElementById('services-input')
+    .value.split(',')
+    .filter(id => id);
+
+  const categorySelect = document.getElementById('category-select');
+  const subcategorySelect = document.getElementById('subcategory-select');
+  const serviceSelect = document.getElementById('service-select');
+  const addServiceBtn = document.getElementById('add-service-btn');
+  const servicesContainer = document.getElementById('services-container');
+
+  // تغییر دسته
+  categorySelect.addEventListener('change', function() {
+    const categoryId = this.value;
+    subcategorySelect.innerHTML = '<option value="">انتخاب کنید...</option>';
+    serviceSelect.innerHTML = '<option value="">ابتدا زیردسته را انتخاب کنید</option>';
+    serviceSelect.disabled = true;
+
+    if (!categoryId || !categoriesData[categoryId]) {
+      subcategorySelect.disabled = true;
+      return;
+    }
+
+    const subs = categoriesData[categoryId].subcategories;
+    Object.keys(subs).forEach(subId => {
+      const opt = document.createElement('option');
+      opt.value = subId;
+      opt.textContent = subs[subId].name;
+      subcategorySelect.appendChild(opt);
+    });
+
+    subcategorySelect.disabled = false;
+  });
+
+  // تغییر زیردسته
+  subcategorySelect.addEventListener('change', function() {
+    const categoryId = categorySelect.value;
+    const subId = this.value;
+    serviceSelect.innerHTML = '<option value="">انتخاب کنید...</option>';
+
+    if (!categoryId || !subId ||
+        !categoriesData[categoryId] ||
+        !categoriesData[categoryId].subcategories[subId]) {
+      serviceSelect.disabled = true;
+      addServiceBtn.disabled = true;
+      return;
+    }
+
+    const services = categoriesData[categoryId].subcategories[subId].services;
+    services.forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s.id;
+      opt.textContent = s.name;
+      opt.dataset.subcategoryName = categoriesData[categoryId].subcategories[subId].name;
+      serviceSelect.appendChild(opt);
+    });
+
+    serviceSelect.disabled = false;
+    addServiceBtn.disabled = true;
+  });
+
+  // تغییر خدمت برای فعال کردن دکمه افزودن
+  serviceSelect.addEventListener('change', function() {
+    addServiceBtn.disabled = !this.value;
+  });
+
+  // هندل کردن زدن دکمه افزودن خدمت
+  addServiceBtn.addEventListener('click', function() {
+    const serviceId = serviceSelect.value;
+    // اگه انتخاب نشده بود یا تکراری بود، بی‌خیال شو
+    if (!serviceId || selectedServices.includes(serviceId)) return;
+
+    const serviceName = serviceSelect.options[serviceSelect.selectedIndex].text;
+    const subcategoryName = serviceSelect.options[serviceSelect.selectedIndex].dataset.subcategoryName;
+
+    // پیام "هیچ خدمتی انتخاب نشده" رو پاک کن
+    const noMsg = document.getElementById('no-services-message');
+    if (noMsg) {
+      noMsg.remove();
+    }
+
+    selectedServices.push(serviceId);
+
+    const badge = document.createElement('div');
+    badge.className = 'service-badge';
+    badge.dataset.serviceId = serviceId;
+    badge.innerHTML = `
+      <button type="button" class="remove-btn" data-service-id="${serviceId}">×</button>
+      ${serviceName}
+      <small class="text-muted">(${subcategoryName})</small>
+    `;
+
+    servicesContainer.appendChild(badge);
+
+    // آپدیت فیلد مخفی
+    document.getElementById('services-input').value = selectedServices.join(',');
+
+    serviceSelect.value = '';
+    addServiceBtn.disabled = true;
+  });
+
+  // حذف خدمت
+  servicesContainer.addEventListener('click', function(e) {
+    if (e.target.classList.contains('remove-btn')) {
+      const serviceId = e.target.getAttribute('data-service-id');
+      selectedServices = selectedServices.filter(id => id !== serviceId);
+
+      const badge = e.target.closest('.service-badge');
+      if (badge) {
+        badge.remove();
+      }
+
+      // آپدیت فیلد مخفی
+      document.getElementById('services-input').value = selectedServices.join(',');
+
+      if (selectedServices.length === 0) {
+        const noMsg = document.createElement('p');
+        noMsg.id = 'no-services-message';
+        noMsg.className = 'text-muted mb-0';
+        noMsg.textContent = 'هیچ خدمتی انتخاب نشده است';
+        servicesContainer.parentNode.insertBefore(noMsg, servicesContainer);
+      }
+    }
+  });
+
+  // ولیدیشن موقع سابمیت و جلوگیری از دبل‌کلیک
+  const form = document.getElementById('staff-edit-form');
+  const saveBtn = document.getElementById('save-btn');
+  let isSubmitting = false;
+
+  if (form && saveBtn) {
+    // اگه خود مرورگر ارور ولیدیشن HTML5 داد، استیت سابمیت رو ریست کن
+    form.addEventListener('invalid', function() {
+      isSubmitting = false;
+      saveBtn.disabled = false;
+      saveBtn.innerHTML = '💾 ذخیره تغییرات';
+    }, true);
+
+    form.addEventListener('submit', function(e) {
+      if (isSubmitting) {
+        e.preventDefault();
+        return false;
+      }
+
+      // بررسی روزهای کاری
+      const workDays = document.querySelectorAll('input[name="work_days"]:checked');
+      if (workDays.length === 0) {
+        e.preventDefault();
+        alert('لطفاً حداقل یک روز کاری انتخاب کنید');
+        isSubmitting = false;
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = '💾 ذخیره تغییرات';
+        return false;
+      }
+
+      // بررسی خدمات
+      const servicesInput = document.getElementById('services-input');
+      if (!servicesInput.value || servicesInput.value.trim() === '') {
+        e.preventDefault();
+        alert('لطفاً حداقل یک خدمت انتخاب کنید');
+        isSubmitting = false;
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = '💾 ذخیره تغییرات';
+        return false;
+      }
+
+      isSubmitting = true;
+      saveBtn.disabled = true;
+      saveBtn.innerHTML = '⏳ در حال ذخیره...';
+    });
+  }
+});
+</script>
+
+<style>
+  .service-badge {
+    display: inline-block;
+    background: #e3f2fd;
+    border: 1px solid #2196f3;
+    border-radius: 20px;
+    padding: 5px 15px;
+    margin: 5px;
+    position: relative;
+  }
+
+  .service-badge .remove-btn {
+    background: none;
+    border: none;
+    color: #f44336; /* قرمز  مثل صفحه افزودن */
+    cursor: pointer;
+    margin-right: 8px;
+    font-weight: bold;
+    padding: 0;
+    font-size: 18px;
+  }
+</style>
+
 {% endblock %}

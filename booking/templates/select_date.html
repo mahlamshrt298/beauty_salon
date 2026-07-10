@@ -1,5 +1,3 @@
-<!-- booking/templates/select_date.html -->
-
 {% extends 'base.html' %}
 {% load static %}
 
@@ -9,10 +7,8 @@
 
 {% block content %}
 <div class="container mt-5">
-
-
     
-    <!-- متن راهنمایی -->
+    <!-- یادآوری به کاربر که چی رو انتخاب کرده تا الان -->
     <div class="text-center mb-4" style="font-size: 1.1rem; color: #6c757d;">
     شما در حال رزرو در دسته: "{{service.subcategory}}" و خدمت "{{service.name}}" هستید.   
     </div>
@@ -40,23 +36,16 @@
             <h3 class="mb-0">مرحله ۲: انتخاب تاریخ و ساعت</h3>
         </div>
         <div class="card-body">
+            <!-- فرم اصلی که در نهایت دیتای این مرحله رو می‌فرسته بک‌اند -->
             <form method="POST" id="date-time-form">
                 {% csrf_token %}
+                <!-- اینا هیدن هستن و با جاوااسکریپت پر میشن. شاه‌کلید رزرو همین سه‌تاس -->
                 <input type="hidden" name="service_id" value="{{ service.id }}">
-                <!-- بدون hidden input نیاز نیست -->
-              <!--
-                <div class="mb-3">
-                    <label for="appointment_date">تاریخ نوبت:</label>
-                    <input type="date" name="appointment_date" class="form-control" required>
-                </div>
-                <div class="mb-3">
-                    <label for="start_time">ساعت شروع:</label>
-                    <input type="time" name="start_time" class="form-control" required>
-                </div>
-            -->  
+                  
                 <input type="hidden" name="appointment_date" id="appointment_date_input">
                 <input type="hidden" name="start_time" id="start_time_input">
                 <div class="row">
+                    <!-- راهنمای رنگ‌های تقویم -->
                     <div class="d-flex gap-3 mb-3">
                         <span><span class="legend past"></span> گذشته</span>
                         <span><span class="legend taken"></span> پر</span>
@@ -68,11 +57,13 @@
                         <h5 class="mb-3">{{ current_month_name }} {{ current_year }}</h5>
                         <div class="calendar">
 
+                            <!-- نویگیشن ماه‌ها (با data-no-exit که گارد خروج الکی گیر نده) -->
                             <div class="cal-nav">
                                 <a href="{% url 'select_date_with_month' service.id prev_year prev_month %}" data-no-exit> ▶ماه قبل</a>
                                 <span>{{ current_year  }} / {{ current_month }}</span>
                                 <a href="{% url 'select_date_with_month' service.id next_year next_month %}" data-no-exit>ماه بعد◀ </a>
                             </div>
+                            <!-- هدر روزهای هفته -->
                             <div class="weekdays">
                                 <div>شنبه</div>
                                 <div>یکشنبه</div>
@@ -88,11 +79,14 @@
                                     <div class="day empty"></div>
                                 {% endfor %}
 
+                                <!-- حلقه اصلی روی روزهای ماه -->
                                 {% for d in days_list %}
                                     {% if d in past_days %}
+                                        <!-- روزهای سوخته -->
                                         <div class="day past">{{ d }}</div>
 
                                     {% elif d in taken_days or d in holiday_days %}
+                                        <!-- روزهای تعطیل یا پر شده -->
                                         <div class="day taken holiday">{{ d }}</div>
 
                                     {% else %}
@@ -114,7 +108,7 @@
                     <div class="col-md-6">
                         <h5 class="mb-3">ساعت‌های در دسترس:</h5>
                         <div id="times-container" class="times-container">
-                            <p class="text-muted">لطفاً یک روز را انتخاب کنید.</p>
+                            <p class="text-muted">لطفاً یک ساعت را انتخاب کنید.</p>
                         </div>
                     </div>
 
@@ -127,12 +121,13 @@
                 </div>
 
 
-                <!-- در داخل card-body، بعد از فرم -->
+                        <!-- دکمه‌های پایین فرم -->
                         <div class="d-flex justify-content-between mt-3">
                             <a href="{% url 'reserve' %}" 
-                            class="btn btn-secondary booking-exit-link" data-no-exit>
+                            class="btn btn-secondary booking-exit-link mt-3" data-no-exit>
                                  بازگشت 
                             </a>
+                            <!-- دکمه ادامه دیفالت غیرفعاله، تا وقتی کاربر ساعت رو انتخاب کنه (تو JS هندل شده) -->
                             <button type="submit" id="next-btn" name="confirm_staff" value="1" class="btn btn-primary mt-3" data-no-exit>ادامه</button>
                             
                         </div>
@@ -146,17 +141,21 @@
 <!--<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>--> 
 
 <script>
+// هندل کردن کلیک روی روزهای تقویم (AJAX اول)
 $(document).on("click", ".selectable-day", function() {
 
     let day = $(this).data("day");
     let month = $(this).data("month");
     let year = $(this).data("year");
 
+    // استایل روز انتخاب شده رو آپدیت کن
     $(".day").removeClass("selected");
     $(this).addClass("selected");
 
+    // پر کردن اینپوت مخفی واسه سابمیت فرم
     $("#appointment_date_input").val(year + "-" + month + "-" + day);
 
+    // زدن ریکوئست واسه گرفتن ساعت‌های خالیِ اون روز
     $.ajax({
         url: "{% url 'get_available_times' %}",
         data: {
@@ -167,7 +166,7 @@ $(document).on("click", ".selectable-day", function() {
         success: function(response) {
 
             let html = "";
-         // ✅ بررسی تعطیلی
+            // اگه ادمین از تو پنل تعطیلش کرده بود:
             if (response.is_holiday) {
                 html = `<div class="alert alert-danger text-center">
                     <i class="fas fa-ban"></i> 
@@ -178,6 +177,7 @@ $(document).on("click", ".selectable-day", function() {
             } else if (response.times.length === 0) {
                 html = "<p>هیچ ساعتی موجود نیست</p>";
             } else {
+                // ساعت‌ها رو رندر کن
                 html = "<div class='times-grid'>";
                 response.times.forEach(function(t) {
                     html += `<div class="time-item selectable-time" data-time="${t}">${t}</div>`;
@@ -198,23 +198,22 @@ $(document).on("click", ".selectable-day", function() {
 {% block scripts %}
 <!--<script src="https://cdn.jsdelivr.net/npm/jalaali-js/dist/jalaali.js"></script>--> 
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    const today = new Date();
-    const currentYear = {{ current_year }};
-    const currentMonth = {{ current_month }};
 
 
-});
+// هندل کردن کلیک روی ساعت‌ها (AJAX دوم)
 $(document).on("click", ".selectable-time", function() {
+    // استایل‌دهی
     $(".selectable-time").removeClass("selected");
     $(this).addClass("selected");
 
     const time = $(this).data("time");
+    // پر کردن هیدن اینپوت ساعت
     $("#start_time_input").val(time);
 
+    // حالا که هم روز و هم ساعت انتخاب شد، دکمه "ادامه" رو فعال کن و بهش افکت بده
     $("#next-btn").prop("disabled", false).addClass("btn-glow");
 
-    // 👇 گرفتن پرسنل آزاد
+    //  گرفتن پرسنل آزاد
     $.ajax({
         url: "{% url 'get_available_staff' %}",
         data: {
@@ -225,6 +224,7 @@ $(document).on("click", ".selectable-time", function() {
         success: function (response) {
             let html = "<h5>انتخاب پرسنل (اختیاری)</h5>";
 
+            // گزینه دیفالت (هر کی بیکار بود)
             html += `
                 <label>
                     <input type="radio" name="staff" value="">
@@ -232,6 +232,7 @@ $(document).on("click", ".selectable-time", function() {
                 </label><hr>
             `;
 
+            // لیست پرسنل آزاد
             response.staffs.forEach(function (s) {
                 html += `
                     <label>
@@ -253,33 +254,8 @@ $(document).on("click", ".selectable-time", function() {
 <script src="{% static 'js/booking-flow.js' %}"></script>
 
 <script>
-document.addEventListener("DOMContentLoaded", function () {
-    const phoneInput = document.getElementById("phone");
-    const notesInput = document.getElementById("notes");
+// هندل کردن دکمه Enter برای کل فرم. واسه UX خوبه که طرف با کیبورد کارش راه بیفته
 
-    if (!phoneInput || !notesInput) return;
-
-    const form = phoneInput.closest("form");
-    if (!form) return;
-
-    phoneInput.addEventListener("keydown", function (e) {
-        if (e.key === "Enter") {
-            e.preventDefault();
-            notesInput.focus();
-        }
-    });
-
-    notesInput.addEventListener("keydown", function (e) {
-        if (e.key === "Enter" && !e.shiftKey) {
-            e.preventDefault();
-            form.submit();
-        }
-    });
-});
-</script>
-
-
-<script>
 document.addEventListener("keydown", function (e) {
     if (e.key !== "Enter") return;
 
@@ -296,6 +272,7 @@ document.addEventListener("keydown", function (e) {
 </script>
 
 <script>
+// بای‌پس کردن گارد خروج واسه دکمه‌های Back و Next
 document.addEventListener('DOMContentLoaded', function () {
 
     // فقط لینک‌هایی که data-no-exit دارند

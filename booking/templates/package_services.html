@@ -12,6 +12,7 @@
 
     <h2 class="mb-3">{{ package.title }}</h2>
     
+    {# کارت هدر: اطلاعات کلی پکیج (عکس، اسم، توضیحات و قیمت‌ها) رو اینجا نشون می‌دیم #}
     <div class="card mb-5 shadow-sm border-0">
         <div class="row g-0">
 
@@ -31,6 +32,7 @@
                     </p>
 
                     <div class="mb-3">
+                        {# اگه قیمت اصلی با قیمت نهایی فرق داشت، یعنی تخفیف داره، پس قیمت اصلی رو خط‌خورده (del) نشون میدیم #}
                         {% if package.original_price %}
                             <del class="text-muted me-2">
                                 {{ package.original_price|intcomma }} تومان
@@ -41,6 +43,7 @@
                             {{ package.discounted_price|intcomma }} تومان
                         </span>
 
+                        {# بج تخفیف (مثلا "۲۰٪ تخفیف") اگه ست شده بود اینجا میفته #}
                         {% if package.discount_badge %}
                             <span class="badge bg-danger ms-2">
                                 {{ package.discount_badge }}
@@ -54,6 +57,7 @@
         </div>
     </div>
 
+    <!-- به کاربر میگه چندتا از خدمات این پکیج رو تا الان رزرو کرده که گیج نشه -->
     <div class="alert alert-info text-center mb-4">
         {{ completed_services }} از {{ total_services }} خدمت رزرو شده
     </div>
@@ -61,6 +65,7 @@
 
     <p class="text-muted">لطفاً یکی از خدمات پکیج را انتخاب کنید:</p>
 
+    <!-- نمایش پیام‌های سراسری -->
     {% if settings.global_duration_note or settings.global_price_note %}
         <div class="alert alert-light border small text-muted py-2">
             {% if settings.global_duration_note %}
@@ -72,11 +77,12 @@
         </div>
     {% endif %}
 
+    {# گرید کارت‌های خدمات داخل پکیج (تو دسکتاپ ۵ تا تو هر ردیف، تو موبایل یکی) #}
     <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-5 g-3">
         {% for booking in bookings %}
             <div class="col mb-4">
+                {# اگه کاربر این خدمت رو قبلا رزرو کرده باشه (is_completed)، کارت رو نیمه‌شفاف (opacity-50) می‌کنیم که تابلو باشه تموم شده #}
                 <div class="card service-card h-100 shadow-sm {% if booking.is_completed %}opacity-50{% endif %}">
-
 
                     {% if booking.service.image %}
                         <img src="{{ booking.service.image.url }}"
@@ -101,6 +107,7 @@
                             ⏱ {{ booking.service.duration_display }} <br>
                             💰 {{ booking.service.price|intcomma }} تومان
                         
+                            <!-- قیمت به حروف -->
                             <span class="text-muted" style="font-size: 0.8rem;">
                                 ({{ booking.service.price_in_words }} تومان)
                             </span>
@@ -108,6 +115,7 @@
 
                         <div class="mt-auto">
                             {% if booking.is_completed %}
+                                <!-- خدمت قبلا رزرو شده، فقط یه بج سبز نشون میدیم -->
                                 <span class="badge bg-success w-100 text-center py-2">
                                     ✔ رزرو شد
                                 </span>

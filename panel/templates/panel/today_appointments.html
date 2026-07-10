@@ -14,6 +14,7 @@
         {% endif %}
     </div>
 
+     <!-- چک می‌کنیم آیا اصلا نوبتی برای امروز هست یا نه -->
     {% if appointments.object_list %}
         <div class="table-scroll">
             <table class="table table-hover align-middle">
@@ -54,10 +55,15 @@
                             {% endif %}
                         </td>
 
+                        <!-- اسم پرسنل. اگه خالی بود خط تیره میذاریم -->
                         <td>{{ appt.staff.full_name|default:"—" }}</td>
-                        <!-- ✅ بعد (ساده‌تر) -->
+
                         <td>
-                            <span class="badge bg-success">تایید شده</span>
+                            {% if appt.status == 'pending' %}
+                                <span class="badge bg-warning text-dark">در انتظار تأیید</span>
+                            {% elif appt.status == 'confirmed' %}
+                                <span class="badge bg-success">تایید شده</span>
+                            {% endif %}
                         </td>
 
                         <td class="note-cell text-center" data-note="{{ appt.notes|escape }}">
@@ -70,16 +76,28 @@
 
                         <td class="text-center">
                             <div class="d-flex flex-column flex-md-row gap-2" role="group">
-                                <!-- ویرایش (فقط برای pending/confirmed) -->
+                                <!-- ویرایش  -->
                                     <a href="{% url 'panel:booking_update' appt.id %}?next={{ request.path }}" 
                                        class="btn btn-primary  rounded btn-xs" 
                                        title="ویرایش">
                                         <i class="fas fa-edit me-1"></i> ویرایش 
                                     </a>
                                 
+                                    <!-- دکمه تأیید (فقط برای pending) -->
+                                    {% if appt.status == 'pending' %}
+                                        <form method="post" action="{% url 'panel:booking_approve' appt.id %}?next={{ request.path }}" style="display:contents;">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-info rounded btn-xs"
+                                                    title="تأیید نوبت"
+                                                    onclick="return confirm('آیا نوبت {{ appt.user.username }} را تأیید می‌کنید؟')">
+                                                <i class="fas fa-check-circle me-1"></i> تأیید
+                                            </button>
+                                        </form>
+                                    {% endif %}
+
                                 <!-- انجام شد (فقط برای confirmed) -->
                                 {% if appt.status == 'confirmed' %}
-                                    <form method="post" action="{% url 'panel:booking_complete' appt.id %}?next={{ request.path }}" style="display:inline;">
+                                    <form method="post" action="{% url 'panel:booking_complete' appt.id %}?next={{ request.path }}" style="display:contents;">
                                         {% csrf_token %}
                                         <button type="submit" class="btn btn-success  rounded  btn-xs" 
                                                 title="انجام شد"
@@ -91,7 +109,7 @@
                                 
                                 <!-- عدم حضور (فقط برای confirmed) -->
                                 {% if appt.status == 'confirmed' %}
-                                    <form method="post" action="{% url 'panel:booking_no_show' appt.id %}?next={{ request.path }}" style="display:inline;">
+                                    <form method="post" action="{% url 'panel:booking_no_show' appt.id %}?next={{ request.path }}" style="display:contents;">
                                         {% csrf_token %}
                                         <button type="submit" class="btn btn-warning  rounded  btn-xs" 
                                                 title="عدم حضور"
@@ -101,7 +119,7 @@
                                     </form>
                                 {% endif %}
                                 
-                                <!-- لغو (برای pending و confirmed) -->
+                                <!-- لغو  -->
                                     <a href="{% url 'panel:booking_cancel' appt.id %}?next={{ request.path }}" 
                                        class="btn btn-danger rounded  btn-xs" 
                                        title="لغو نوبت"
@@ -116,17 +134,17 @@
             </table>
         </div>
         
-        <div class="alert alert-info mt-3">
+        <div class="alert alert-info alert-static mt-3">
             <i class="fas fa-info-circle"></i> 
             <strong>راهنما:</strong> 
             <ul class="mb-0 mt-2" style="font-size:0.9rem;">
+                <li><span class="badge bg-warning text-dark">در انتظار</span> = نوبت هنوز تأیید نشده، فقط می‌توان ویرایش یا لغو کرد</li>
                 <li><span class="badge bg-success">تایید شده</span> + <strong>انجام شد</strong> = نوبت به وضعیت "انجام شده" تغییر می‌کند</li>
-                <li><span class="badge bg-success">تایید شده</span> + <strong>عدم حضور</strong> = نوبت لغو شده و پیام "عدم حضور" به کاربر ارسال می‌شود</li>
-                <li><span class="badge bg-success">تایید شده</span> + <strong>لغو</strong> = نوبت لغو شده و پیام استاندارد ارسال می‌شود</li>
+                <li><span class="badge bg-success">تایید شده</span> + <strong>عدم حضور</strong> = نوبت لغو شده و پیام "عدم حضور" ارسال می‌شود</li>
             </ul>
         </div>
     {% else %}
-        <div class="alert alert-success text-center py-4">
+        <div class="alert alert-success alert-static text-center py-4">
             <i class="fas fa-check-circle fa-3x mb-3"></i>
             <h5>🎉 امروز هیچ نوبت فعالی وجود ندارد!</h5>
             <p class="mb-0 mt-2">می‌توانید لیست کل نوبت‌ها را بررسی کنید یا نوبت جدید اضافه کنید.</p>
@@ -136,7 +154,7 @@
         </div>
     {% endif %}
 
-    <!-- قبل از بسته شدن </div> کانتینر، این کد را اضافه کنید -->
+    <!-- بخش صفحه‌بندی -->
     {% if appointments.has_other_pages %}
     <nav aria-label="صفحه‌بندی نوبت‌های امروز" class="mt-4">
         <ul class="pagination justify-content-center">
@@ -182,7 +200,7 @@
     </nav>
     {% endif %}
 
-<!-- Modal -->
+<!-- مدال برای نمایش متن کامل یادداشت‌ها -->
 <div class="modal fade" id="noteModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg modal-dialog-centered" style="max-width: 40vw; max-height: 80vh;">
     <div class="modal-content">
@@ -190,6 +208,7 @@
         <h5 class="modal-title">یادداشت کامل</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
+      <!-- اینجا با جاوااسکریپت متن یادداشت رو می‌ریزیم -->
       <div class="modal-body" id="noteModalBody" 
         style="white-space: pre-wrap; line-height: 1.6; 
             max-height: 70vh; overflow-y: auto; padding: 1.5rem;">
@@ -201,7 +220,8 @@
 
 </div>
 
-<!-- ✅ اسکریپت اصلاح‌شده و کاملاً صحیح برای نمایش یادداشت با دابل‌کلیک -->
+
+<!-- باز کردن یادداشت با دابل‌کلیک -->
 <script>
 document.addEventListener("DOMContentLoaded", function() {
     // انتخاب تمام سلول‌های یادداشت و افزودن رویداد دابل‌کلیک
@@ -209,12 +229,12 @@ document.addEventListener("DOMContentLoaded", function() {
         cell.addEventListener('dblclick', function() {
             const note = this.getAttribute('data-note');
             
-            // بررسی کامل: خالی، فاصله، یا مقدار "None"
+            // اگه یادداشتی نبود (خالی، اسپیس خالی، یا کلمه None) اصلا مدال رو باز نمی‌کنیم
             if (!note || note.trim() === '' || note === 'None' || note === '-----') {
                 return;
             }
             
-            // نمایش یادداشت در مودال
+            // متن رو می‌ریزیم تو بادی مدال
             const modalBody = document.getElementById('noteModalBody');
             modalBody.textContent = note;
             

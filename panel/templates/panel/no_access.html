@@ -1,10 +1,12 @@
 {% extends "panel/base_panel.html" %}
 
 {% block content %}
+<!-- برای مدیریت خطاهای دسترسی (معادل ارور 403) -->
 <div class="container mt-5">
     <div class="row justify-content-center">
         <div class="col-md-6">
             <div class="card shadow-lg border-danger">
+                <!-- هدر کارت -->
                 <div class="card-header bg-danger text-white text-center">
                     <h4 class="mb-0">
                         <i class="fas fa-exclamation-triangle me-2"></i>
@@ -22,6 +24,7 @@
                         لطفاً با مدیر سیستم تماس بگیرید.
                     </p>
                     
+                    <!-- باکس راهنمای کاربر -->
                     <div class="alert alert-info mb-4">
                         <i class="fas fa-info-circle me-2"></i>
                         <strong>نکته:</strong> 
@@ -44,6 +47,7 @@
     </div>
 </div>
 
+<!-- میکرو انیمیشن برای لود نرم‌تر مودال ارور. -->
 <style>
     .card {
         animation: fadeIn 0.5s ease-in;

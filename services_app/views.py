@@ -7,7 +7,9 @@ from django.utils import timezone
 from django.db.models import Prefetch
 from django.http import JsonResponse
 import jdatetime
+from services_app.models import number_to_persian_words
 
+#تبدیل تاریخ میلادی به شمسی
 def to_jalali(datetime_obj):
     if not datetime_obj:
         return ""
@@ -15,11 +17,22 @@ def to_jalali(datetime_obj):
     return jd.strftime('%Y/%m/%d - %H:%M')
 
 def services_list(request):
+
     active_services = Service.objects.filter(is_active=True)
-    # دریافت تمام دسته‌بندی‌ها با خدمات مرتبط
+    
+    # گرفتن دسته‌ها به همراه زیردسته‌ها و سرویس‌هاشون
     categories = Category.objects.prefetch_related(Prefetch('subcategories__services', queryset=active_services)).all()
     packages = Package.objects.filter(is_active=True , show_on_homepage=True )
     
+    # تبدیل قیمت‌ها به حروف فارسی
+    for package in packages:
+        package.discounted_price_words = number_to_persian_words(int(package.discounted_price))
+        if package.original_price:
+            package.original_price_words = number_to_persian_words(int(package.original_price))
+        else:
+            package.original_price_words = ''
+
+    # هندل کردن تایمر معکوس برای پکیج‌های زمان‌دار
     for package in packages:
         if package.is_limited_time and package.start_time:
             end_time = package.start_time + timedelta(days=package.duration_days)
@@ -34,15 +47,16 @@ def services_list(request):
         else:
             package.timer_active = False
 
+    # متصل کردن تاریخ شمسی به نظرات تاییدشده‌ی هر سرویس
     for category in categories:
         for subcategory in category.subcategories.all():
             for service in subcategory.services.all():
-                reviews = service.approved_reviews()  # اگر property داری
+                reviews = service.approved_reviews() 
                 for review in reviews:
                     review.jalali_created_at = to_jalali(review.created_at)
         
     context = {
-        'categories': categories,    # لیست تمام دسته‌بندی‌ها و خدمات
+        'categories': categories,   
         'packages': packages,
         'active_page': 'service', 
     }

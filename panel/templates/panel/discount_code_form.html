@@ -1,20 +1,23 @@
 {% extends "panel/base_panel.html" %}
-{% load static %}  {# اگر در بالای فایل نیست، اینجا اضافه کن #}
+{% load static %}  
 
-<!-- ✅ اضافه کردن کتابخانه‌های ضروری (حتماً قبل از اسکریپت اصلی) -->
+<!-- لود کردن فایل‌های لوکال -->
 <link rel="stylesheet" href="{% static 'css/persian-datepicker.min.css' %}">
 <script src="{% static 'js/moment.min.js' %}"></script>
 <script src="{% static 'js/jalali-moment.browser.js' %}"></script>
 <script src="{% static 'js/persian-datepicker.min.js' %}"></script>
 
 {% block content %}
+
 <div class="card shadow-sm">
     <div class="card-header bg-success text-white">
+        <!-- چک کردن pk برای اینکه بفهمیم تو مود "ویرایش" هستیم یا "ساخت" -->
         <h5 class="mb-0">{% if form.instance.pk %}ویرایش کد تخفیف{% else %}افزودن کد تخفیف{% endif %}</h5>
     </div>
     <div class="card-body">
         <form method="post">
             {% csrf_token %}
+            <!-- نمایش ارورهای کلی فرم -->
             {{ form.non_field_errors }}
             <div class="mb-3">
                 {{ form.code.label_tag }}{{ form.code }}
@@ -26,51 +29,52 @@
             </div>
             
             <div class="mb-3">
-                <label>تاریخ انقضا</label>
+                <label for="jalali_expires">تاریخ انقضا <span class="text-danger">*</span></label>
+                <!-- این فیلد فقط برای نمایش به کاربر و کار با تقویم شمسیه -->
+                <input type="text" id="jalali_expires" class="form-control" autocomplete="off" placeholder="مثال: 1405/02/15">
+                
+                <!-- 
+                این فیلد اصلیه که name داره و میره سمت جنگو. 
+                مقدارش توسط جاوا اسکریپت (پایین صفحه) به میلادی پر میشه.
+                -->
 
-                <input type="text" id="jalali_expires" class="form-control" autocomplete="off">
-
-                <!-- ✅ اضافه کردن این خط (رندر فیلد فرم) -->
-                {{ form.expires_at }}
-                {{ form.expires_at.errors }}
+                <input type="hidden" id="id_expires_at" name="expires_at" value="{{ form.expires_at.value|default:'' }}">
+                
+                <!--  هندل کردن ارورهای فیلد تاریخ-->
+                {% if form.expires_at.errors %}
+                    <div class="invalid-feedback d-block">
+                        {{ form.expires_at.errors }}
+                    </div>
+                {% endif %}
             </div>
-            <!-- discount_code_form.html -->
+
             <div class="mb-3">
                 {{ form.extra_message.label_tag }}{{ form.extra_message }}
                 {{ form.extra_message.errors }}
             </div>
             
-            <div class="mb-3 form-check">
+            <div class="mb-3 form-check mobile-active-box">
                 {{ form.is_active }}
                 {{ form.is_active.label_tag }}
                 {{ form.is_active.errors }}
             </div>
 
         {# دکمهٔ فعال/غیرفعال فقط در حالت ویرایش نمایش داده می‌شود #}
-        <div class="d-flex justify-content-between align-items-center mt-4">
+        <div class="d-flex justify-content-between align-items-center mt-4 service-buttons-mobile">
 
-            <!-- دکمه‌های اصلی -->
-            <div>
                 <button type="submit" class="btn btn-primary">
                     {% if form.instance.pk %}به‌روزرسانی{% else %}ذخیره{% endif %}
                 </button>
 
-                <a href="{% url 'panel:discount_codes' %}" class="btn btn-outline-secondary ms-2">
-                    لغو
+                <a href="{% url 'panel:discount_codes' %}" class="btn btn-outline-secondary">
+                    بازگشت
                 </a>
-            </div>
 
         </div>
     </form>
     </div>
 </div>
 
-<!--<link rel="stylesheet" href="https://unpkg.com/persian-datepicker/dist/css/persian-datepicker.min.css">--> 
-
-<!--<script src="https://unpkg.com/jquery@3.6.0/dist/jquery.min.js"></script>--> 
-<!--<script src="https://unpkg.com/moment/min/moment.min.js"></script>--> 
-<!--<script src="https://unpkg.com/moment-jalaali/build/moment-jalaali.js"></script>--> 
-<!--<script src="https://unpkg.com/persian-datepicker/dist/js/persian-datepicker.min.js"></script>--> 
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
@@ -87,22 +91,23 @@ document.addEventListener("DOMContentLoaded", function () {
 
     console.log("✅ المان‌های تاریخ پیدا شدند");
 
-    // ✅ اطمینان از لود شدن کتابخانه‌ها
+    //  اطمینان از لود شدن کتابخانه‌ها
     if (typeof $ === 'undefined' || typeof $.fn.pDatepicker === 'undefined') {
         console.error("❌ کتابخانه‌های تاریخ‌گذار لود نشده‌اند!");
         alert("کتابخانه‌های تاریخ‌گذار بارگذاری نشدند. لطفاً با پشتیبانی تماس بگیرید.");
         return;
     }
 
-    // ✅ مقدار پیش‌فرض برای جلوگیری از خطا
+    //  مقدار پیش‌فرض برای جلوگیری از خطا
     if (!formExpiresInput.value) {
         formExpiresInput.value = '';
     }
 
+    // کانفیگ دیت‌پیکر شمسی
     $(jalaliInput).pDatepicker({
         format: 'YYYY/MM/DD',
         autoClose: true,
-        minDate: new Date(),
+        minDate: new Date(),    // کاربر نتونه تاریخ گذشته رو برای انقضا انتخاب کنه
         calendar: { persian: { locale: 'fa' } },
         toolbox: { calendarSwitch: { enabled: false } },
         timePicker: { enabled: false },
@@ -116,7 +121,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 return;
             }
 
-            // ✅ تبدیل ارقام فارسی/عربی به لاتین (مهم‌ترین تغییر!)
+            //  تبدیل ارقام فارسی/عربی به انگلیسی
             jalaliStr = jalaliStr.replace(/[۰-۹]/g, function(d) {
                 return String.fromCharCode(d.charCodeAt(0) - 1728);
             }).replace(/[٠-٩]/g, function(d) {
@@ -124,14 +129,17 @@ document.addEventListener("DOMContentLoaded", function () {
             });
             console.log("🔄 تاریخ پس از تبدیل ارقام (لاتین):", jalaliStr);
 
-            // ✅ تبدیل با اعتبارسنجی کامل
+            //  تبدیل با اعتبارسنجی کامل
             const gregorianDate = moment(jalaliStr, 'jYYYY/jMM/jDD', true);
             
+            // اگر کاربر فرمت رو دستکاری نکرده بود و ولید بود
             if (gregorianDate.isValid()) {
+                // تبدیل به فرمت استاندارد دیتابیس/جنگو (YYYY-MM-DD) و تزریق به اینپوت هیدن
                 const gregorianStr = gregorianDate.format('YYYY-MM-DD');
                 formExpiresInput.value = gregorianStr;
                 console.log("✅ تاریخ میلادی تنظیم شد:", gregorianStr);
                 
+                // هندل کردن کلاس‌های ولیدیشن بوت‌استرپ برای فیدبک بصری
                 jalaliInput.classList.remove('is-invalid');
                 jalaliInput.classList.add('is-valid');
             } else {
@@ -144,7 +152,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
-    // ✅ پر کردن تاریخ شمسی در حالت ویرایش
+    //  پر کردن تاریخ شمسی در حالت ویرایش
     if (formExpiresInput.value) {
         const gDate = moment(formExpiresInput.value);
         if (gDate.isValid()) {
@@ -153,19 +161,18 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    // ✅ اعتبارسنجی قبل از ارسال فرم
+        // ولیدیشن سمت کلینت قبل از سابمیت فرم
     document.querySelector('form').addEventListener('submit', function(e) {
         if (!formExpiresInput.value || formExpiresInput.value.trim() === '') {
             e.preventDefault();
-            console.error("❌ فیلد تاریخ انقضا خالی است!");
+            e.stopImmediatePropagation(); //  جلوگیری از اجرای سایر listener‌ها
             jalaliInput.classList.add('is-invalid');
-            alert("لطفاً تاریخ انقضا را انتخاب کنید!");
             jalaliInput.focus();
-        } else {
-            console.log("✅ فرم آماده ارسال است");
+            alert("لطفاً تاریخ انقضا را انتخاب کنید!");
         }
-    });
+    }, true); 
 });
 </script>
+
 
 {% endblock %}

@@ -1,3 +1,4 @@
+# این ماژول برای ساخت تگ‌ها و فیلترهای سفارشی ضروری است.
 from django import template
 
 register = template.Library()

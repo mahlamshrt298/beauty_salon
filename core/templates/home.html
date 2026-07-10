@@ -13,7 +13,7 @@
   <div class="banner-container">
       <img src="{% static 'images/Hall_space.png' %}" alt="فضای سالن" class="banner-image">
 
-      <!-- متن روی عکس -->
+      <!-- متنی که می‌افته روی عکس بنر -->
       <div class="banner-text">
           <h1>خدمات تخصصی سالن زیبایی نورا</h1>
           <p>تجربه‌ای لوکس و حرفه‌ای برای زیباتر شدن</p>
@@ -24,14 +24,16 @@
 
 
 
-  <!-- 4 خدمات پرطرفدار با اسکرول افقی -->
+  <!--  خدمات پرطرفدار با اسکرول افقی -->
   <div class="container mt-5">
     <h2 class="text-center mb-4">پرطرفدارترین خدمات ما</h2>
     
     <div class="popular-services-wrapper" style="position: relative;">
       <!-- دکمه اسکرول به چپ -->
-      <button class="scroll-btn scroll-left" onclick="scrollServices(-1)" style="display: none;">
-        <i class="fas fa-chevron-right"></i>
+      <button class="scroll-btn scroll-left" onclick="scrollServices(1)" >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
       </button>
       
       <!-- کانتینر خدمات با اسکرول افقی -->
@@ -45,21 +47,25 @@
         margin: 0 -12px;
       ">
         <div class="d-inline-flex gap-4" style="padding: 0 12px;">
+          <!-- لوپ زدن روی خدماتی که تو ویو به عنوان پرطرفدار فیلتر شدن -->
           {% for service in popular_services %}
             <div class="service-card" style="
               width: 280px;
               flex: 0 0 auto;
               margin: 0;
               white-space: normal;
-            ">
+              ">
+
               <img src="{{ service.image_url }}" 
                   alt="{{ service.title }}" 
                   class="card-img-top"
                   style="width: 100%; height: auto; min-height: 180px; max-height: 220px; object-fit: contain; border-radius: 8px 8px 0 0; background: #f8f9fa;">
+              
               <div class="card-body" style="padding: 15px;">
                 <br>
                 <h5>{{ service.title }}</h5>
                 <p>{{ service.description }}</p>
+                <!-- دکمه رزرو که کتگوری سرویس رو تو URL پاس میده که تو صفحه رزرو مستقیم همون انتخاب بشه -->
                 <a href="{% url 'reserve' %}?category={{ service.category.slug }}"
                   class="btn btn-gold header-btn">
                   رزرو نوبت
@@ -71,16 +77,18 @@
       </div>
       
       <!-- دکمه اسکرول به راست -->
-      <button class="scroll-btn scroll-right" onclick="scrollServices(1)" style="display: none;">
-        <i class="fas fa-chevron-left"></i>
+      <button class="scroll-btn scroll-right" onclick="scrollServices(-1)">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6"></polyline>
+        </svg>
       </button>
     </div>
   </div>
 
-    <!-- معرفی سالن -->
+  <!-- بخش معرفی کوتاه سالن -->
   <div class="container mt-5 mb-5">
     <div class="row align-items-center g-5">
-      <!-- متن (سمت چپ در دسکتاپ) -->
+      <!-- متن -->
       <div class="col-md-6">
          <h2 class="mb-4" style="color: #D4AF37;">سالن زیبایی نورا</h2>
 
@@ -96,7 +104,7 @@
         <a href="{% url 'about' %}" class="btn btn-gold mt-3 header-btn">جزئیات بیشتر</a>
       </div>
 
-      <!-- عکس (سمت راست در دسکتاپ) -->
+      <!-- عکس  -->
       <div class="col-md-6">
         <div class="salon-image-wrapper">
           <img src="{% static 'images/Hall_space2.jpg' %}" alt="فضای سالن زیبایی نورا" class="salon-image">
@@ -106,7 +114,7 @@
   </div>
 
 
-    <!-- قبل و بعد گالری-->
+    <!-- گالری قبل و بعد-->
   <div class="container mt-5 mb-5">
     <h2 class="text-center mb-4" style="color: #D4AF37;">نتایج کارهای ما</h2>
     <div class="before-after-wrapper">
@@ -147,7 +155,6 @@
           </div>
         </div>
 
-        <!-- اگر می‌خوای بیشتر اضافه کنی، اینجا ادامه بده -->
         <!-- کارت 4 -->
         <div class="before-after-card">
           <div class="image-grid">
@@ -187,7 +194,7 @@
     </div>
   </div>
 
-          <!-- نظرات مشتریان -->
+  <!-- نظرات مشتریان، نظراتی که تو پنل تایید شدن رو اینجا نشون می‌دیم -->
   <div class="section-with-space">
     <h2 class="text-center mb-4" style="color: #D4AF37;">نظرات مشتریان ما</h2>
 
@@ -216,6 +223,7 @@
           </div>
         </div>
       {% empty %}
+      <!-- اگه نظری تو دیتابیس نبود این متن رو نشون میده -->
         <p class="text-center text-muted">نظری برای نمایش وجود ندارد.</p>
       {% endfor %}
     </div>
@@ -226,88 +234,88 @@
   </div>
 
 
-    <!-- پیشنهادهای ویژه -->
+  <!-- اسلایدر پیشنهادهای ویژه (پکیج‌ها) -->
   <div class="container mt-5 mb-5">
     <h2 class="text-center mb-4" style="color: #D4AF37;">پیشنهادهای ویژه ما</h2>
     {% if packages %}
-    <!-- اسلایدر پیشنهادهای ویژه -->
-    <div id="offersCarousel" class="carousel slide" data-bs-ride="carousel">
-      <div class="carousel-indicators">
-        {% for package in packages %}
-        <button type="button" data-bs-target="#offersCarousel" data-bs-slide-to="{{ forloop.counter0 }}"
-          {% if forloop.first %}class="active" aria-current="true"{% endif %} aria-label="{{ package.title }}">
-        </button>
-        {% endfor %}
-      </div>
+      <div id="offersCarousel" class="carousel slide" data-bs-ride="carousel">
 
-       <!-- آیتم‌های اسلایدر -->
-      <div class="carousel-inner">
-        {% for package in packages %}
-        <div class="carousel-item {% if forloop.first %}active{% endif %}">
-            <div class="offer-card open-package-modal"
-              data-bs-toggle="modal"
-              data-bs-target="#packageModal"
-
-              data-title="{{ package.title }}"
-              data-description="{{ package.description|escapejs }}"
-              data-original="{{ package.original_price|default:'' }}"
-              data-discounted="{{ package.discounted_price }}"
-              data-discounted-words="{{ package.discounted_price_words }}"
-              data-original-words="{{ package.original_price_words }}"
-
-              
-              data-badge="{{ package.discount_badge|default:'' }}"
-              data-services="{% for s in package.service.all %}{{ s.name }}{% if not forloop.last %}, {% endif %}{% endfor %}"
-              data-image="{{ package.image_url }}"
-              data-reserve-url="{% url 'package_payment_confirm' package.id %}">
-
-              <img src="{{ package.image_url }}" class="d-block w-100 rounded" alt="{{ package.title }}">
-              <div class="offer-overlay">
-                <h3>{{ package.title }}</h3>
-                <p>{{ package.description }}</p> 
-                  <!-- بعد ✅ -->
-                  <p class="offer-price">
-                    {% if package.original_price %}
-                      <del>{{ package.original_price|intcomma }} تومان</del>
-                    {% endif %}
-                    <strong>{{ package.discounted_price|intcomma }} تومان</strong>
-                    {% if package.discount_badge %}
-                      <span class="badge bg-danger">{{ package.discount_badge }}</span>
-                    {% endif %}
-                  </p>
-               <!--<div><a href="{% url 'package_payment_confirm' package.id %}" class="btn btn-gold mt-2">رزرو نوبت</a></div>--> 
-
-                <!-- تایمر فقط برای پکیج‌های موقت -->
-                {% if package.is_limited_time and package.timer_active %}
-                <div class="offer-timer mt-2"
-                    data-package-id="{{ package.id }}"
-                    data-remaining="{{ package.remaining_seconds }}"
-                    data-package-title="{{ package.title }}">
-                    <div class="timer-display text-end"></div>
-                </div>
-                {% endif %}
-
-              </div>
-            </div>
-          
+        <div class="carousel-indicators">
+          {% for package in packages %}
+          <button type="button" data-bs-target="#offersCarousel" data-bs-slide-to="{{ forloop.counter0 }}"
+            {% if forloop.first %}class="active" aria-current="true"{% endif %} aria-label="{{ package.title }}">
+          </button>
+          {% endfor %}
         </div>
-        {% endfor %}
-      </div>
 
-       <!-- دکمه‌های کنترل اسلایدر -->
-      <button class="carousel-control-prev" type="button" data-bs-target="#offersCarousel" data-bs-slide="prev">
-        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-      </button>
-      <button class="carousel-control-next" type="button" data-bs-target="#offersCarousel" data-bs-slide="next">
-        <span class="carousel-control-next-icon" aria-hidden="true"></span>
-      </button>
-    </div>
+        <!-- آیتم‌های اسلایدر -->
+        <div class="carousel-inner">
+          {% for package in packages %}
+            <div class="carousel-item {% if forloop.first %}active{% endif %}">
+              <!-- کلاس open-package-modal رو گذاشتیم که رو هر پکیج کلیک شد، مودالش باز بشه -->
+                <div class="offer-card open-package-modal"
+                  data-bs-toggle="modal"
+                  data-bs-target="#packageModal"
+
+                  data-title="{{ package.title }}"
+                  data-description="{{ package.description|escapejs }}"
+                  data-original="{{ package.original_price|default:'' }}"
+                  data-discounted="{{ package.discounted_price }}"
+                  data-discounted-words="{{ package.discounted_price_words }}"
+                  data-original-words="{{ package.original_price_words }}"
+                  
+                  data-badge="{{ package.discount_badge|default:'' }}"
+                  data-services="{% for s in package.service.all %}{{ s.name }}{% if not forloop.last %}, {% endif %}{% endfor %}"
+                  data-image="{{ package.image_url }}"
+                  data-reserve-url="{% url 'package_payment_confirm' package.id %}">
+
+                  <img src="{{ package.image_url }}" class="d-block w-100 rounded" alt="{{ package.title }}">
+                  <div class="offer-overlay">
+                    <h3>{{ package.title }}</h3>
+                    <p>{{ package.description }}</p> 
+
+                      <p class="offer-price">
+                        <!-- اگه قیمت اصلی وارد شده بود روش خط می‌کشیم (تخفیف) -->
+                        {% if package.original_price %}
+                          <del>{{ package.original_price|intcomma }} تومان</del>
+                        {% endif %}
+                        <strong>{{ package.discounted_price|intcomma }} تومان</strong>
+                        {% if package.discount_badge %}
+                          <span class="badge bg-danger">{{ package.discount_badge }}</span>
+                        {% endif %}
+                      </p>
+
+                    <!-- تایمر فقط برای پکیج‌های موقت -->
+                    {% if package.is_limited_time and package.timer_active %}
+                    <div class="offer-timer mt-2"
+                        data-package-id="{{ package.id }}"
+                        data-remaining="{{ package.remaining_seconds }}"
+                        data-package-title="{{ package.title }}">
+                        <div class="timer-display text-end"></div>
+                    </div>
+                    {% endif %}
+
+                  </div>
+                </div>
+              
+            </div>
+          {% endfor %}
+        </div>
+
+        <!-- دکمه‌های کنترل اسلایدر -->
+        <button class="carousel-control-prev" type="button" data-bs-target="#offersCarousel" data-bs-slide="prev">
+          <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#offersCarousel" data-bs-slide="next">
+          <span class="carousel-control-next-icon" aria-hidden="true"></span>
+        </button>
+      </div>
     {% else %}
-    <p class="text-center">در حال حاضر پیشنهاد ویژه‌ای وجود ندارد.</p>
+      <p class="text-center">در حال حاضر پیشنهاد ویژه‌ای وجود ندارد.</p>
     {% endif %}
   </div>
 
-  <!-- اسکریپت تایمر شخصی -->
+  <!-- اسکریپت هندل کردن تایمر تخفیف‌ها -->
   <script>
     document.addEventListener('DOMContentLoaded', function () {
         document.querySelectorAll('.offer-timer').forEach(timerEl => {
@@ -316,7 +324,7 @@
             const displayEl = timerEl.querySelector('.timer-display');
             const packageTitle = timerEl.dataset.packageTitle;
             
-            // ✅ استفاده از زمان سرور به جای localStorage
+            // زمان رو از سرور می‌گیریم که کاربر نتونه با تغییر ساعت گوشیش تایمر رو دور بزنه
             let remainingTime = remainingSeconds;
             
             // تابع بروزرسانی تایمر
@@ -340,7 +348,7 @@
                     </div>
                 `;
                 
-                remainingTime -= 60; // کاهش یک دقیقه
+                remainingTime -= 60; // هر بار ۶۰ ثانیه (یک دقیقه) کم می‌کنیم
             };
             
             updateTimer();
@@ -356,10 +364,12 @@
     <div class="row justify-content-center">
       {% for a in latest_articles %}
         <div class="col-md-6 mb-4">
+          <!-- کاربر اگه رو کل کارت دابل کلیک کنه هم میره تو مقاله -->
           <div  class="blog-card h-100" ondblclick="window.location.href='{% url 'blog_detail' a.id %}'">
             <img src="{{ a.image.url }}" class="blog-img">
             <div class="blog-content">
               <h4>{{ a.title }}</h4>
+              <!-- محتوای مقاله رو روی ۲۰ کلمه می‌بُریم که کارت‌ها هم‌اندازه بمونن -->
               <p>{{ a.content|truncatewords:20 }}</p>
               <a href="{% url 'blog_detail' a.id %}" class="btn-read">
                 ادامه مطلب →
@@ -374,11 +384,10 @@
 
 
     <!-- تماس و موقعیت -->
-  <!-- تماس و موقعیت - نسخه نهایی با داده‌های پویا از مدل -->
   <div class="container mt-5 mb-5">
     <h2 class="text-center mb-4" style="color: #D4AF37;">تماس با ما</h2>
     <div class="row g-4">
-      <!-- اطلاعات تماس - کاملاً پویا -->
+      <!-- اطلاعات تماس -->
       <div class="col-md-6">
         <div class="contact-info">
           <h4>آدرس</h4>
@@ -419,23 +428,30 @@
         </div>
       </div>
 
-      <!-- نقشه گوگل (بدون تغییر) -->
+      <!-- نقشه بلد  -->
       <div class="col-md-6">
-        <div class="google-map">
-          <iframe 
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d1722.3548421801895!2d57.05072353967285!3d30.302325399999997!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3f021907e804b547%3A0xd62677e739287e22!2z2KLYsdin24zYtNqv2KfZhyDZgtuM2obbjCDZhtmC2LHZhyDYp9uM!5e0!3m2!1sen!2s!4v1763302664885!5m2!1sen!2s" 
-            width="100%" 
-            height="300" 
-            style="border:0; border-radius: 12px;" 
-            allowfullscreen="" 
-            loading="lazy">
+        <div class="google-map">          
+          <iframe src="https://balad.ir/embed?p=6eZiWAIFuwoUSv" width="100%"
+            height="300"
+            style="border:0; border-radius: 12px;"
+            allowfullscreen="">
           </iframe>
         </div>
+        
+        <!-- دکمه باز کردن توی اپ بلد -->
+        <div class="text-center">
+          <a href="https://balad.ir/p/6eZiWAIFuwoUSv" 
+            target="_blank" 
+            class="btn btn-gold mt-3 ">
+            📍 مسیریابی با بلد
+          </a>
+        </div>
       </div>
+
     </div>
   </div>
 
-  <!-- Package Modal -->
+  <!-- مودال پکیج -->
   <div class="modal fade" id="packageModal" tabindex="-1">
     <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
       <div class="modal-content">
@@ -446,7 +462,7 @@
         </div>
 
         <div class="modal-body" id="packageModalBody">
-          <!-- JS پر می‌کند -->
+          <!-- با جاوااسکریپت پر میشه -->
         </div>
 
         <div class="modal-footer">
@@ -462,12 +478,11 @@
     </div>
   </div>
 
-
-
 </div>
 
+<!-- اسکریپت‌های مربوط به مودال و اسکرول افقی -->
 <script>
-
+// پر کردن دیتای مودال پکیج وقتی روی کارت پکیج کلیک میشه
 document.addEventListener('DOMContentLoaded', function () {
   document.querySelectorAll('.open-package-modal').forEach(card => {
     card.addEventListener('click', function () {
@@ -485,7 +500,7 @@ document.addEventListener('DOMContentLoaded', function () {
       titleEl.innerText = this.dataset.title || '';
       reserveBtn.href = this.dataset.reserveUrl || '#';
 
-      // HTML قیمت (نسخه نهایی بدون تکرار let)
+      // ساختار HTML قیمت رو اینجا به صورت داینامیک می‌سازیم
       let priceHtml = `
         <div class="d-flex align-items-center justify-content-end gap-3">
           ${this.dataset.original ? `
@@ -512,14 +527,14 @@ document.addEventListener('DOMContentLoaded', function () {
         </div>
       `;
 
-      // بدنه مودال
+      // جایگذاری نهایی تو بدنه مودال
       bodyEl.innerHTML = `
         <div class="package-image-container mb-3">
           <img src="${this.dataset.image}" 
                class="w-100 rounded-3"
                style="max-height: 420px;
-  object-fit: contain;
-  background: #f8f9fa;
+                  object-fit: contain;
+                  background: #f8f9fa;
                       border: 2px solid #f8f9fa;
                       box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
         </div>
@@ -542,49 +557,53 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 
+
 <script>
+
+// تابع هندل کردن کلیک رو دکمه‌های چپ و راست خدمات پرطرفدار
 function scrollServices(direction) {
     const container = document.getElementById('servicesScrollContainer');
-    const scrollAmount = 300; // مقدار اسکرول به پیکسل
-    
-    if (direction === 1) {
-        container.scrollLeft += scrollAmount;
-    } else {
-        container.scrollLeft -= scrollAmount;
-    }
+    const scrollAmount = 300;   // با هر کلیک ۳۰۰ پیکسل اسکرول میشه
+    // نکته مهم: چون سایت RTL (راست‌چین) هست، scrollLeft به صورت منفی کار می‌کنه، پس direction ضرب در منفی میشه
+    container.scrollLeft -= direction * scrollAmount;
 }
 
-// نمایش/مخفی کردن دکمه‌ها بر اساس موقعیت اسکرول
+
+// چک کردن اینکه کی به ته لیست رسیدیم که دکمه‌ها رو غیرفعال (کمرنگ) کنیم
 document.addEventListener('DOMContentLoaded', function() {
     const container = document.getElementById('servicesScrollContainer');
     const leftBtn = document.querySelector('.scroll-left');
     const rightBtn = document.querySelector('.scroll-right');
-    
+
     if (container && leftBtn && rightBtn) {
         const checkScroll = () => {
-            // اگر به اول رسیدیم، دکمه چپ رو مخفی کن
-            if (container.scrollLeft <= 10) {
-                leftBtn.style.opacity = '0.5';
-                leftBtn.style.pointerEvents = 'none';
-            } else {
-                leftBtn.style.opacity = '1';
-                leftBtn.style.pointerEvents = 'auto';
-            }
-            
-            // اگر به آخر رسیدیم، دکمه راست رو مخفی کن
-            if (container.scrollLeft + container.clientWidth >= container.scrollWidth - 10) {
+            const absScroll = Math.abs(container.scrollLeft);
+            const maxScroll = container.scrollWidth - container.clientWidth;
+
+            // دکمه راست (›) — رفتن به سمت ابتدای لیست (در RTL: scrollLeft → 0)
+            if (absScroll <= 10) {
                 rightBtn.style.opacity = '0.5';
                 rightBtn.style.pointerEvents = 'none';
             } else {
                 rightBtn.style.opacity = '1';
                 rightBtn.style.pointerEvents = 'auto';
             }
+
+            // دکمه چپ (‹) — رفتن به سمت انتهای لیست (در RTL: scrollLeft → منفی)
+            if (absScroll >= maxScroll - 10) {
+                leftBtn.style.opacity = '0.5';
+                leftBtn.style.pointerEvents = 'none';
+            } else {
+                leftBtn.style.opacity = '1';
+                leftBtn.style.pointerEvents = 'auto';
+            }
         };
-        
+
         container.addEventListener('scroll', checkScroll);
-        checkScroll(); // بررسی اولیه
+        checkScroll();
     }
 });
+
 </script>
 
 {% endblock content %}

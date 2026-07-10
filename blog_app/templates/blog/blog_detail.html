@@ -15,15 +15,17 @@
             </div>
         </div>
 
-        <!-- عنوان و تاریخ -->
+        <!-- عنوان و تاریخ  و نام نویسنده -->
         <div class="row mb-4">
             <div class="col-12">
                 <h1 class="article-title">{{ article.title }}</h1>
                 <p class="text-muted">
-                    <i class="far fa-calendar-alt"></i> 
+                    <i class="far fa-calendar-alt"></i>
+                    <!-- فرمت کردن تاریخ به شکل شمسی --> 
                     تاریخ انتشار: {{ article.created_at|jformat:"%d %B %Y" }}
                     &nbsp;|&nbsp;
                     <i class="far fa-user"></i> 
+                    <!-- نمایش نام و نام‌خانوادگی نویسنده، اگر نبود نمایش نام کاربری -->
                     نویسنده: {{ article.author.get_full_name|default:article.author.username }}
                 </p>
                 <hr>
@@ -34,18 +36,20 @@
         <div class="row">
             <div class="col-12">
                 <div class="article-content">
+                    <!-- فیلتر safe برای اجرای کدهای HTML داخل متن (مثل بولد بودن، لینک‌ها و...) -->
                     {{ article.content|safe }}
                 </div>
             </div>
         </div>
 
-        <!-- باکس نکات کلیدی -->
+        <!-- باکس نکات کلیدی (در صورت وجود) -->
         <div class="row mt-5">
             <div class="col-12">
                 <div class="alert alert-info" role="alert">
                     <h5><i class="fas fa-lightbulb"></i> نکات کلیدی از متخصصان ما:</h5>
                         {% if article.Key_points %}
                             <div class="mt-3">
+                                 <!-- تبدیل اینترها (خطوط جدید) در دیتابیس به تگ <br> در HTML -->
                                 {{ article.Key_points|linebreaksbr }}
                             </div>
                         {% else %}
@@ -56,12 +60,13 @@
             </div>
         </div>
 
-        <!-- جمله تشویقی + لینک به خدمت مدنظر -->
+        <!-- جمله تشویقی + لینک به خدمت مدنظر ( اگر باشد) -->
         {% if article.for_reserve %}
         <div class="row mt-4">
             <div class="col-12 text-center">
                 <p class="lead">
                     اگر این مقاله برایتان مفید بود، برای انجام
+                    <!-- ارسال ID خدمت موردنظر به صفحه رزرو از طریق URL Parameters -->
                     <a href="{% url 'reserve' %}?service={{ article.for_reserve.id }}"
                     class="text-gold fw-bold">
                         {{ article.for_reserve.title }}
@@ -85,11 +90,13 @@
                 <div class="row g-4">
                     {% for related_article in related_articles %}
                         <div class="col-12 col-md-6 col-lg-4 blog-item" data-category="{{ related_article.category.name|slugify }}">
+                            <!-- قابلیت دابل‌کلیک روی کارت برای ورود به مقاله -->
                             <div class="blog-card" ondblclick="window.location.href='{% url 'blog_detail' related_article.pk %}'">
                                 <img src="{{ related_article.image.url }}" alt="{{ related_article.title }}" class="blog-img">
                                 <div class="blog-content">
                                     <span class="blog-category">{{ related_article.category.name }}</span>
                                     <h4>{{ related_article.title }}</h4>
+                                    <!-- نمایش فقط ۱۰ کلمه اول مقاله به عنوان خلاصه -->
                                     <p>{{ related_article.content|truncatewords:10 }}</p>
                                     <a href="{% url 'blog_detail' related_article.pk %}" class="btn-read">ادامه مطلب →</a>
                                 </div>
@@ -100,7 +107,7 @@
             </div>
         </div>
 
-        <!-- دکمه بازگشت -->
+        <!-- دکمه بازگشت به لیست وبلاگ -->
         <div class="row mt-4">
             <div class="col-12 text-center">
                 <a href="{% url 'blog' %}" class="btn btn-gold">بازگشت به لیست مقالات</a>

@@ -7,24 +7,22 @@
 خدمات - سالن زیبایی نورا
 {% endblock %}
 
-<!--اینجا کلا مشکل داریم،باید کامل بررسی بشه هم انی فایل هم فایل جزئیات-->
 {% block content %}
 <div class="container mt-5">
 
-    <!-- سربرگ -->
+    <!-- هدر-->
     <div class="text-center mb-4">
         <h1 class="hero-title">خدمات سالن زیبایی نورا</h1>
         <p class="lead">از مو تا مژه، هر آنچه برای درخشش نیاز دارید</p>
     </div>
 
-    <!-- اعتبارسازی -->
     <div class="text-center mb-5">
         <p class="text-muted">
             تمام خدمات توسط متخصصان حرفه‌ای و با بهترین متریال روز دنیا انجام می‌شود
         </p>
     </div>
 
-    <!-- بخش اسکرول افقی دسته‌بندی‌ها -->
+    <!--تب‌های دسته‌بندی-->
     <div class="d-flex gap-2 pb-3 category-scroll">
         {% for category in categories %}
             <button class="btn btn-outline-gold category-btn" data-slug="{{ category.slug }}">
@@ -34,14 +32,14 @@
     </div>
 
 
-    <!--  جعبه نمایش زیردسته‌ها و خدمات -->
+    <!--   نمایش زیردسته‌ها و خدمات -->
     <div id="subcategory-container" class="mt-4">
         <!-- زیردسته‌ها و خدمات اینجا با JavaScript نمایش داده می‌شن -->
     </div>
 
 
-     <!--  برای نمایش جزئیات خدمت -->
-    <!-- Modal -->
+     <!--  مودال نمایش جزئیات خدمت -->
+
     <div class="modal fade" id="serviceModal" tabindex="-1" aria-labelledby="serviceModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
@@ -63,86 +61,88 @@
     </div>
 
 
-        <!-- پیشنهادهای ویژه -->
+    <!-- پیشنهادهای ویژه -->
     <div class="container mt-5 mb-5">
         <h2 class="text-center mb-4" style="color: #D4AF37;">پیشنهادهای ویژه ما</h2>
         {% if packages %}
-        <!-- اسلایدر پیشنهادهای ویژه -->
-        <div id="offersCarousel" class="carousel slide" data-bs-ride="carousel">
-        <div class="carousel-indicators">
-            {% for package in packages %}
-            <button type="button" data-bs-target="#offersCarousel" data-bs-slide-to="{{ forloop.counter0 }}"
-            {% if forloop.first %}class="active" aria-current="true"{% endif %} aria-label="{{ package.title }}">
+            <!-- اسلایدر پیشنهادهای ویژه -->
+            <div id="offersCarousel" class="carousel slide" data-bs-ride="carousel">
+
+                <div class="carousel-indicators">
+                    {% for package in packages %}
+                        <button type="button" data-bs-target="#offersCarousel" data-bs-slide-to="{{ forloop.counter0 }}"
+                            {% if forloop.first %}class="active" aria-current="true"{% endif %} aria-label="{{ package.title }}">
+                        </button>
+                    {% endfor %}
+                </div>
+
+                <!-- آیتم‌های اسلایدر -->
+                <div class="carousel-inner">
+                    {% for package in packages %}
+                    <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                        <div class="offer-card open-package-modal"
+                            data-bs-toggle="modal"
+                            data-bs-target="#packageModal"
+
+                            data-title="{{ package.title }}"
+                            data-description="{{ package.description|escapejs }}"
+                            data-original="{{ package.original_price|default:'' }}"
+                            data-discounted="{{ package.discounted_price }}"
+                            data-badge="{{ package.discount_badge|default:'' }}"
+                            data-services="{% for s in package.service.all %}{{ s.name }}{% if not forloop.last %}, {% endif %}{% endfor %}"
+                            data-image="{{ package.image.url }}"
+                            data-reserve-url="{% url 'package_payment_confirm' package.id %}"
+                            data-discounted-words="{{ package.discounted_price_words }}"
+                            data-original-words="{{ package.original_price_words }}">
+
+                            <img src="{{ package.image_url }}" class="d-block w-100 rounded" alt="{{ package.title }}">
+                            <div class="offer-overlay">
+                                <h3>{{ package.title }}</h3>
+                                <p>{{ package.description }}</p> 
+
+                                    <p class="offer-price">
+                                        {% if package.original_price %}
+                                            <del>{{ package.original_price|intcomma }} تومان</del>
+                                        {% endif %}
+
+                                        <strong>{{ package.discounted_price|intcomma }} تومان</strong>
+
+                                        {% if package.discount_badge %}
+                                            <span class="badge bg-danger">{{ package.discount_badge }}</span>
+                                        {% endif %}
+                                    </p>
+
+                                <!-- تایمر فقط برای پکیج‌های موقت -->
+                                {% if package.is_limited_time %}
+                                    <div class="offer-timer mt-2" 
+                                        data-package-id="{{ package.id }}" 
+                                        data-duration="{{ package.duration_days }}"
+                                        data-package-title="{{ package.title }}">
+                                        <div class="timer-display text-end"></div>
+                                    </div>
+                                {% endif %}
+
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+            <!-- دکمه‌های کنترل اسلایدر -->
+            <button class="carousel-control-prev" type="button" data-bs-target="#offersCarousel" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
             </button>
-            {% endfor %}
-        </div>
-
-        <!-- آیتم‌های اسلایدر -->
-        <div class="carousel-inner">
-            {% for package in packages %}
-            <div class="carousel-item {% if forloop.first %}active{% endif %}">
-            <div class="offer-card open-package-modal"
-                data-bs-toggle="modal"
-                data-bs-target="#packageModal"
-
-                data-title="{{ package.title }}"
-                data-description="{{ package.description|escapejs }}"
-                data-original="{{ package.original_price|default:'' }}"
-                data-discounted="{{ package.discounted_price }}"
-                data-badge="{{ package.discount_badge|default:'' }}"
-                data-services="{% for s in package.service.all %}{{ s.name }}{% if not forloop.last %}, {% endif %}{% endfor %}"
-                data-image="{{ package.image.url }}"
-                data-reserve-url="{% url 'package_payment_confirm' package.id %}">
-
-                <img src="{{ package.image_url }}" class="d-block w-100 rounded" alt="{{ package.title }}">
-                <div class="offer-overlay">
-                <h3>{{ package.title }}</h3>
-                <p>{{ package.description }}</p> 
-                    <!-- بعد ✅ -->
-                    <p class="offer-price">
-                    {% if package.original_price %}
-                        <del>{{ package.original_price|intcomma }} تومان</del>
-                    {% endif %}
-                    <strong>{{ package.discounted_price|intcomma }} تومان</strong>
-                    {% if package.discount_badge %}
-                        <span class="badge bg-danger">{{ package.discount_badge }}</span>
-                    {% endif %}
-                    </p>
-               <!--<div><a href="{% url 'reserve' %}" class="btn btn-gold mt-2">رزرو نوبت</a></div>--> 
-
-                <!-- تایمر فقط برای پکیج‌های موقت -->
-                {% if package.is_limited_time %}
-                <div class="offer-timer mt-2" 
-                    data-package-id="{{ package.id }}" 
-                    data-duration="{{ package.duration_days }}"
-                    data-package-title="{{ package.title }}">
-                    <div class="timer-display text-end"></div>
-                </div>
-                {% endif %}
-
-                </div>
+            <button class="carousel-control-next" type="button" data-bs-target="#offersCarousel" data-bs-slide="next">
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            </button>
             </div>
-            </div>
-            {% endfor %}
-        </div>
-
-        <!-- دکمه‌های کنترل اسلایدر -->
-        <button class="carousel-control-prev" type="button" data-bs-target="#offersCarousel" data-bs-slide="prev">
-            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-        </button>
-        <button class="carousel-control-next" type="button" data-bs-target="#offersCarousel" data-bs-slide="next">
-            <span class="carousel-control-next-icon" aria-hidden="true"></span>
-        </button>
-        </div>
         {% else %}
-        <p class="text-center">در حال حاضر پیشنهاد ویژه‌ای وجود ندارد.</p>
+            <p class="text-center">در حال حاضر پیشنهاد ویژه‌ای وجود ندارد.</p>
         {% endif %}
     </div>
 
-    <!-- اسکریپت تایمر (اگر بخواهید) -->
+     <!-- اسکریپت تایمر پیشنهادهای ویژه -->
     <script>
-   // --- جاوااسکریپت ---
-    // اسکریپت مدیریت نمایش تایمر
     document.addEventListener('DOMContentLoaded', function () {
       document.querySelectorAll('.offer-timer').forEach(timerEl => {
         const packageId = timerEl.dataset.packageId;
@@ -188,36 +188,36 @@
         };
 
         updateTimer();
-        setInterval(updateTimer, 60000); // هر دقیقه آپدیت
+        setInterval(updateTimer, 60000); // هر یک دقیقه یه بار چک می‌کنه
       });
     });
     </script>
     
-    <!-- Package Modal -->
+    <!--مودال پکیج‌ها -->
     <div class="modal fade" id="packageModal" tabindex="-1">
-    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-        <div class="modal-content">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
 
-        <div class="modal-header">
-            <h5 class="modal-title" id="packageModalTitle"></h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
+            <div class="modal-header">
+                <h5 class="modal-title" id="packageModalTitle"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
 
-        <div class="modal-body" id="packageModalBody">
-            <!-- JS پر می‌کند -->
-        </div>
+            <div class="modal-body" id="packageModalBody">
+                <!-- JS پر می‌کند -->
+            </div>
 
-        <div class="modal-footer">
-            <a href="#" id="packageReserveBtn" class="btn btn-gold">
-            رزرو نوبت
-            </a>
-            <button class="btn btn-secondary" data-bs-dismiss="modal">
-            بستن
-            </button>
-        </div>
+            <div class="modal-footer">
+                <a href="#" id="packageReserveBtn" class="btn btn-gold">
+                رزرو نوبت
+                </a>
+                <button class="btn btn-secondary" data-bs-dismiss="modal">
+                بستن
+                </button>
+            </div>
 
+            </div>
         </div>
-    </div>
     </div>
 
 
@@ -227,16 +227,7 @@
 
 
 <script>
-// --- جاوااسکریپت بدون تغییر ---
-// اسکریپت مدیریت نمایش خدمات و Modal
-// این اسکریپت خدمات را بر اساس دسته‌بندی فیلتر کرده و جزئیات را در Modal نمایش می‌دهد
-// --- جاوااسکریپت ---
-// اسکریپت مدیریت نمایش زیردسته‌ها و خدمات
-// این اسکریپت زیردسته‌ها و خدمات را بر اساس دسته‌بندی فیلتر کرده و جزئیات را در Modal نمایش می‌دهد
-// --- جاوااسکریپت ---
-// اسکریپت مدیریت نمایش زیردسته‌ها و خدمات
-// این اسکریپت زیردسته‌ها و خدمات را بر اساس دسته‌بندی فیلتر کرده و جزئیات را در Modal نمایش می‌دهد
-
+// تبدیل دیتابیس جنگو به آبجکت جاوااسکریپت
 const categoriesData = {
     {% for category in categories %}
     "{{ category.slug }}": {
@@ -259,16 +250,17 @@ const categoriesData = {
                         price: "{{ service.price|intcomma }}",
                         price_words: "{{ service.price_in_words }}",
 
-                        // {{ service.image.url }} 
                         imageUrl: "{% if service.image %}{{ service.image.url }}{% else %}{% static 'images/default-service.jpg' %}{% endif %}",
-                        // 👇 اضافه کردن عکس‌های مرتبط
+                        
+                        //  اضافه کردن عکس‌های مرتبط
                         relatedImages: [
                             {% for image in service.get_related_images %}
                                 "{{ image.image.url }}"{% if not forloop.last %},{% endif %}
                             {% empty %}
                             {% endfor %}
                         ],
-                        // 👇 اضافه کردن نظرات کاربران
+
+                       // نظرات تایید شده
                         reviews: [
                             {% for review in service.approved_reviews %}
                                 {
@@ -292,11 +284,13 @@ const categoriesData = {
     {% endfor %}
 };
 
+// نمایش دیفالت اولین دسته وقتی صفحه لود میشه
 let currentCategory = Object.keys(categoriesData)[0] || null;
 if (currentCategory) {
     showCategory(currentCategory);
 }
 
+// هندل کردن کلیک روی دکمه‌های تب بالا
 document.querySelectorAll('.category-btn').forEach(btn => {
     btn.addEventListener('click', function () {
         const slug = this.dataset.slug;
@@ -304,6 +298,7 @@ document.querySelectorAll('.category-btn').forEach(btn => {
     });
 });
 
+//رندر کردن زیردسته‌ها و سرویس‌های هر دسته
 function showCategory(slug) {
     const category = categoriesData[slug];
     if (!category) return;
@@ -327,7 +322,15 @@ function showCategory(slug) {
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <h4>${subcategory.name}</h4>
                             <button class="btn btn-sm btn-outline-primary toggle-services" data-open="false">
-                                <i class="fas fa-plus"></i>
+                                <!-- ایکون + و - -->
+
+                                <svg class="icon-plus" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                </svg>
+                                <svg class="icon-minus" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="display:none">
+                                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                                </svg>
                             </button>
                         </div>
 
@@ -344,7 +347,8 @@ function showCategory(slug) {
 
     document.getElementById('subcategory-container').innerHTML = html;
 
-    // toggle باز و بسته شدن خدمات
+    //  باز و بسته شدن خدمات
+    // باز شدن یک لیست مساوی است با بسته شدن بقیه
     document.querySelectorAll('.toggle-services').forEach(btn => {
         btn.addEventListener('click', function () {
 
@@ -352,7 +356,7 @@ function showCategory(slug) {
             const list = card.querySelector('.services-list');
             const isOpen = this.dataset.open === "true";
 
-            // 🔴 بستن بقیه زیردسته‌ها
+            //  بستن بقیه زیردسته‌ها
             document.querySelectorAll('.subcategory-card').forEach(otherCard => {
                 if (otherCard !== card) {
                     const otherList = otherCard.querySelector('.services-list');
@@ -360,7 +364,8 @@ function showCategory(slug) {
 
                     if (otherList && !otherList.classList.contains('d-none')) {
                         otherList.classList.add('d-none');
-                        otherBtn.querySelector('i').className = "fas fa-plus";
+                        otherBtn.querySelector('.icon-plus').style.display = 'inline';
+                        otherBtn.querySelector('.icon-minus').style.display = 'none';
                         otherBtn.dataset.open = "false";
                     }
                 }
@@ -369,13 +374,16 @@ function showCategory(slug) {
             // باز/بسته کردن فعلی
             if (isOpen) {
                 list.classList.add('d-none');
-                this.querySelector('i').className = "fas fa-plus";
+                this.querySelector('.icon-plus').style.display = 'inline';
+                this.querySelector('.icon-minus').style.display = 'none';
                 this.dataset.open = "false";
             } else {
                 list.classList.remove('d-none');
-                this.querySelector('i').className = "fas fa-minus";
+                this.querySelector('.icon-plus').style.display = 'none';
+                this.querySelector('.icon-minus').style.display = 'inline';
                 this.dataset.open = "true";
             }
+
         });
     });
 
@@ -391,14 +399,14 @@ function renderServices(services) {
         <div class="col-12">
             <div class="service-item d-flex align-items-center gap-3 p-3">
                 <img src="${service.imageUrl}" 
-     alt="${service.name}" 
-     class="service-img"
-     style="width:300px;
-            height:180px;
-            object-fit:contain;
-            background:#f8f9fa;
-            padding:8px;
-            border-radius:12px;">
+                    alt="${service.name}" 
+                    class="service-img"
+                    style="width:300px;
+                        height:180px;
+                        object-fit:contain;
+                        background:#f8f9fa;
+                        padding:8px;
+                        border-radius:12px;">
 
                 <div class="service-info flex-grow-1 d-flex flex-column">
                     <h5 class="text-center w-100">${service.name}</h5>
@@ -430,8 +438,8 @@ function renderServices(services) {
     return html;
 }
 
-// هنگام باز شدن Modal
-// هنگام باز شدن Modal
+
+// پر کردن محتوای مودال سرویس قبل از باز شدن
 document.getElementById('serviceModal').addEventListener('show.bs.modal', function(event) {
     const button = event.relatedTarget;
     const serviceSlug = button.getAttribute('data-service-slug');
@@ -456,6 +464,7 @@ document.getElementById('serviceModal').addEventListener('show.bs.modal', functi
 
     const modalContent = document.getElementById('modalContent');
 
+    // ساختاربندی HTML داخل مودال
     let html = `
         <div class="row mb-4">
             <div class="col-12">
@@ -502,7 +511,7 @@ document.getElementById('serviceModal').addEventListener('show.bs.modal', functi
         </div>
     `;
 
-    // عکس‌های مرتبط
+    // رندر عکس‌های گالری اگه وجود داشته باشه
     if (serviceData.relatedImages && serviceData.relatedImages.length > 0) {
         html += `
             <h5 class="mt-4 mb-3">عکس‌های مرتبط</h5>
@@ -513,19 +522,19 @@ document.getElementById('serviceModal').addEventListener('show.bs.modal', functi
                 <div class="col-6 col-md-4">
                     <img src="${imgUrl}" class="w-100 rounded zoomable-image"
                         style="height:150px;
-       width:100%;
-       object-fit:contain;
-       background:#f8f9fa;
-       padding:6px;
-       border-radius:10px;"
->
+                        width:100%;
+                        object-fit:contain;
+                        background:#f8f9fa;
+                        padding:6px;
+                        border-radius:10px;"
+                    >
                 </div>
             `;
         });
         html += `</div>`;
     }
 
-    // نظرات
+    // رندر نظرات و ستاره‌ها
     if (serviceData.reviews && serviceData.reviews.length > 0) {
         html += `
             <h5 class="mt-4 mb-3">نظرات کاربران</h5>
@@ -569,7 +578,9 @@ document.getElementById('serviceModal').addEventListener('show.bs.modal', functi
 
 </script>
 
+
 <script>
+    //مودال پکیج‌ها
 document.addEventListener('DOMContentLoaded', function () {
   document.querySelectorAll('.open-package-modal').forEach(card => {
     card.addEventListener('click', function () {
@@ -587,37 +598,34 @@ document.addEventListener('DOMContentLoaded', function () {
       titleEl.innerText = this.dataset.title || '';
       reserveBtn.href = this.dataset.reserveUrl || '#';
 
-// ✅ محاسبه قیمت به حروف
-      const discountedPriceWords = getWordsPrice(this.dataset.discounted);
-      const originalPriceWords = this.dataset.original ? getWordsPrice(this.dataset.original) : ''
+        //  محاسبه قیمت به حروف
+      const discountedPriceWords = this.dataset.discountedWords || '';
+      const originalPriceWords = this.dataset.originalWords || '';
 
-      // HTML قیمت (نسخه نهایی بدون تکرار let)
       let priceHtml = `
         <div class="d-flex align-items-center justify-content-end gap-3">
-          ${this.dataset.original ? `
+            ${this.dataset.original ? `
             <del class="text-muted fs-6">
-              ${Number(this.dataset.original).toLocaleString()} تومان
+                ${Number(this.dataset.original).toLocaleString()} تومان
             </del>
-          ` : ''}
+            ` : ''}
 
-          <strong class="fs-5">
+            <strong class="fs-5">
             ${Number(this.dataset.discounted).toLocaleString()} تومان
-          </strong>
+            </strong>
 
-          ${this.dataset.badge ? `
+            <div class="text-muted mt-2" style="font-size:14px;">
+            (${this.dataset.discountedWords} تومان)
+            </div>
+
+            ${this.dataset.badge ? `
             <span class="badge bg-danger fs-6">
-              ${this.dataset.badge}
+                ${this.dataset.badge}
             </span>
-          ` : ''}
+            ` : ''}
         </div>
+        `;
 
-        <!-- ✅ اضافه کردن قیمت به حروف -->
-        <div class="text-end mt-2 text-muted" style="font-size: 0.85rem;">
-          ${discountedPriceWords}
-          ${originalPriceWords ? `(${originalPriceWords})` : ''}
-        </div>
-        
-      `;
 
       // بدنه مودال
       bodyEl.innerHTML = `
@@ -625,8 +633,8 @@ document.addEventListener('DOMContentLoaded', function () {
           <img src="${this.dataset.image}" 
                class="w-100 rounded-3"
                style="max-height: 420px;
-  object-fit: contain;
-  background: #f8f9fa;
+                object-fit: contain;
+                background: #f8f9fa;
                       border: 2px solid #f8f9fa;
                       box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
         </div>
@@ -649,7 +657,8 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 
-<!-- Advanced Image Viewer Modal -->
+
+<!-- برای زوم و نمایش عکس‌هاl -->
 <div class="modal fade" id="imageZoomModal" tabindex="-1">
   <div class="modal-dialog modal-xl modal-dialog-centered">
     <div class="modal-content bg-dark">
@@ -661,28 +670,28 @@ document.addEventListener('DOMContentLoaded', function () {
                 data-bs-dismiss="modal"></button>
 
         <!-- دکمه‌ها -->
+
         <!-- دکمه قبلی -->
         <button id="prevImage"
-                class="btn btn-light position-absolute top-50 start-0 translate-middle-y ms-3 d-none">
+                class="btn btn-light position-absolute top-50 start-0 translate-middle-y ms-3 d-none"
+                style="width: 48px; height: 48px; font-size: 1.8rem; line-height: 1;">
             ‹
         </button>
 
         <!-- دکمه بعدی -->
         <button id="nextImage"
-                class="btn btn-light position-absolute top-50 end-0 translate-middle-y me-3 d-none">
-            ›
-        </button>
+                class="btn btn-light position-absolute top-50 end-0 translate-middle-y me-3 d-none"
+                style="width: 48px; height: 48px; font-size: 1.8rem; line-height: 1;">›</button>
 
-        <!-- کنترل زوم -->
-        <!-- کنترل زوم - کوچک‌تر و محدود به مودال عکس -->
-        <div class="position-absolute end-0 d-flex flex-column gap-1 zoom-controls"
-            style="top: 70px; right: 20px; z-index: 10;">
+        <!-- کنترل زوم  -->
+        <div class="position-absolute d-flex flex-column gap-1 zoom-controls"
+            style="bottom: 20px; left: 20px; z-index: 10;">
 
-            <button id="zoomInBtn" class="btn btn-light btn-sm p-1" style="width: 28px; height: 28px; font-size: 0.85rem;">
-                <i class="fas fa-plus"></i>
+            <button id="zoomInBtn" class="btn btn-light btn-sm p-1" style="width: 44px; height: 44px; font-size: 1.4rem; line-height: 1;">
+                +
             </button>
-            <button id="zoomOutBtn" class="btn btn-light btn-sm p-1" style="width: 28px; height: 28px; font-size: 0.85rem;">
-                <i class="fas fa-minus"></i>
+            <button id="zoomOutBtn" class="btn btn-light btn-sm p-1" style="width: 44px; height: 44px; font-size: 1.4rem; line-height: 1;">
+                −
             </button>
         </div>
 
@@ -697,8 +706,9 @@ document.addEventListener('DOMContentLoaded', function () {
   </div>
 </div>
 
-<script>
 
+<script>
+//برای پیگیری وضعیت زوم و جابجایی عکس
 let scale = 1;
 let posX = 0;
 let posY = 0;
@@ -741,9 +751,7 @@ document.addEventListener('click', function (e) {
 });
 
 
-// =======================
-// 1️⃣ Mouse Wheel Zoom
-// =======================
+//  قابلیت زوم با اسکرول موس
 zoomedImage.addEventListener('wheel', function (e) {
     e.preventDefault();
     scale += e.deltaY < 0 ? 0.1 : -0.1;
@@ -752,9 +760,7 @@ zoomedImage.addEventListener('wheel', function (e) {
 });
 
 
-// =======================
-// 2️⃣ Double Click Zoom
-// =======================
+//  قابلیت زوم با دابل کلیک
 zoomedImage.addEventListener('dblclick', function () {
     scale = scale === 1 ? 2 : 1;
     posX = 0;
@@ -763,9 +769,7 @@ zoomedImage.addEventListener('dblclick', function () {
 });
 
 
-// =======================
-// 3️⃣ Drag
-// =======================
+//  برای جابجا کردن عکسی که زوم شده
 zoomedImage.addEventListener('mousedown', function (e) {
     if (scale <= 1) return;
     isDragging = true;
@@ -787,9 +791,7 @@ document.addEventListener('mouseup', function () {
 });
 
 
-// =======================
-// 4️⃣ Buttons + −
-// =======================
+//  دکمه + −
 document.getElementById('zoomInBtn').onclick = function () {
     scale += 0.2;
     updateTransform();
@@ -802,9 +804,7 @@ document.getElementById('zoomOutBtn').onclick = function () {
 };
 
 
-// =======================
-// 5️⃣ Gallery Navigation
-// =======================
+// نمایش یا مخفی کردن دکمه‌های چپ و راست گالری
 function updateNavigation() {
     const hasGallery =
         window.currentGalleryImages &&
@@ -817,6 +817,7 @@ function updateNavigation() {
         .classList.toggle('d-none', !hasGallery);
 }
 
+// دکمه قبلی
 document.getElementById('prevImage').onclick = function () {
     if (!window.currentGalleryImages) return;
     window.currentImageIndex =
@@ -832,6 +833,7 @@ document.getElementById('prevImage').onclick = function () {
     updateTransform();
 };
 
+// دکمه بعدی
 document.getElementById('nextImage').onclick = function () {
     if (!window.currentGalleryImages) return;
     window.currentImageIndex =
@@ -847,9 +849,7 @@ document.getElementById('nextImage').onclick = function () {
 };
 
 
-// =======================
-// 6️⃣ Swipe Mobile
-// =======================
+// هندل کردن Swipe کردن رو موبایل برای تعویض عکس
 let touchStartX = 0;
 
 zoomedImage.addEventListener('touchstart', function (e) {
@@ -859,6 +859,7 @@ zoomedImage.addEventListener('touchstart', function (e) {
 zoomedImage.addEventListener('touchend', function (e) {
     let diff = e.changedTouches[0].screenX - touchStartX;
 
+    // اگر کاربر بیشتر از 50 پیکسل سوایپ کرده بود عکس رو عوض کن
     if (Math.abs(diff) > 50) {
         if (diff > 0) {
             document.getElementById('prevImage').click();

@@ -1,6 +1,7 @@
 {% extends "panel/base_panel.html" %}
 {% block content %}
 
+<!-- با چک کردن وجود آبجکت category تو کانتکست، تایتل صفحه رو داینامیک عوض می‌کنیم -->
 <h4 class="mb-3">
     {% if category %}ویرایش دسته‌بندی{% else %}افزودن دسته‌بندی{% endif %}
 </h4>
@@ -12,11 +13,15 @@
            name="name"
            class="form-control mb-2"
            placeholder="نام دسته‌بندی"
-           value="{{ category.name|default:'' }}" autofocus>
+           value="{{ category.name|default:'' }}" required autofocus>
 
-    <button class="btn btn-success mt-4">ذخیره</button>
-    <a href="{% url 'panel:article_category_list' %}"
-       class="btn btn-secondary mt-2">بازگشت</a>
+    <div class="d-flex gap-2 mt-4">
+        <button class="btn btn-success">ذخیره</button>
+        
+        <a href="{% url 'panel:article_category_list' %}"
+        class="btn btn-secondary">بازگشت</a>
+    </div>
+
 </form>
 
 <script>

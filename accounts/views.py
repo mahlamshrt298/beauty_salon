@@ -24,18 +24,39 @@ from services_app.models import Service
 from django.template.loader import render_to_string
 from django.utils import timezone
 from booking.models import Appointment
-from booking.views import MAX_ACTIVE_APPOINTMENTS_PER_USER  # اگر این ثابت در booking تعریف شده
+from booking.views import MAX_ACTIVE_APPOINTMENTS_PER_USER  
 from django.core.paginator import Paginator
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login
 from core.models import PackageBooking
 from services_app.models import number_to_persian_words
+from django.contrib.auth import views as auth_views
+from django.core.mail import EmailMultiAlternatives  
+from django.template.loader import render_to_string 
+
+class CustomPasswordResetView(auth_views.PasswordResetView):
+    # اورراید کردن ویوی دیفالت جنگو برای ارسال ایمیل ریست پسورد به صورت HTML و تمیزتر
+    def send_mail(self, subject_template_name, email_template_name,
+                  context, from_email, to_email, html_email_template_name=None):
+        
+        subject = render_to_string(subject_template_name, context)
+        # حذف نیولاین‌ها که هدر ایمیل به هم نریزه
+        subject = ''.join(subject.splitlines())
+        
+        body = render_to_string(email_template_name, context)
+        
+        email_message = EmailMultiAlternatives(subject, body, from_email, [to_email])
+        
+        if html_email_template_name is not None:
+            html_email = render_to_string(html_email_template_name, context)
+            email_message.attach_alternative(html_email, 'text/html')
+        
+        email_message.send(fail_silently=True)
 
 class MyPasswordChangeView(PasswordChangeView):
-    template_name = "password_change.html"       # قالب شما
+    template_name = "password_change.html"       
     success_url = reverse_lazy("accounts:profile")      # پس از موفقیت به پروفایل برگرد
 
-# Create your views here.
 def register(request):
     # اگر درخواست POSTباشد: اطلاعات فرم را پردازش و کاربر جدید ایجاد می‌کند
     # اگر درخواست GET باشد: فرم خالی ثبت‌نام را نمایش می‌دهد
@@ -49,7 +70,6 @@ def register(request):
             #نمایش پیام
             messages.success(request,  "ثبت‌نام شما با موفقیت انجام شد! اکنون می‌توانید وارد شوید.", extra_tags = "front")
            
-           ## هدایت  به صفحه ثبت‌نام مجدد (تغییرش بده به لاگین یا خونه)
             return redirect('home')
     else:
         
@@ -64,16 +84,16 @@ def custom_logout(request):
 
 @login_required
 def profile(request):
+
     user = request.user
 
     # پروفایل اگر نبود، ساخته شود
     profile, created = Profile.objects.get_or_create(user=user)
 
     if request.method == 'POST':
-
-        # -------------------------------
+      
         #  ذخیره تنظیمات یادآوری
-        # -------------------------------
+        
         if 'save_reminder' in request.POST:
             reminder_enabled = request.POST.get('reminder_enabled') == 'on'
             profile.reminder_enabled = reminder_enabled
@@ -83,8 +103,9 @@ def profile(request):
 
         profile = request.user.profile
 
-            # 🔴 حذف آواتار
+        #  حذف عکس پروفایل
         if 'delete_avatar' in request.POST:
+
             if profile.avatar:
                 avatar_path = profile.avatar.path
 
@@ -96,14 +117,15 @@ def profile(request):
                 profile.avatar = None
                 profile.save()
 
-                # ✅ پیام موفقیت
+                #  پیام موفقیت
                 messages.success(request, "عکس پروفایل با موفقیت حذف شد.")
 
             return redirect('accounts:profile')
-        # -------------------------------
+        
         #  ذخیره اطلاعات پروفایل
-        # -------------------------------
-        if 'save_profile' in request.POST:
+        # if 'save_profile' in request.POST
+
+        else:
 
             # نام کامل
             full_name = request.POST.get('full_name', '').strip()
@@ -118,6 +140,7 @@ def profile(request):
             # ایمیل
             email = request.POST.get('email')
             if email and email != user.email:
+                #چک کردن یونیک بودن ایمیل
                 if User.objects.filter(email=email).exclude(id=user.id).exists():
                     messages.error(request, "این ایمیل قبلاً ثبت شده است.", extra_tags = "front")
                     return redirect('accounts:profile')
@@ -151,6 +174,7 @@ def profile(request):
             profile.bio = bio
             
             # آواتار
+            #بخش آپلود و بهینه‌سازی عکس
             MAX_WIDTH, MAX_HEIGHT = 800, 800    # حداکثر ابعاد پیکسل
 
             avatar = request.FILES.get('avatar')
@@ -159,7 +183,7 @@ def profile(request):
                     messages.error(request, "حجم عکس نباید بیشتر از 1 مگابایت باشد.")
                     return redirect("accounts:profile")
 
-            # ابعاد و فشرده‌سازی
+                # ابعاد و فشرده‌سازی
                 try:
                     img = Image.open(avatar)
                     img.thumbnail((MAX_WIDTH, MAX_HEIGHT), Image.Resampling.LANCZOS)
@@ -177,12 +201,11 @@ def profile(request):
                     return redirect("accounts:profile")
 
                 profile.avatar = avatar
-            # -------------------------------
+            
+            
             #  تاریخ تولد (شمسی → میلادی)
-            # -------------------------------
-            # -------------------------------
             #  تاریخ تولد (سال / ماه / روز شمسی)
-            # -------------------------------
+            
             birth_year = request.POST.get("birth_year")
             birth_month = request.POST.get("birth_month")
             birth_day = request.POST.get("birth_day")
@@ -204,8 +227,9 @@ def profile(request):
                     )
                     new_gregorian_date = jalali_date.togregorian()
 
-                      # ❌ تاریخ آینده نباشد
+                      #  تاریخ آینده نباشد
                     if new_gregorian_date > date.today():
+
                         messages.error(
                             request,
                             "تاریخ تولد نمی‌تواند در آینده باشد.",
@@ -219,31 +243,30 @@ def profile(request):
                             profile.birthday_change_count += 1
                         profile.birthday = new_gregorian_date
                         
-                except ValueError:
+                except ValueError as e:
+
                     messages.error(
                         request,
                         "تاریخ تولد نامعتبر است.",
                         extra_tags="front"
                     )
                     return redirect('accounts:profile')
+            
             # ذخیره نهایی تغییرات پروفایل
             profile.save()
+
             messages.success(request, "اطلاعات با موفقیت ذخیره شد.", extra_tags="front")
             return redirect('accounts:profile')
 
 
-    # -------------------------------
     #  ارسال اطلاعات به قالب
-    # -------------------------------
-    # -------------------------------
-    #  ارسال اطلاعات به قالب
-    # -------------------------------
-    # ✅ دریافت فیلتر وضعیت از URL
-    status_filter = request.GET.get('status', 'all')  # اضافه شد
+    
+    #  دریافت فیلتر وضعیت از URL
+    status_filter = request.GET.get('status', 'all') 
 
     appointments = None
     try:
-        # ✅ اعمال فیلتر وضعیت
+        #  اعمال فیلتر وضعیت
         if status_filter == 'all':
             appointments_queryset = Appointment.objects.filter(user=user)
         else:
@@ -257,16 +280,17 @@ def profile(request):
             'package_booking__package'
         ).order_by('-appointment_date')
         
-        # ✅ اضافه کردن اطلاعات پرداخت به هر نوبت (بدون تغییر)
+        #  اضافه کردن اطلاعات پرداخت به هر نوبت (بدون تغییر)
         appointments_list = []
-
+        today = timezone.localdate()
+        
         for appt in appointments_queryset:
             try:
                 payment = appt.payment
             except Payment.DoesNotExist:
                 payment = None
                         
-            # 🔵 بررسی اینکه نوبت مربوط به پکیج است یا خیر
+            #  بررسی اینکه نوبت مربوط به پکیج است یا خیر
             package_booking = getattr(appt, "package_booking", None)
 
             if package_booking and package_booking.package:
@@ -279,14 +303,14 @@ def profile(request):
 
             if payment:
                 amount = int(payment.amount)
-
+                # ساختن دیکشنری دیتای مالی برای فرانت (با تبدیل عدد به حروف)
                 appt.payment_info = {
                     'amount': amount,
-                    'amount_in_words': number_to_persian_words(amount),  # 👈 اضافه شد
+                    'amount_in_words': number_to_persian_words(amount),  
                     'method': payment.payment_method,
                     'method_display': payment.get_payment_method_display(),
                     'original_price': appt.service.price,
-                    'original_price_in_words': number_to_persian_words(int(appt.service.price)),  # 👈 اختیاری ولی حرفه‌ای
+                    'original_price_in_words': number_to_persian_words(int(appt.service.price)),  
                     'discount_amount': appt.service.price - amount if amount < appt.service.price else 0,
                     'discount_percent': round(((appt.service.price - amount) / appt.service.price) * 100, 0) if amount < appt.service.price else 0,
                 }
@@ -295,10 +319,13 @@ def profile(request):
                 
             else:
                 appt.payment_info = None
+
+            # فلگ برای اینکه فرانت بدونه تایم نوبت گذشته یا نه
+            appt.is_past_due = (appt.appointment_date < today)
             appointments_list.append(appt)
         
-
-        paginator = Paginator(appointments_list, 5)  # 👈 ۵ نوبت در هر صفحه
+        #  ۵ نوبت در هر صفحه
+        paginator = Paginator(appointments_list, 5)  
         page_number = request.GET.get("appointments_page")
         appointments = paginator.get_page(page_number)
 
@@ -306,6 +333,7 @@ def profile(request):
         print(f"Error loading appointments: {e}")
         appointments = None
         
+    # گرفتن نظرات کاربر
     user_reviews = Review.objects.filter(user=user).select_related("appointment", "service").order_by('-created_at')
 
     reviews_paginator = Paginator(user_reviews, 4)
@@ -314,9 +342,7 @@ def profile(request):
 
     current_jalali_year = jdatetime.date.today().year
 
-    
-    today = timezone.localdate()
-
+    # محاسبه ظرفیت باقیمانده رزرو کاربر
     active_appointments_count = Appointment.objects.filter(
         user=user,
         status__in=['pending', 'confirmed'],
@@ -327,14 +353,20 @@ def profile(request):
 
     has_any_appointment = Appointment.objects.filter(user=user).exists()
 
+    # تبدیل تاریخ تولد میلادی به شمسی برای نمایش در فرم
+    jalali_birthday = None
+    if profile.birthday:
+        jalali_birthday = jdatetime.date.fromgregorian(date=profile.birthday)
+
     return render(request, 'profile.html', {
         'user': user,
         'profile': profile,
         'appointments': appointments,
+        'jalali_birthday': jalali_birthday,
         'birth_years': range(1350, current_jalali_year + 1),
         'user_reviews': user_reviews, 
         'status': status_filter,
-            # ✅ این خط جدید اضافه شد
+        
         'active_appointments_count': active_appointments_count,
         'remaining_quota': remaining_quota,
         'max_quota': MAX_ACTIVE_APPOINTMENTS_PER_USER,
@@ -376,7 +408,7 @@ def notifications_list(request):
         user=request.user
     ).order_by("-created_at")
 
-    paginator = Paginator(notifications, 10)  # 👈 ۱۰ اعلان در هر صفحه
+    paginator = Paginator(notifications, 10)  # ۱۰ اعلان در هر صفحه
     page_number = request.GET.get("page")
     notifications = paginator.get_page(page_number)
 
@@ -389,6 +421,7 @@ def notifications_list(request):
 
 @login_required
 def ajax_add_review(request, appointment_id):
+    # ثبت نظر از طریق ایجکس تو همون صفحه پروفایل
     appointment = get_object_or_404(
         Appointment,
         id=appointment_id,
@@ -398,7 +431,8 @@ def ajax_add_review(request, appointment_id):
 
     service = appointment.service
 
-     # ✅ آیا این کاربر برای این خدمت نوبت انجام‌شده دارد؟
+     #  آیا این کاربر برای این خدمت نوبت انجام‌شده دارد؟
+     #طرف حتما باید این سرویس رو انجام داده باشه
     has_done_appointment = Appointment.objects.filter(
         user=request.user,
         service=service,
@@ -442,7 +476,7 @@ def ajax_add_review(request, appointment_id):
         rating = request.POST.get('rating')
         comment = request.POST.get('comment')
 
-        # ✅ اعتبارسنجی امتیاز
+        #  اعتبارسنجی امتیاز
         if not rating or not rating.isdigit() or not (1 <= int(rating) <= 5):
             return JsonResponse({
                 'success': False,
@@ -480,7 +514,8 @@ def cancel_appointment(request, appt_id):
         return redirect('accounts:profile')
 
     appt.status = 'cancelled'
-    appt._skip_signal = True    # 👈 جلوگیری از ارسال سیگنال
+    
+    appt._skip_signal = True    #  جلوگیری از ارسال سیگنال
     appt.save()
 
     # اعلان داخلی
@@ -489,7 +524,7 @@ def cancel_appointment(request, appt_id):
          appointment=appt,
         type='status_change',
         status='sent',
-        channel='email',  # یا sms / whatsapp
+        channel='email',  
         message=f"نوبت شما برای خدمت {appt.service.category.name} : {appt.service.subcategory.name} : {appt.service.name}  در تاریخ {appt.jalali_date_display} و ساعت : {appt.start_time}با موفقیت لغو شد."
        )
 
@@ -499,7 +534,7 @@ def cancel_appointment(request, appt_id):
         message=f"نوبت شما برای {appt.service.name} لغو شد.",
         from_email=settings.EMAIL_HOST_USER,
         recipient_list=[request.user.email],
-        fail_silently=True
+        fail_silently=True,
     )
 
     messages.success(request, "نوبت با موفقیت لغو شد.")

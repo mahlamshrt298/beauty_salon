@@ -1,10 +1,12 @@
 {% extends "panel/base_panel.html" %}
 
 {% block content %}
+
 <div class="container-fluid mt-4">
     <div class="row justify-content-center">
-        <div class="col-12 col-md-10">
+        <div class="col-12">
             <div class="card">
+                <!-- هدر داینامیک: بر اساس متغیر action مشخص میشه کاربر در حال ساخت پکیج جدیده یا ویرایش -->
                 <div class="card-header bg-primary text-white">
                     <h4 class="mb-0">
                         {% if action == 'add' %}
@@ -17,7 +19,6 @@
                 <div class="card-body">
                     <form method="post" enctype="multipart/form-data">
                         {% csrf_token %}
-                        <!-- عنوان پکیج -->
                         <!-- عنوان پکیج -->
                         <div class="mb-3">
                             <label class="form-label">عنوان پکیج <span class="text-danger">*</span></label>
@@ -35,8 +36,14 @@
                         <div class="row mb-3">
                             <div class="col-12">
                                 <label class="form-label">عکس پکیج <span class="text-danger">*</span></label>
+                                <!-- در حالت ویرایش، آپلود عکس اجباری نیست (چون از قبل عکس داره) -->
                                 <input type="file" name="image" class="form-control" 
                                     {% if action == 'add' %}required{% endif %}>
+                                {% if package.image %}
+                                    <div class="form-text text-success mt-1">
+                                        📎 تصویر فعلی: <strong>{{ package.image.name|cut:"packages/" }}</strong>
+                                    </div>
+                                {% endif %}
                                 <div class="mt-2">
                                     <img src="{{ package.image_url }}" width="150" class="img-thumbnail">
                                 </div>
@@ -54,7 +61,6 @@
                             {% endif %}
                         </select>
 
-
                         <!-- گروه‌های انتخاب خدمت -->
                         <div id="service-groups-container">
                             <div class="service-group mb-3">
@@ -70,6 +76,7 @@
                                     </div>
                                     <div class="col-md-4">
                                         <label class="form-label">زیردسته</label>
+                                        <!-- تا وقتی دسته اصلی انتخاب نشده، غیرفعاله -->
                                         <select class="form-select service-subcategory"  disabled>
                                             <option value="">اول دسته‌بندی را انتخاب کنید</option>
                                         </select>
@@ -88,7 +95,7 @@
                         <div id="selected-services-list" class="mb-3">
                             <label class="form-label">خدمات انتخاب شده:</label>
                             <div class="d-flex flex-wrap gap-2">
-                                
+                                <!-- تگ‌ها توسط JS اینجا رندر میشن -->
                             </div>
                         </div>
 
@@ -102,7 +109,8 @@
                                     class="form-control" 
                                     value="{{ package.original_price|default:'' }}"
                                     placeholder="مثال: 1000000">
-                                <small id="original_price_words" class="text-muted d-block mt-1" style="font-size: 0.85rem;"></small>
+                                <!-- نمایش لحظه‌ای قیمت به حروف -->
+                                    <small id="original_price_words" class="text-muted d-block mt-1" style="font-size: 0.85rem;"></small>
                             </div>
 
                             <!-- قیمت تخفیف‌خورده -->
@@ -118,7 +126,7 @@
                                 <small id="discounted_price_words" class="text-muted d-block mt-1" style="font-size: 0.85rem;"></small>
                             </div>
 
-                            <!-- ✅ اسکریپت نمایش قیمت به حروف -->
+                            <!--  اسکریپت نمایش قیمت به حروف -->
                             <script>
                             document.addEventListener('DOMContentLoaded', function() {
                                 displayPriceInWords('id_original_price', 'original_price_words');
@@ -127,6 +135,7 @@
                             </script>
                         </div>
 
+                        <!-- لیبل تخفیف که به صورت خودکار بر اساس دو قیمت بالا محاسبه میشه -->
                         <div class="row mb-3">
                             <div class="col-12">
                                 <label class="form-label">برچسب تخفیف (مثل: ۲۵٪ تخفیف)</label>
@@ -135,18 +144,21 @@
                             </div>
                         </div>
 
+                        <!-- تنظیمات تخفیف زمان‌دار -->
                         <div class="card mb-3">
                             <div class="card-header bg-warning">
                                 <h5 class="mb-0">⏰ تنظیمات تخفیف موقت</h5>
                             </div>
                             <div class="card-body">
-                                <div class="form-check form-switch mb-3">
-                                    <input class="form-check-input" type="checkbox" 
-                                        name="is_limited_time" id="is_limited_time"
-                                        {% if package.is_limited_time %}checked{% endif %}>
-                                    <label class="form-check-label" for="is_limited_time">
-                                        این پکیج تخفیف موقت دارد
-                                    </label>
+                                <div class="mobile-active-box mb-4">
+                                    <div class="form-check form-switch mb-0">
+                                        <input class="form-check-input" type="checkbox" 
+                                            name="is_limited_time" id="is_limited_time"
+                                            {% if package.is_limited_time %}checked{% endif %}>
+                                        <label class="form-check-label" for="is_limited_time">
+                                            این پکیج تخفیف موقت دارد
+                                        </label>
+                                    </div>
                                 </div>
 
                                 <div id="limited_time_fields" style="display: {% if package.is_limited_time %}block{% else %}none{% endif %};">
@@ -173,41 +185,54 @@
                             </div>
                         </div>
 
-                        <div class="form-check form-switch mb-3">
-                            <input class="form-check-input" type="checkbox" 
-                                   name="is_active" id="is_active"
-                                   {% if not package or package.is_active %}checked{% endif %}>
-                            <label class="form-check-label" for="is_active">
-                                فعال باشد
-                            </label>
+                        <div class="mobile-active-box mb-4">
+                            <div class="form-check form-switch mb-0">
+                                <input class="form-check-input" type="checkbox" 
+                                    name="is_active" id="is_active"
+                                    {% if not package or package.is_active %}checked{% endif %}>
+                                <label class="form-check-label" for="is_active">
+                                    فعال باشد
+                                </label>
+                            </div>
                         </div>
 
                         <!-- هیدن اینپوت برای ارسال همیشه مقدار -->
                         <input type="hidden" name="show_on_homepage" id="show_on_homepage_hidden" 
                             value="{% if not package or package.show_on_homepage %}1{% else %}0{% endif %}">
 
-                        <div class="form-check form-switch mb-3">
-                            <input class="form-check-input" type="checkbox" 
-                                 id="show_on_homepage_checkbox"
-                                {% if not package or package.show_on_homepage %}checked{% endif %}>
-                            <label class="form-check-label" for="show_on_homepage_checkbox">
-                                <i class="fas fa-home me-1"></i> نمایش در سایت 
-                            </label>
-                            <small class="text-muted d-block mt-1">
-                                اگر غیرفعال باشد، این پکیج در هیچ جای سایت (صفحه اصلی و صفحه خدمات) نمایش داده نمی‌شود.
-                            </small>
+                        <div class="mobile-active-box mb-4">
+                            <div class="form-check form-switch mb-0">
+                                <input class="form-check-input" type="checkbox" 
+                                    id="show_on_homepage_checkbox"
+                                    {% if not package or package.show_on_homepage %}checked{% endif %}>
+                                <label class="form-check-label" for="show_on_homepage_checkbox">
+                                    <i class="fas fa-home me-1"></i> نمایش در سایت 
+                                </label>
+                            </div>
+                                <small class="text-muted d-block mt-1">
+                                    اگر غیرفعال باشد، این پکیج در هیچ جای سایت (صفحه اصلی و صفحه خدمات) نمایش داده نمی‌شود.
+                                </small>
+                            
                         </div>
 
-                        <div class="d-flex gap-2">
-                            <button type="submit" class="btn btn-primary" id="saveBtn">
-                                <i class="fas fa-save"></i>
-                                ذخیره
-                            </button>
-                            <a href="{% url 'panel:package_list' %}" class="btn btn-outline-secondary">
-                                <i class="fas fa-times"></i>
-                                انصراف
-                            </a>
+                        <div class="row g-2 mt-4 w-100 m-0">
+                            <!-- دکمه ذخیره -->
+                            <div class="col-6 col-md-auto p-0 pe-1 pe-md-0">
+                                <button type="submit" class="btn btn-primary w-100 h-100 px-4 d-flex justify-content-center align-items-center" id="saveBtn">
+                                    <i class="fas fa-save ms-2"></i>
+                                    ذخیره
+                                </button>
+                            </div>
+                            
+                            <!-- دکمه انصراف -->
+                            <div class="col-6 col-md-auto ms-md-auto p-0 ps-1 ps-md-0">
+                                <a href="{% url 'panel:package_list' %}" class="btn btn-outline-secondary w-100 h-100 px-4 d-flex justify-content-center align-items-center">
+                                    <i class="fas fa-times ms-2"></i>
+                                    انصراف
+                                </a>
+                            </div>
                         </div>
+
                     </form>
                 </div>
             </div>
@@ -223,6 +248,7 @@ document.getElementById('is_limited_time').addEventListener('change', function()
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+     // منطق انتخاب آبشاری خدمات و اضافه کردن به لیست
     const allServicesSelect = document.getElementById('all-services');
     const selectedServicesList = document.getElementById('selected-services-list').querySelector('.d-flex');
     const getSubcategoriesUrl = "/service/ajax/get-subcategories/";
@@ -235,10 +261,9 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        // اضافه کردن به select پنهان
         const option = document.createElement('option');
         option.value = serviceId;
-        option.selected = true;
+        option.selected = true;     // مهم: حتما باید selected باشه تا ارسال شه
         allServicesSelect.appendChild(option);
         
         // اضافه کردن به لیست نمایشی
@@ -259,7 +284,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // تابع برای حذف خدمت
     function removeService(serviceId) {
-        // حذف از select پنهان
         const option = allServicesSelect.querySelector(`option[value="${serviceId}"]`);
         if (option) allServicesSelect.removeChild(option);
         
@@ -369,6 +393,7 @@ if (homepageCheckbox && homepageHidden) {
 </script>
 
 <script>
+    // محاسبه خودکار درصد تخفیف بر اساس فرمول ریاضی
 document.addEventListener('DOMContentLoaded', function () {
     const originalPriceInput = document.getElementById('id_original_price');
     const discountedPriceInput = document.getElementById('id_discounted_price');
@@ -376,7 +401,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     let badgeManuallyEdited = false;
 
-    // اگر کاربر دستی برچسب رو تغییر داد
+    // اگه کاربر دستی متن رو عوض کرد، دیگه روش override نمیکنیم
     discountBadgeInput.addEventListener('input', function () {
         badgeManuallyEdited = true;
     });
@@ -387,11 +412,13 @@ document.addEventListener('DOMContentLoaded', function () {
         const original = parseFloat(originalPriceInput.value);
         const discounted = parseFloat(discountedPriceInput.value);
 
+        // ولیدیشن اولیه
         if (!original || !discounted || discounted >= original) {
             discountBadgeInput.value = '';
             return;
         }
 
+        // فرمول محاسبه درصد: ((قیمت اصلی - قیمت جدید) / قیمت اصلی) * 100
         const discountPercent = Math.round(((original - discounted) / original) * 100);
         discountBadgeInput.value = `٪${discountPercent} تخفیف`;
     }
@@ -524,22 +551,23 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <script>
+    //نمایش تقویم شمسی به کاربر + ارسال میلادی به بک‌اند
 $(document).ready(function() {
     if ($('#start_time').length) {
-        // مخفی کردن input اصلی
+        // اینپوت اصلی که فرمت دیتابیس داره رو مخفی می‌کنیم
         $('#start_time').hide();
         
-        // ایجاد input جدید برای تاریخ شمسی
         $('<input type="text" id="jalali_date" class="form-control mb-2" placeholder="تاریخ شمسی">').insertBefore('#start_time');
         $('<input type="time" id="jalali_time" class="form-control" value="12:00">').insertBefore('#start_time');
         
-        // ========== مقداردهی اولیه ==========
+        //  مقداردهی اولیه 
         var currentValue = $('#start_time').val();
         console.log("📅 مقدار اولیه از دیتابیس:", currentValue);
 
         // اول تقویم رو غیرفعال کن
         var datepickerEnabled = false;
         
+        // اگر در حالت ویرایش هستیم و دیتا از قبل وجود داره
         if (currentValue && currentValue !== '') {
             try {
                 // تبدیل تاریخ میلادی به شمسی با moment
@@ -560,7 +588,7 @@ $(document).ready(function() {
                         autoClose: true,
                         calendarType: 'persian',
                         persianDigit: true,
-                        initialValue: false, // مقدار اولیه رو از input می‌گیره
+                        initialValue: false, // جلوگیری از override شدن مقدار دستی بالا
                         onSelect: function() {
                             updateMiladiDate();
                         }
@@ -604,11 +632,13 @@ $(document).ready(function() {
             return str;
         }
         
+        // فانکشن اصلی برای کانورت کردن دیتای کاربر به فرمت قابل قبول دیتابیس
         function updateMiladiDate() {
             var jalaliDate = $('#jalali_date').val();
             var jalaliTime = $('#jalali_time').val() || '12:00';
             
             if (jalaliDate) {
+                 // اعداد فارسی رو به انگلیسی تبدیل می‌کنیم تا moment گیر نده
                 var cleanDate = toEnglishDigits(jalaliDate);
                 var cleanTime = toEnglishDigits(jalaliTime);
                 
@@ -617,11 +647,9 @@ $(document).ready(function() {
                 
                 if (m.isValid()) {
                     var miladiDate = m.format('YYYY-MM-DDTHH:mm');
+                    // مقدار کانورت شده رو تو اینپوت اصلی آپدیت می‌کنیم تا فرم همینو سابمیت کنه
                     $('#start_time').val(miladiDate);
-                    console.log("✅ تاریخ میلادی:", miladiDate);
-                } else {
-                    console.log("❌ تاریخ نامعتبر:", jalaliStr);
-                }
+                
             }
         }
         

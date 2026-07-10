@@ -25,6 +25,7 @@
       <div class="step-number">2</div>
       <div class="step-title">پرداخت پکیج</div>
     </div>
+    <!-- مرحله بعدی بعد از سابمیت این فرمه: انتخاب سرویس‌های داخل پکیج و زمانشونه -->
     <div class="step" style="width: 34%;">
       <div class="step-number">3</div>
       <div class="step-title">انتخاب خدمات</div>
@@ -54,6 +55,7 @@
               {{ package.description }}
             </p>
             
+            <!-- لیست سرویس‌هایی که با خرید این پکیج باز میشن -->
             {% if package.service.exists %}
             <div class="mb-3">
               <strong>خدمات شامل پکیج:</strong>
@@ -73,9 +75,11 @@
             </div>
             {% endif %}
 
+            <!-- بخش قیمت‌ها -->
             <div class="mt-3">
               <strong>قیمت:</strong>
 
+              <!-- اگه قیمت اصلی (بدون تخفیف) داشت روش خط بکش -->
               {% if package.original_price %}
                 <div>
                   <del class="text-muted me-2">
@@ -88,6 +92,7 @@
                 {{ package.discounted_price|intcomma }} تومان
               </div>
 
+              <!-- تبدیل قیمت به حروف -->
               <div class="text-muted small mt-1">
                 ({{ package.discounted_price|persian_words }} تومان)
               </div>
@@ -114,13 +119,14 @@
         </div>
       </div>
 
-      <!-- فرم پرداخت -->
+      <!-- فرم انتخاب روش پرداخت -->
       <form method="post">
         {% csrf_token %}
 
         <div class="mb-3">
           <label class="form-label">روش پرداخت:</label>
 
+          <!-- دیفالت روی نقدی گذاشتم فعلا -->
           <div class="form-check">
             <input class="form-check-input" type="radio" name="payment_method" value="cash" id="cash" checked>
             <label class="form-check-label" for="cash">
@@ -135,6 +141,7 @@
             </label>
           </div>
 
+          <!-- پرداخت آنلاین فقط در صورتی رندر میشه که ادمین تو تنظیمات سالن تیکش رو زده باشه -->
           {% if salon_settings.enable_online_payment %}
           <div class="form-check">
               <input class="form-check-input" type="radio" name="payment_method" value="online" id="online">

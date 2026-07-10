@@ -3,14 +3,14 @@ from django.urls import path
 
 app_name = 'services_app'
 urlpatterns = [
+    
+    #صفحه لیست همه سرویس ها رو میاره
     path('', views.services_list,name='service'),
-    #path('<int:pk>/', views.service_detail, name='service_detail'),  
-   # path('category/<str:category_slug>/', views.subcategory_list, name='subcategory_list'), # صفحه زیردسته‌ها
-   # path('subcategory/<str:subcategory_slug>/', views.service_by_subcategory, name='service_by_subcategory'), # صفحه خدمات یک زیردسته
-    #path('<int:pk>/', views.service_detail, name='service_detail'), # صفحه جزئیات خدمت
- 
-    # مسیرهای AJAX برای انتخاب سلسله‌مراتبی
+
+    # وقتی دسته انتخاب میشه، یه ریکوست میاد تا زیردسته هاش رو برگردونه
     path('ajax/get-subcategories/', views.get_subcategories, name='get_subcategories'),
+    
+    #وقتی یه زیر دسته انتخاب میشه، یه ریکوست میاد تا سرویسهاش رو برگردونه
     path('ajax/get-services/', views.get_services, name='get_services'),
 
 ]

@@ -7,10 +7,11 @@ from .models import Appointment
 from accounts.utils.notification_service import notify_user
 import jdatetime
 
+# سیگنال مدیریت تغییرات نوبت و ارسال نوتیفیکیشن
 @receiver(pre_save, sender=Appointment)
 def send_notification_on_appointment_edit(sender, instance, **kwargs):
     
-    # ❌ اگر از ویو لغو شده، اعلان نفرست
+    #  اگر از ویو لغو شده، اعلان نفرست
     if getattr(instance, '_skip_signal', False):
         return
     
@@ -18,12 +19,13 @@ def send_notification_on_appointment_edit(sender, instance, **kwargs):
     if not instance.pk:
         return
 
+    # گرفتن نسخه قدیمی نوبت از دیتابیس برای مقایسه با دیتای جدید
     try:
         old = Appointment.objects.get(pk=instance.pk)
     except Appointment.DoesNotExist:
         return
 
-    # اگر هیچ تغییری نداشته
+    # اگر هیچ تغییری نداشته ، الکی پیامک و ایمیل نفرست
     if old.appointment_date == instance.appointment_date and \
        old.start_time == instance.start_time and \
        old.service == instance.service and \
@@ -33,19 +35,19 @@ def send_notification_on_appointment_edit(sender, instance, **kwargs):
 
     user = instance.user
     
-    # ✅ تبدیل تاریخ میلادی به شمسی برای نمایش
+    #  تبدیل تاریخ میلادی به شمسی برای نمایش
     jalali_date = jdatetime.date.fromgregorian(date=instance.appointment_date)
     formatted_date = jalali_date.strftime('%Y/%m/%d')
     weekday_fa = jalali_date.strftime('%A')
 
-    # ✅ شناسایی تمام تغییرات
+    #  شناسایی تمام تغییرات
     has_status_change = old.status != instance.status
     has_date_change = old.appointment_date != instance.appointment_date
     has_time_change = old.start_time != instance.start_time
     has_service_change = old.service != instance.service
     has_staff_change = old.staff != instance.staff
 
-    # ✅ شمارش تعداد تغییرات
+    #  شمارش تعداد تغییرات
     change_count = sum([
         has_status_change,
         has_date_change,
@@ -54,7 +56,7 @@ def send_notification_on_appointment_edit(sender, instance, **kwargs):
         has_staff_change
     ])
 
-    # ✅ اگر فقط یک تغییر داشته → پیام ساده
+    #  اگر فقط یک تغییر داشته ، پیام ساده
     if change_count == 1:
         message = create_single_change_message(
             old, instance, user, 
@@ -74,7 +76,7 @@ def send_notification_on_appointment_edit(sender, instance, **kwargs):
             appointment=instance,
         )
     
-    # ✅ اگر چند تغییر داشته → پیام ترکیبی
+    #  اگر چند تغییر داشته ، پیام ترکیبی
     else:
         message = create_combined_change_message(
             old, instance, user,
@@ -94,13 +96,14 @@ def send_notification_on_appointment_edit(sender, instance, **kwargs):
             appointment=instance,
         )
 
-# ✅ تابع ساخت پیام تکی
+#  تابع ساخت پیام تکی
 def create_single_change_message(old, instance, user, formatted_date, weekday_fa,
                                   has_status_change, has_date_change,
                                   has_time_change, has_service_change,
                                   has_staff_change):
     """ساخت پیام برای یک تغییر واحد"""
     
+    # وقتی وضعیت نوبت عوض شده (تایید/لغو/انجام شد)
     if has_status_change:
         if instance.status == 'confirmed':
             return (
@@ -126,7 +129,7 @@ def create_single_change_message(old, instance, user, formatted_date, weekday_fa
                     f"برای رزرو مجدد، از طریق سایت اقدام کنید."
                 )
             else:
-                # پیام لغو عمومی
+                # پیام لغو عادی
                 return(
                     f"❌ نوبت شما لغو شد.\n"
                     f"━━━━━━━━━━━━━━\n"
@@ -157,6 +160,7 @@ def create_single_change_message(old, instance, user, formatted_date, weekday_fa
                 f"⏰ ساعت: {instance.start_time.strftime('%H:%M')}"
             )
     
+    # وقتی فقط تاریخ نوبت جابجا شده
     elif has_date_change:
         old_jalali = jdatetime.date.fromgregorian(date=old.appointment_date)
         return (
@@ -168,6 +172,7 @@ def create_single_change_message(old, instance, user, formatted_date, weekday_fa
             f"💼 خدمت: {instance.service.name}"
         )
     
+    # وقتی فقط ساعت عوض شده
     elif has_time_change:
         return (
             f"⏰ ساعت نوبت تغییر کرد:\n"
@@ -178,6 +183,7 @@ def create_single_change_message(old, instance, user, formatted_date, weekday_fa
             f"💼 خدمت: {instance.service.name}"
         )
     
+    #وقتی خدمت عوض شده
     elif has_service_change:
         return (
             f"💼 خدمت نوبت تغییر کرد:\n"
@@ -188,6 +194,7 @@ def create_single_change_message(old, instance, user, formatted_date, weekday_fa
             f"💼 بعد: {instance.service.name}"
         )
     
+    # وقتی آرایشگر/پرسنل جابجا شده
     elif has_staff_change:
         return (
             f"💇 پرسنل نوبت تغییر کرد:\n"
@@ -201,7 +208,7 @@ def create_single_change_message(old, instance, user, formatted_date, weekday_fa
     
     return ""
 
-# ✅ تابع ساخت پیام ترکیبی
+#  تابع ساخت پیام ترکیبی
 def create_combined_change_message(old, instance, user, formatted_date, weekday_fa,
                                     has_status_change, has_date_change,
                                     has_time_change, has_service_change,
@@ -230,6 +237,7 @@ def create_combined_change_message(old, instance, user, formatted_date, weekday_
         new_staff = instance.staff.full_name if instance.staff else 'تخصیص داده خواهد شد'
         message += f"💇 پرسنل: {old_staff} → {new_staff}\n"
     
+    # یه خلاصه از وضعیت نهایی نوبت آخر پیام میذاریم که کاربر بدونه الان چه خبره
     message += "\n━━━━━━━━━━━━━━\n"
     message += f"📅 تاریخ نهایی: {formatted_date} ({weekday_fa})\n"
     message += f"⏰ ساعت نهایی: {instance.start_time.strftime('%H:%M')}\n"

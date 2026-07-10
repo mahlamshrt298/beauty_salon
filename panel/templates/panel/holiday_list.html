@@ -1,6 +1,7 @@
 {% extends "panel/base_panel.html" %}
 
 {% block content %}
+
 <div class="container-fluid mt-4">
     <!-- هدر صفحه -->
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -8,54 +9,19 @@
             <h2 class="fw-bold mb-1" style="color: #2c3e50;">📅 مدیریت تعطیلات</h2>
             <p class="text-muted mb-0">لیست تعطیلات رسمی، مذهبی و سفارشی سیستم</p>
         </div>
-        <a href="{% url 'panel:holiday_create' %}" class="btn btn-primary d-flex align-items-center gap-2">
+        <a href="{% url 'panel:holiday_create' %}" class="btn btn-primary d-flex align-items-center gap-2 holiday-add-btn-mobile">
             <i class="fas fa-plus"></i>
             <span>افزودن تعطیلی جدید</span>
         </a>
     </div>
 
-    
-    <!-- کارت فیلتر -->
-    <!-- کارت فیلتر -->
+    <!-- کارت فیلتر و اطلاعات ماه -->
     <div class="card mb-4">
         <div class="card-body">
-            <div class="row g-3">
-                <!-- فیلترها -->
-                <div class="col-12 col-md-8">
-                    <form method="get" class="row g-3 align-items-end">
-                        <div class="col-md-3 col-lg-3">
-                            <label class="form-label">نوع تعطیلی</label>
-                            <select name="type" class="form-select">
-                                <option value="">همه انواع</option>
-                                <option value="solar" {% if request.GET.type == 'solar' %}selected{% endif %}>رسمی</option>
-                                <option value="lunar" {% if request.GET.type == 'lunar' %}selected{% endif %}>مذهبی</option>
-                                <option value="custom" {% if request.GET.type == 'custom' %}selected{% endif %}>سفارشی</option>
-                            </select>
-                        </div>
-                        <div class="col-md-3 col-lg-3">
-                            <label class="form-label">وضعیت</label>
-                            <select name="is_active" class="form-select">
-                                <option value="">همه وضعیت‌ها</option>
-                                <option value="true" {% if request.GET.is_active == 'true' %}selected{% endif %}>فعال</option>
-                                <option value="false" {% if request.GET.is_active == 'false' %}selected{% endif %}>غیرفعال</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6 col-lg-4">
-                            <div class="d-flex gap-2">
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-filter"></i> اعمال فیلتر
-                                </button>
-                                <a href="{% url 'panel:holiday_list' %}" class="btn btn-outline-secondary">
-                                    <i class="fas fa-times"></i> پاک کردن
-                                </a>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-                
-                <!-- تقویم -->
+            <div class="row g-3 align-items-start">
+                <!-- بخش تقویم و آمار این ماه -->
                 <div class="col-12 col-md-4">
-                    <div class="card h-100">
+                    <div class="card">
                         <div class="card-header bg-info text-white">
                             <h5 class="mb-0">
                                 <i class="fas fa-calendar-alt"></i>
@@ -64,10 +30,11 @@
                         </div>
                         <div class="card-body">
                             <div class="text-center mb-3">
-                                <h4 class="text-primary">
+                                <h4 class="text-primary holiday-date">
                                     {{ current_year }}/{{ current_month|stringformat:"02d" }}
                                 </h4>
-                                <small class="text-muted">
+                                <!-- تبدیل شماره ماه به اسم ماه -->
+                                <small class="text-muted holiday-month">
                                     {% if current_month == 1 %}فروردین
                                     {% elif current_month == 2 %}اردیبهشت
                                     {% elif current_month == 3 %}خرداد
@@ -91,6 +58,7 @@
                                 </p>
                                 
                                 <div class="d-flex flex-wrap gap-2">
+                                    <!-- dictsort واسه مرتب کردن روزهاست که تو UI قاطی پاتی نشون نده -->
                                     {% for day in month_holidays_days|dictsort:0 %}
                                         <span class="badge bg-danger p-2">
                                             {{ day }}
@@ -109,17 +77,52 @@
                                 <div class="text-center py-3">
                                     <i class="fas fa-calendar-times fa-2x text-muted mb-3 "></i>
                                     <p class="text-muted mb-2">هیچ تعطیلی در این ماه ندارید.</p>
-                                    <a href="{% url 'panel:holiday_create' %}" class="btn btn-outline-primary mt-2">
-                                        ➕ افزودن تعطیلی
-                                    </a>
+                                    
                                 </div>
                             {% endif %}
                         </div>
                     </div>
                 </div>
+
+            <!-- فیلترها -->
+            <div class="col-12 col-md-8">
+                <form method="get" >
+                    <div class="row g-2">
+                        <div class="col-12">
+                            <label class="form-label">نوع تعطیلی</label>
+                            <select name="type" class="form-select">
+                                <option value="">همه انواع</option>
+                                <option value="solar" {% if request.GET.type == 'solar' %}selected{% endif %}>رسمی</option>
+                                <option value="lunar" {% if request.GET.type == 'lunar' %}selected{% endif %}>مذهبی</option>
+                                <option value="custom" {% if request.GET.type == 'custom' %}selected{% endif %}>سفارشی</option>
+                            </select>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label">وضعیت</label>
+                            <select name="is_active" class="form-select">
+                                <option value="">همه وضعیت‌ها</option>
+                                <option value="true" {% if request.GET.is_active == 'true' %}selected{% endif %}>فعال</option>
+                                <option value="false" {% if request.GET.is_active == 'false' %}selected{% endif %}>غیرفعال</option>
+                            </select>
+                        </div>
+                        <div class="col-12 d-flex gap-2 mt-2">
+                            <button type="submit" class="btn btn-primary text-nowrap flex-fill">
+                                <i class="fas fa-filter"></i> اعمال فیلتر
+                            </button>
+                            <a href="{% url 'panel:holiday_list' %}" class="btn btn-outline-secondary text-nowrap flex-fill">
+                                <i class="fas fa-times"></i> پاک کردن
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+                
+                
             </div>
         </div>
     </div>
+    
     <!-- کارت جدول -->
     <div class="card">
         <div class="card-body p-0">
@@ -127,6 +130,7 @@
                 <table class="table table-hover mb-0">
                     <thead>
                         <tr>
+                            <!-- ستون‌ها عرض ثابت گرفتن که تو رزولوشن‌های مختلف جدول به هم نریزه -->
                             <th class="text-center" width="120">📅 تاریخ شمسی</th>
                             <th class="text-center" width="200">🏷️ عنوان</th>
                             <th class="text-center" width="100">🎯 نوع</th>
@@ -156,7 +160,6 @@
                                 {% endif %}
                             </td>
                             
-                            <!-- ستون نوع -->
                             <!-- ستون نوع --> 
                             <td class="text-center"> 
                                 {% if holiday.holiday_type == 'solar' or holiday.holiday_type == 'official' %} 
@@ -207,7 +210,7 @@
                                        data-bs-toggle="tooltip"
                                        data-bs-placement="top"
                                        title="ویرایش">
-                                        <i class="fas fa-edit"></i>
+                                        ✏️
                                     </a>
                                     
                                     <form method="post"
@@ -217,7 +220,7 @@
                                         <button type="submit"
                                                 class="btn btn-toggle"
                                                 title="{% if holiday.is_active %}غیرفعال کردن{% else %}فعال کردن{% endif %}">
-                                            <i class="fas fa-toggle-{% if holiday.is_active %}on{% else %}off{% endif %}"></i>
+                                            {% if holiday.is_active %}⭕{% else %}✅{% endif %}
                                         </button>
                                     </form>
 
@@ -227,9 +230,10 @@
                                         style="display:inline;">
                                         {% csrf_token %}
                                         <button type="submit"
+                                                title="حذف"
                                                 class="btn btn-delete"
                                                 onclick="return confirm('آیا از حذف این تعطیلی مطمئن هستید؟')">
-                                            <i class="fas fa-trash"></i>
+                                            🗑️
                                         </button>
                                     </form>
 
@@ -237,6 +241,7 @@
                             </td>
                         </tr>
                         {% empty %}
+                        <!-- برای وقتی که کلا دیتایی وجود نداره -->
                         <tr>
                             <td colspan="6" class="text-center py-5">
                                 <div class="text-muted">
@@ -253,7 +258,6 @@
         </div>
         
         <!-- فوتر جدول -->
-        <!-- ✅ جایگزینی با این کد ساده‌تر -->
         {% if holidays %}
         <div class="card-footer text-muted text-center py-2">
             <i class="fas fa-info-circle me-1"></i>
@@ -263,7 +267,7 @@
 
     </div>
 
-    <!-- قبل از بسته شدن </div> کارت، این کد را اضافه کنید -->
+    <!-- بخش صفحه‌بندی -->
     {% if holidays.has_other_pages %}
     <nav aria-label="صفحه‌بندی تعطیلات" class="mt-3">
         <ul class="pagination justify-content-center">
@@ -320,9 +324,9 @@
 </div>
 
 <script>
-// فعال‌سازی tooltip برای دکمه‌ها
 document.addEventListener('DOMContentLoaded', function() {
     // تبدیل تاریخ‌های نامعتبر
+    // پیدا کردن ردیف‌هایی که تاریخشون تو دیتابیس مشکل داره یا نال بوده و اصلاح ظاهرشون تو فرانت
     const invalidDates = document.querySelectorAll('.invalid-date');
     invalidDates.forEach(el => {
         if (el.textContent.includes('تاریخ نامعتبر')) {
@@ -333,6 +337,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <style>
+    /* استایل‌های کاستوم دکمه‌های اکشن که تو موبایل هم خوب دیده بشن */
     .action-buttons .btn {
         width: 40px;
         height: 40px;

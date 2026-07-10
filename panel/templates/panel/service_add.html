@@ -6,8 +6,26 @@
 
     <h2 class="mb-4 fw-bold">➕ افزودن خدمت جدید</h2>
 
+    <!-- enctype واسه آپلود عکس‌ها ضروریه، وگرنه فایل‌ها سمت ویو نمیرسن -->
     <form method="POST" enctype="multipart/form-data">
         {% csrf_token %}
+
+        <!-- بخش نمایش ارورها -->
+        {% if form.errors %}
+        <div class="alert alert-danger mb-4" role="alert">
+            <strong>لطفاً موارد زیر را اصلاح کنید:</strong>
+            <ul class="mb-0 mt-2">
+                {% for field in form %}
+                    {% for error in field.errors %}
+                        <li>{{ field.label }}: {{ error }}</li>
+                    {% endfor %}
+                {% endfor %}
+                {% for error in form.non_field_errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
 
         <!-- کارت اطلاعات خدمت -->
         <div class="card mb-4 shadow-sm">
@@ -16,25 +34,30 @@
             </div>
             <div class="card-body">
 
+                <!-- رندر فیلدهای عادی با کریسپی -->
+
                 {{ form.name|as_crispy_field }}
                 {{ form.description|as_crispy_field }}
                 {{ form.price|as_crispy_field }}
-                {{ form.is_active|as_crispy_field }}
+                <div class="mobile-active-box mb-3">
+                    {{ form.is_active|as_crispy_field }}
+                </div>
+
                 {{ form.category|as_crispy_field }}
                 {{ form.subcategory|as_crispy_field }}
                 {{ form.image|as_crispy_field }}
 
-                <!-- 🔥 مدت زمان انجام خدمت -->
-                <div class="mb-3">
+                <!--  مدت زمان انجام خدمت -->
+                <div class="mb-3 mt-3">
                     <label class="form-label fw-bold d-flex align-items-center gap-2">
-                        <i class="bi bi-clock-history text-primary fs-5"></i>
+                        <i class="fas fa-history text-primary fs-5"></i>
                         حداقل مدت زمان انجام خدمت
                     </label>
                     <small class="text-muted">
                         زمان اعلامی ممکن است بسته به شرایط مشتری بیشتر شود
                     </small>
 
-                    <div class="row align-items-center">
+                    <div class="row align-items-center mt-2">
 
                         <div class="col-auto">
                             {{ form.duration_hours }}
@@ -58,7 +81,7 @@
             </div>
         </div>
 
-        <!-- کارت تصاویر -->
+        <!-- کارت گالری تصاویر -->
         <div class="card mb-4 shadow-sm">
             <div class="card-header bg-info text-white">
                 عکس‌های مرتبط
@@ -85,7 +108,8 @@
         </div>
 
         <!-- دکمه‌ها -->
-        <div class="d-flex flex-column flex-md-row gap-2">
+        <div class="d-flex flex-column flex-md-row gap-2 service-buttons-mobile">
+            <!-- فقط مالک سالن می‌تونه خدمت جدید تعریف کنه، منشی اجازه نداره -->
             {% if request.user.profile.role == "owner" %}
                 <button class="btn btn-success px-4" type="submit">
                     ثبت خدمت
@@ -162,9 +186,9 @@ function numberToPersianWords(num) {
     return result.trim().replace(/ و $/, '');
 }
 
-// ✅ اسکریپت اصلی - اضافه کردن نمایش حروف بعد از فیلد قیمت
+//  اضافه کردن نمایش حروف بعد از فیلد قیمت
 document.addEventListener('DOMContentLoaded', function() {
-    // پیدا کردن فیلد قیمت (با کلاس form-control یا name)
+    // کلاس و آیدی ممکنه توسط کریسپی تغییر کنه، پس با صفت name سلکت کردیم که مطمئن‌تره
     const priceInput = document.querySelector('input[name="price"]');
     
     if (!priceInput) {
@@ -197,7 +221,7 @@ document.addEventListener('DOMContentLoaded', function() {
         displayElement.style.display = 'block';
     }
     
-    // اتصال رویدادها
+    // وصل کردن به رویدادهای تایپ و خروج از فیلد
     priceInput.addEventListener('input', updateDisplay);
     priceInput.addEventListener('blur', updateDisplay);
     
@@ -206,7 +230,9 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
+
 <script>
+    //لود کردن زیردسته‌ها با ای‌جکس
 document.addEventListener('DOMContentLoaded', function () {
 
     const categorySelect = document.getElementById('id_category');
@@ -216,12 +242,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const categoryId = this.value;
 
+        // وقتی دسته اصلی عوض شد، یه ریکوئست میزنیم به ویو ajax_load_subcategories
         fetch("{% url 'panel:ajax_load_subcategories' %}?category_id=" + categoryId)
             .then(response => response.json())
             .then(data => {
-
+                // اول گزینه‌های قبلی زیردسته رو پاک میکنیم
                 subCategorySelect.innerHTML = '<option value="">---------</option>';
 
+                // دیتای جدید رو به عنوان آپشن اضافه میکنیم
                 data.forEach(function (item) {
                     const option = document.createElement('option');
                     option.value = item.id;
@@ -234,14 +262,16 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 
+
 <script>
+    //فیلد زمان
 document.addEventListener("DOMContentLoaded", function() {
 
     const hourSelect = document.getElementById("id_duration_hours");
     const minuteSelect = document.getElementById("id_duration_extra_minutes");
 
     if (hourSelect && minuteSelect) {
-
+// منطق فعلی: اگه ساعت رو عددی بیشتر از $0$ انتخاب کرد، دقیقه رو اتوماتیک صفر کن.
         hourSelect.addEventListener("change", function() {
             if (parseInt(this.value) > 0) {
                 minuteSelect.value = "0";

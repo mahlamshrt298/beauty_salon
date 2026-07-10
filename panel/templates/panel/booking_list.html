@@ -4,54 +4,115 @@
 {% load jalali_tags %}
 
 {% block content %}
-    <h2 class="fw-bold mb-1" style="color: #2c3e50;">🗓 نوبت‌ها</h2>
+    <h2 class="fw-bold mb-1" style="color: #2c3e50;">📋 نوبت‌ها</h2>
 
 <div class="container mt-4">
 
-    <!-- فرم جستجو - نسخه نهایی با دو فیلد تاریخ -->
-    <form method="get" class="row align-items-center g-2 mb-4">
-        <div class="col-md-3">
-            <input type="text"
-                name="q"
-                class="form-control"
-                placeholder="جستجو بر اساس کاربر، خدمت ..."
-                value="{{ q|default:'' }}">
-        </div>
-
-        <div class="col-md-2">
-            <select name="status" class="form-select">
-                <option value="">همه وضعیت‌ها</option>
-                <option value="pending" {% if status == 'pending' %}selected{% endif %}>در انتظار تایید</option>
-                <option value="confirmed" {% if status == 'confirmed' %}selected{% endif %}>تایید شده</option>
-                <option value="cancelled" {% if status == 'cancelled' %}selected{% endif %}>لغو شده</option>
-                <option value="completed" {% if status == 'completed' %}selected{% endif %}>انجام شده</option>
-            </select>
-        </div>
-
-        <!-- ✅ فیلتر بازه زمانی (دو فیلد جداگانه) -->
-        <div class="col-md-5">
-            <div class="date-range-filter">
-                <input type="text"
-                    name="start_date"
-                    class="form-control date-input"
-                    placeholder="تاریخ شروع (مثال: 1404/11/01)"
-                    value="{{ start_date|default:'' }}"
-                    dir="ltr">
-                <span class="separator">تا</span>
-                <input type="text"
-                    name="end_date"
-                    class="form-control date-input"
-                    placeholder="تاریخ پایان (مثال: 1404/11/30)"
-                    value="{{ end_date|default:'' }}"
-                    dir="ltr">
+    <!-- برای فیدبک کپی شدن کد پیگیری -->
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+        <div id="copyToast" class="toast align-items-center text-white bg-success border-0" role="alert">
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="fas fa-check-circle me-2"></i>
+                    کد پیگیری کپی شد
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
             </div>
         </div>
+    </div>
 
-        <div class="col-md-2">
-            <button class="btn btn-dark w-100">جستجو</button>
+<!-- فرم جستجو -->
+<div class="row mb-2">
+
+<form method="get" class="row g-3">
+
+    <!-- سطر اول: فیلترها -->
+
+    <div class="col-lg-3 col-md-6">
+        <input type="text"
+            name="q"
+            class="form-control text-center"
+            placeholder="نام کاربر، خدمت یا پرسنل"
+            value="{{ q|default:'' }}">
+    </div>
+
+    <div class="col-lg-2 col-md-6">
+        <input type="text" 
+            name="tracking" 
+            class="form-control text-center"
+            placeholder="کد پیگیری" 
+            value="{{ tracking|default:'' }}" 
+            dir="ltr">
+    </div>
+
+    <div class="col-lg-2 col-md-6">
+        <select name="status" class="form-select">
+            <option value="">همه وضعیت‌ها</option>
+            <option value="pending" {% if status == 'pending' %}selected{% endif %}>در انتظار تایید</option>
+            <option value="confirmed" {% if status == 'confirmed' %}selected{% endif %}>تایید شده</option>
+            <option value="cancelled" {% if status == 'cancelled' %}selected{% endif %}>لغو شده</option>
+            <option value="completed" {% if status == 'completed' %}selected{% endif %}>انجام شده</option>
+        </select>
+    </div>
+
+    <div class="col-lg-5 col-md-6">
+        <div class="input-group">
+            {# کلاس pdate برای اتصال به کتابخانه persian-datepicker در جاوااسکریپت استفاده میشه #}
+            <input type="text"
+                name="start_date"
+                id="start_date_input"
+                class="form-control text-center pdate"
+                placeholder="از تاریخ: 1404/11/01"
+                value="{{ start_date|default:'' }}"
+                dir="ltr" autocomplete="off">
+            <span class="input-group-text bg-light">تا</span>
+            <input type="text"
+                name="end_date"
+                id="end_date_input"
+                class="form-control text-center pdate"
+                placeholder="تا تاریخ: 1404/11/30"
+                value="{{ end_date|default:'' }}"
+                dir="ltr" autocomplete="off">
         </div>
-    </form>
+    </div>
 
+    <!-- سطر دوم: دکمه‌ها (در زیر فیلترها) -->
+    <div class="col-12 d-flex justify-content-start gap-2 mt-2">
+        <button type="submit" class="btn btn-dark px-4">
+            <i class="fas fa-search me-1"></i>
+            جستجو
+        </button>
+        <a href="{% url 'panel:booking_list' %}" class="btn btn-outline-secondary px-4">
+            <i class="fas fa-redo me-1"></i>
+            پاک کردن فیلترها
+        </a>
+    </div>
+
+    <!-- نمایش فیلترهای فعال -->
+    {% if q or tracking or status or start_date or end_date %}
+    <div class="col-12 mt-1">
+        <div class="d-flex flex-wrap align-items-center gap-2">
+            <span class="text-muted small">فیلترهای فعال:</span>
+            {% if q %}
+                <span class="badge bg-info">جستجو: {{ q }}</span>
+            {% endif %}
+            {% if tracking %}
+                <span class="badge bg-info">کد: {{ tracking }}</span>
+            {% endif %}
+            {% if status %}
+                <span class="badge bg-info">وضعیت: {{ status }}</span>
+            {% endif %}
+            {% if start_date or end_date %}
+                <span class="badge bg-info">
+                    {% if start_date %}از {{ start_date }}{% endif %}
+                    {% if end_date %} تا {{ end_date }}{% endif %}
+                </span>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</form>
+</div>
 
     <div class="table-scroll">
         <table class="table table-bordered text-center align-middle">
@@ -64,6 +125,7 @@
                     <th>ساعت</th>
                     <th>وضعیت</th>
                     <th>اسم پرسنل</th>
+                    <th>کد پیگیری</th>
                     <th>یادداشت</th>
                     <th>اقدامات</th>
                     
@@ -75,7 +137,8 @@
                 <tr>
                     <td>{{ booking.user }}</td>
                     
-                    <td class="phone-column"> <!-- اینجا تغییر اصلی -->
+                    <td class="phone-column"> 
+                        <!-- هندل کردن شماره تماس‌های مختلف -->
                         {% if booking.display_phones %}
                             <div class="d-flex flex-column gap-1 text-center">
                                 {% for phone_info in booking.display_phones %}
@@ -83,7 +146,7 @@
                                         <a href="tel:{{ phone_info.number }}" 
                                             title="تماس با مشتری">
                                                 <i class="fas fa-phone fa-sm"></i>
-                                                <span class="phone-number">{{ phone_info.number }}</span> <!-- تغییر اصلی -->
+                                                <span class="phone-number">{{ phone_info.number }}</span> 
                                                 {% if phone_info.label == 'رزرو' %}
                                                     <span class="badge bg-warning text-dark">رزرو</span>
                                                 {% elif phone_info.label == 'پروفایل' %}
@@ -126,6 +189,21 @@
                         {% endif %}
                     </td>
 
+                    <!-- سلول کد پیگیری با قابلیت کپی شدن با کلیک -->
+                    <td dir="ltr" style="font-size:0.85rem; letter-spacing:1px; cursor:pointer;" 
+                        class="tracking-code-cell"
+                        data-tracking="{{ booking.tracking_code }}"
+                        onclick="copyTrackingCode(this)"
+                        title="کلیک کنید تا کپی شود">
+                        {% if booking.tracking_code %}
+                            <i class="fas fa-copy text-muted me-1"></i>
+                            {{ booking.tracking_code }}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+
+                    {# نمایش پیش‌نمایش یادداشت - متن کامل با دابل‌کلیک تو مودال باز میشه تا جدول کش نیاد #}
                     <td class="note-cell" data-note="{{ booking.notes|escape }}">
                         {% if booking.notes_preview %}    
                              {{ booking.notes_preview }}
@@ -140,7 +218,7 @@
                         {% if booking.is_past %}
                             <span class="text-muted">تاریخ این نوبت گذشته است</span>
                         {% else %}
-                            <!-- ویرایش: owner + receptionist -->
+                            {# محدودیت سطح دسترسی برای دکمه ویرایش (فقط مالک و منشی) #}
                             {% if booking.status in "pending confirmed" %}
                                 {% if request.user.profile.role == "owner" or request.user.profile.role == "receptionist" %}
                                     <a href="{% url 'panel:booking_update' booking.id %}"
@@ -152,7 +230,7 @@
                                 {% endif %}
                             {% endif %}
 
-                            <!-- فقط وقتی در انتظار تایید است -->
+                            <!-- دکمه‌های تایید و لغو فقط برای نوبت‌های در انتظار تایید -->
                             {% if booking.status == "pending" %}
 
                                 <!-- تایید -->
@@ -195,14 +273,14 @@
 
                 {% empty %}
                 <tr>
-                    <td colspan="9" class="text-muted">هیچ نوبتی ثبت نشده است</td>
+                    <td colspan="10" class="text-muted">هیچ نوبتی ثبت نشده است</td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
 
-    <!-- اضافه کردن بعد از بسته شدن تگ </table> -->
+    <!-- بخش صفحه‌بندی -->
     {% if appointments.has_other_pages %}
     <nav aria-label="صفحه‌بندی نوبت‌ها" class="mt-4">
         <ul class="pagination justify-content-center">
@@ -238,7 +316,8 @@
                             {% if q %}&q={{ q }}{% endif %}
                             {% if status %}&status={{ status }}{% endif %}
                             {% if start_date %}&start_date={{ start_date }}{% endif %}
-                            {% if end_date %}&end_date={{ end_date }}{% endif %}">
+                            {% if end_date %}&end_date={{ end_date }}{% endif %}
+                            {% if tracking %}&tracking={{ tracking }}{% endif %}">
                             {{ num }}
                         </a>
                     </li>
@@ -268,7 +347,7 @@
     {% endif %}
 </div>
 
-<!-- Modal -->
+<!-- Modal برای نمایش متن کامل یادداشت‌ها -->
 <div class="modal fade" id="noteModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-lg modal-dialog-centered" style="max-width: 40vw; max-height: 80vh;">
     <div class="modal-content">
@@ -286,7 +365,7 @@
 </div>
 
 
-<!-- ✅ اسکریپت اصلاح‌شده و کاملاً صحیح برای نمایش یادداشت با دابل‌کلیک -->
+<!--  اسکریپت برای نمایش یادداشت با دابل‌کلیک -->
 <script>
 document.addEventListener("DOMContentLoaded", function() {
     // انتخاب تمام سلول‌های یادداشت و افزودن رویداد دابل‌کلیک
@@ -294,7 +373,7 @@ document.addEventListener("DOMContentLoaded", function() {
         cell.addEventListener('dblclick', function() {
             const note = this.getAttribute('data-note');
             
-            // بررسی کامل: خالی، فاصله، یا مقدار "None"
+             // چک میکنیم اگه یادداشت خالیه، الکی مودال رو باز نکنیم
             if (!note || note.trim() === '' || note === 'None' || note === '-----') {
                 return;
             }
@@ -308,6 +387,131 @@ document.addEventListener("DOMContentLoaded", function() {
             modal.show();
         });
     });
+});
+</script>
+
+<style>
+/* محدود کردن عرض ستون یادداشت */
+/* جلوگیری از بهم ریختن جدول در صورت طولانی بودن یادداشت */
+.table td:nth-child(9),
+.table th:nth-child(9) {
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;    /* اضافه کردن ... به آخر متن */
+    white-space: nowrap;
+}
+
+/* اسکرول افقی واسه موبایل */
+.table-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* استایل بهتر برای input-group */
+.input-group .input-group-text {
+    font-weight: 500;
+    min-width: 40px;
+    justify-content: center;
+}
+
+.badge.bg-info {
+    font-weight: normal;
+    padding: 0.4rem 0.6rem;
+}
+
+/* بهبود ظاهر دکمه‌ها */
+.btn {
+    font-weight: 500;
+}
+
+.btn-outline-secondary:hover {
+    background-color: #6c757d;
+    color: white;
+}
+</style>
+
+
+<!-- اسکریپت کپی کردن کد پیگیری -->
+<script>
+function copyTrackingCode(element) {
+    const trackingCode = element.getAttribute('data-tracking');
+    
+    if (!trackingCode || trackingCode === 'None' || trackingCode === '—') {
+        return;
+    }
+    
+    navigator.clipboard.writeText(trackingCode).then(() => {
+        // تغییر موقت رنگ
+        const originalBg = element.style.backgroundColor;
+        element.style.backgroundColor = '#d4edda';
+        element.style.transition = 'background-color 0.3s';
+        
+        setTimeout(() => {
+            element.style.backgroundColor = originalBg;
+        }, 1000);
+        
+        // نمایش Toast (پاپ‌آپ موفقیت گوشه تصویر)
+        const toastEl = document.getElementById('copyToast');
+        const toast = new bootstrap.Toast(toastEl, {
+            autohide: true,
+            delay: 2000
+        });
+        toast.show();
+    }).catch(err => {
+        alert('خطا در کپی کردن');
+    });
+}
+</script>
+
+
+<!-- هندل کردن تقویم‌های شمسی و ولیدیشن تاریخ‌ها -->
+<script>
+$(document).ready(function() {
+    
+    // گزینه‌های پایه برای هر دو تقویم
+    var datepickerOptions = {
+        format: 'YYYY/MM/DD',
+        initialValue: false,
+        autoClose: true,
+        calendarType: 'persian',
+        observer: true,
+    };
+
+    // مقداردهی اولیه برای تقویم تاریخ شروع"
+    var startDatePicker = $("#start_date_input").persianDatepicker($.extend({}, datepickerOptions, {
+        onSelect: function() {
+            // مقدار تاریخ‌ها را می‌خوانیم
+            var startDate = $("#start_date_input").val();
+            var endDate = $("#end_date_input").val();
+
+            // ولیدیشن: کاربر نتونه تاریخ شروع رو بعد از تاریخ پایان انتخاب کنه
+
+            // اگر تاریخ پایان وجود داشت و تاریخ شروع جدید از آن بزرگتر بود
+            if (endDate && startDate > endDate) {
+                // مقدار تاریخ پایان را خالی کن
+                $("#end_date_input").val(''); 
+                alert('تاریخ شروع نمی‌تواند بعد از تاریخ پایان باشد. لطفا تاریخ پایان را مجددا انتخاب کنید.');
+            }
+        }
+    }));
+
+    // مقداردهی اولیه برای تقویم "تاریخ پایان"
+    var endDatePicker = $("#end_date_input").persianDatepicker($.extend({}, datepickerOptions, {
+        onSelect: function() {
+            //  مقدار تاریخ‌ها را می‌خوانیم
+            var startDate = $("#start_date_input").val();
+            var endDate = $("#end_date_input").val();
+
+            // ولیدیشن: کاربر نتونه تاریخ پایان رو قبل از تاریخ شروع بندازه
+            
+            //  اگر تاریخ شروع وجود داشت و تاریخ پایان جدید از آن کوچکتر بود
+            if (startDate && endDate < startDate) {
+                // مقدار تاریخ پایان را خالی کن
+                $("#end_date_input").val(''); 
+                alert('تاریخ پایان نمی‌تواند قبل از تاریخ شروع باشد.');
+            }
+        }
+    }));
 });
 </script>
 

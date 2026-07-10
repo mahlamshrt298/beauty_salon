@@ -11,22 +11,21 @@
     <!-- Bootstrap -->
     <!--<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">--> 
     <!--<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">--> 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <!--<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">-->
 
     <!-- CSS -->
    <!-- <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}"> --> 
     <link rel="stylesheet" href="{% static 'css/persian-datepicker.min.css' %}">
     <link rel="stylesheet" href="{% static 'css/bootstrap.rtl.min.css' %}">
     <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}"> 
-    <!-- در بخش <head> فایل base_panel.html این خط رو اضافه کن: -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!--<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">-->
+    <link rel="stylesheet" href="{% static 'vendor/fontawesome/css/all.min.css' %}">
 
 
     <!-- JS -->
     <script src="{% static 'js/jquery-3.6.0.min.js' %}"></script>
     <script src="{% static 'js/persian-date.min.js' %}"></script>
     <script src="{% static 'js/persian-datepicker.min.js' %}"></script>
-    <!--<script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>-->
     <script src="{% static 'js/moment.min.js' %}"></script>
     <script src="{% static 'js/jalali-moment.browser.js' %}"></script>
     <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
@@ -39,6 +38,7 @@
             background-color: #f8f9fa;
         }
 
+        /* استایل‌های سایدبار (منوی کناری) */
         .sidebar {
             width: 260px;
             height: 100vh;
@@ -48,7 +48,7 @@
             right: 0;
             padding-top: 80px;
             color: white;
-            overflow-y: auto;   /* 👈 فعال شدن اسکرول عمودی */
+            overflow-y: auto;   /*  فعال شدن اسکرول عمودی */
             scrollbar-width: thin; /* برای فایرفاکس */
         }
 
@@ -70,7 +70,7 @@
             background: #6c6cff;
         }
 
-
+         /* افکت‌های هاور و اکتیو لینک‌های سایدبار */
         .sidebar a {
             display: block;
             padding: 12px 20px;
@@ -95,12 +95,12 @@
         .content {
             margin-right: 260px;
             padding: 30px;
-            margin-top: 65px; 
         }
 
+        /* فیکس کردن ریسپانسیو برای تبلت و موبایل  */
         @media(max-width: 768px){
             .sidebar {
-                width: 260px !important;   /* ❗ جلوگیری از 100% شدن */
+                width: 260px !important;   /*  جلوگیری از 100% شدن */
                 position: fixed !important;
                 height: calc(100vh - 65px) !important;
             }
@@ -113,23 +113,23 @@
             background-color: #212529 !important;
         }
 
-        /* ===== Sidebar Mobile Toggle (Safe Mode) ===== */
-
+        /* انیمیشن و پوزیشن سایدبار تو حالت موبایل */
         @media (max-width: 991px) {
 
             .sidebar {
                 position: fixed;
                 top: 65px;
-                right: -260px;
+                right: -260px;      /* دیفالت بیرون کادر باشه */
                 height: calc(100vh - 65px);
                 width: 260px;
                 background: #1e1e2d;
                 transition: right 0.3s ease;
                 z-index: 1050;
+                padding-top: 15px !important;
             }
 
             .sidebar.open {
-                right: 0;
+                right: 0;   /* وقتی کلاس open می‌گیره میاد تو صفحه */
             }
 
             .content {
@@ -138,8 +138,7 @@
             }
         }
 
-
-        /* ===== Table horizontal scroll (SAFE) ===== */
+        /* رپر جدول‌ها برای اینکه تو موبایل اسکرول افقی بخورن و صفحه رو خراب نکنن */
         .table-scroll {
             width: 100%;
             overflow-x: auto;
@@ -149,10 +148,6 @@
         .table-scroll table {
             min-width: 900px; /* جدول له نشه */
         }
-
-        /* ===============================
-        PANEL MOBILE FIX (SAFE)
-        ================================= */
 
         @media (max-width: 768px) {
 
@@ -172,7 +167,7 @@
                 overflow-x: auto;
             }
 
-            /* فرم‌ها فول عرض */
+            /* فرم‌ها تو موبایل فول‌عرض باشن که بشه راحت تایپ کرد */
             form[class*="col-md"] {
                 width: 100% !important;
             }
@@ -193,9 +188,8 @@
                 font-size: 1.1rem;
             }
 
-            /* ===============================
-            PANEL RESPONSIVE FIX (SAFE)
-            ================================= */
+        }
+        
 
             @media (max-width: 992px) {
 
@@ -248,8 +242,23 @@
                 }
             }
 
-
+        /* فیکس کردن قیافه دراپ‌داون‌ها (select) برای مرورگرهای مختلف */
+        select,
+        .form-select {
+            background-color: #ffffff !important;
+            color: #212529 !important;
+            /* جلوگیری از نمایش دو فلش */
+            -webkit-appearance: none !important;
+            appearance: none !important;
+            color-scheme: light !important;
         }
+
+        select option,
+        .form-select option {
+            background-color: #ffffff !important;
+            color: #212529 !important;
+        }
+
 
     </style>
 </head>
@@ -257,77 +266,73 @@
 <body>
 
 <!-- نوار بالا -->
-<nav class="navbar navbar-dark bg-dark fixed-top px-4">
-    <a href="{% url 'home' %}" target="_blank" class="navbar-brand d-flex align-items-center gap-2" data-bs-toggle="tooltip" data-bs-placement="bottom" title="صفحه خانه">
-        
-        <img src="{% static 'images/logo.png' %}"
-            alt="Beauty Salon"
-            height="50">
-    </a>
-
-    <button id="toggleSidebar"
-            class="btn btn-outline-light d-md-none me-2">
-        <i class="fas fa-bars"></i>
-    </button>
-
+<nav class="navbar navbar-dark bg-dark border-bottom px-3 d-flex align-items-center justify-content-between" style="position: sticky; top: 0; z-index: 1060; flex-wrap: nowrap !important; white-space: nowrap !important; overflow-x: auto; overflow-y: hidden; min-height: 65px;">
     
-    <span class="navbar-brand">پنل مدیریت</span>
-
-   <!-- این div همه‌چیز را می‌برد سمت راست -->
-    <div class=" d-flex align-items-center gap-2">
-        
-        <!-- ✅ دکمه جدید: مشاهده سایت اصلی (در تب جدید) -->
-        <a href="{% url 'home' %}" 
-        target="_blank"
-        class="btn btn-outline-light d-flex align-items-center gap-2"
-        style="
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 6px;
-            padding: 6px 14px;
-            transition: all 0.3s;
-            text-decoration: none;
-        "
-        onmouseover="this.style.background='rgba(255, 255, 255, 0.2)'; this.style.borderColor='white'; this.style.transform='translateY(-1px)'"
-        onmouseout="this.style.background='rgba(255, 255, 255, 0.1)'; this.style.borderColor='rgba(255, 255, 255, 0.3)'; this.style.transform='translateY(0)'"
-        data-bs-toggle="tooltip" 
-        data-bs-placement="bottom" 
-        title="باز کردن سایت اصلی در تب جدید">
-            <i class="fas fa-external-link-alt" style="font-size: 0.9rem;"></i>
-            <span style="font-size: 0.9rem; font-weight: 500;">مشاهده سایت</span>
+    <!-- سمت راست: لوگو، عنوان و دکمه منو -->
+    <div class="d-flex align-items-center flex-shrink-0" style="flex-wrap: nowrap !important;">
+        <a href="{% url 'home' %}" target="_blank" class="navbar-brand d-flex align-items-center m-0 p-0" style="order: 1 !important;" data-bs-toggle="tooltip" data-bs-placement="bottom" title="صفحه خانه">
+            <img src="{% static 'images/logo.png' %}" alt="Beauty Salon" class="flex-shrink-0" height="48">
         </a>
 
+        <!-- دکمه منوی موبایل (فقط تو سایز lg به پایین دیده میشه) -->
+        <button id="toggleSidebar" class="btn btn-outline-light d-lg-none flex-shrink-0 mx-2" style="order: 2 !important;">
+            <i class="fas fa-bars"></i>
+        </button>
+        <span class="fw-bold text-white " style="order: 3 !important; margin-right: 5px;">پنل مدیریت</span>
 
-        <span class="text-white">
-            <div class="text-end">
-                <div class="text-white fw-semibold">
+    </div>
 
-                    {% if request.user.profile.role == "owner" %}
-                        <span class="text-info">مالک</span>
-                    {% elif request.user.profile.role == "receptionist" %}
-                        <span class="text-warning">منشی</span>
-                    {% else %}
-                        <span class="text-secondary">کاربر</span>
-                    {% endif %}
-
-                    – <i class="bi bi-person-circle me-1"></i>
-                    {{ request.user.username }}
-                </div>
-            </div>
-        </span>
-
+    <!-- سمت چپ: اطلاعات کاربر، مشاهده سایت و خروج -->
+    <div class="d-flex align-items-center flex-shrink-0" style="gap:10px; flex-wrap: nowrap !important; white-space: nowrap !important;">
         
-        <a href="{% url 'accounts:logout' %}" class="btn btn-sm btn-danger">
+        <div id="userBox" class="text-white fw-semibold mb-0 d-flex align-items-center gap-1">
+            {# چک کردن رول یوزر برای نمایش لیبل رنگی #}
+            {% if request.user.profile.role == "owner" %}
+                <span class="text-info">مالک</span>
+            {% elif request.user.profile.role == "receptionist" %}
+                <span class="text-warning">منشی</span>
+            {% else %}
+                <span class="text-secondary">کاربر</span>
+            {% endif %}
+            – <i class="fas fa-user-circle me-1"></i>
+            {{ request.user.username }}
+        </div>
+
+        <!-- دکمه رفتن به سایت اصلی -->
+        <a href="{% url 'home' %}" target="_blank" class="btn btn-outline-light d-flex align-items-center gap-2 flex-shrink-0"
+            style="background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 6px; padding: 4px 8px; transition: all 0.3s; text-decoration: none;"
+            onmouseover="this.style.background='rgba(255, 255, 255, 0.2)'; this.style.borderColor='white'; this.style.transform='translateY(-1px)'"
+            onmouseout="this.style.background='rgba(255, 255, 255, 0.1)'; this.style.borderColor='rgba(255, 255, 255, 0.3)'; this.style.transform='translateY(0)'"
+            data-bs-toggle="tooltip" data-bs-placement="bottom" title="باز کردن سایت اصلی در تب جدید">
+                <i class="fas fa-external-link-alt" style="font-size: 0.9rem;"></i>
+                <span class="d-none d-lg-inline" style="font-size: 0.9rem; font-weight: 500;">مشاهده سایت</span>
+        </a>
+        
+        <a href="{% url 'accounts:logout' %}" class="btn btn-sm btn-danger flex-shrink-0">
             خروج
         </a>
     </div>
 </nav>
 
+<style>
+@media (max-width: 992px) {
+    #userBox {
+        font-size: 0.8rem !important;
+    }
+    nav.navbar {
+        display: flex !important;
+    }
+}
+
+</style>
+
+<!-- نمایش پیام‌های سیستم (Alerts) -->
 {% if messages %}
 <div class="container-fluid" style="position: fixed; top: 70px; right: 0; left: 0; z-index: 9999; pointer-events: none;">
     <div class="row justify-content-center">
         <div class="col-md-8 col-lg-6">
             {% for message in messages %}
+                {# فقط پیام‌های مربوط به پنل رو اینجا نشون میدیم #}
                 {% if "panel" in message.tags %}
                 <div class="alert alert-{% if 'error' in message.tags %}danger{% elif 'success' in message.tags %}success{% elif 'warning' in message.tags %}warning{% else %}info{% endif %} alert-dismissible fade show shadow-lg" 
                      role="alert" 
@@ -335,6 +340,7 @@
                     
                     <div class="d-flex align-items-center">
                         <div class="me-3">
+                            {# آیکون متناسب با نوع پیام #}
                             {% if 'error' in message.tags %}
                                 <i class="fas fa-exclamation-circle fa-2x text-danger"></i>
                             {% elif 'success' in message.tags %}
@@ -346,14 +352,6 @@
                             {% endif %}
                         </div>
                         <div class="flex-grow-1">
-                            <strong>
-                                {% if 'error' in message.tags %}خطا!
-                                {% elif 'success' in message.tags %}موفقیت!
-                                {% elif 'warning' in message.tags %}هشدار!
-                                {% else %}توجه!
-                                {% endif %}
-                            </strong>
-                            <br>
                             {{ message }}
                         </div>
                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
@@ -375,65 +373,44 @@
     </a>
 
     <a href="{% url 'panel:booking_list' %}"
-    class="{% if request.resolver_match.url_name == 'booking_list' %}active{% endif %}">
-        🗓 نوبت‌ها
+    class="{% if request.resolver_match.url_name in 'booking_list booking_approve booking_cancel booking_update booking_complete booking_no_show' %}active{% endif %}">
+        📋 نوبت‌ها
     </a>
 
-    <!-- ✅ لینک جدید: نوبت‌های امروز (بالای لیست نوبت‌ها) -->
+    <!--  نوبت‌های امروز -->
     <a href="{% url 'panel:today_appointments' %}"
        class="{% if request.resolver_match.url_name == 'today_appointments' %}active{% endif %}">
-        📅 نوبت‌های امروز
+        📅 نوبت‌های امروز{% if today_count %} <span class="badge bg-danger ms-1">{{ today_count }}</span>{% endif %}
     </a>
 
-     <!-- ✅ لینک جدید برای نوبت‌های فردا -->
+     <!--  نوبت‌های فردا -->
     <a href="{% url 'panel:tomorrow_appointments' %}"
        class="{% if request.resolver_match.url_name == 'tomorrow_appointments' %}active{% endif %}">
-        📅 نوبت‌های فردا
+        🗓 نوبت‌های فردا{% if tomorrow_count %} <span class="badge bg-warning text-dark ms-1">{{ tomorrow_count }}</span>{% endif %}
+    </a>
+
+    <a class="{% if request.resolver_match.url_name == 'staff_plan' %}active{% endif %}" 
+    href="{% url 'panel:staff_plan' %}">
+        📅 برنامه کاری پرسنل
     </a>
 
     <a href="{% url 'panel:services_list' %}"
-    class="{% if request.resolver_match.url_name == 'services_list' %}active{% endif %}">
+    class="{% if request.resolver_match.url_name in 'services_list service_add service_edit service_delete category_add subcategory_add category_edit subcategory_edit service_delete_category service_delete_subcategory service_toggle_status' %}active{% endif %}">
         💅 خدمات
     </a>
 
-    <a href="{% url 'panel:staff_list' %}"
-    class="{% if request.resolver_match.url_name == 'staff_list' %}active{% endif %}">
-        👩‍💼 پرسنل
-    </a>
-
     <a href="{% url 'panel:popular_services_list' %}"
-    class="{% if request.resolver_match.url_name == 'popular_services_list' %}active{% endif %}">
+    class="{% if 'popular_service' in request.resolver_match.url_name %}active{% endif %}">
         ⭐ خدمات پرطرفدار
     </a>
 
-    <a href="{% url 'panel:article_list' %}"
-    class="{% if request.resolver_match.url_name == 'article_list' %}active{% endif %}">
-        📝 مقالات
-    </a>
-
-    <a href="{% url 'panel:review_list' %}" class="{% if request.resolver_match.url_name == 'review_list' %}active{% endif %}">
-            📝 نظرات مشتریان
-        
-    </a>
-
-    <a href="{% url 'panel:discount_codes' %}"
-    class="{% if request.resolver_match.url_name == 'discount_codes' %}active{% endif %}">
-    🎁 کد تخفیف‌ها
-    </a>
-
-    
-        <a href="{% url 'panel:holiday_list' %}" class=" {% if request.resolver_match.url_name == 'holiday_list' %}active{% endif %}" >
-            <i class="fas fa-calendar-times"></i> 🎉 تعطیلات 
-        </a>
-    
-        <!-- ⚙️ تنظیمات سالن -->
-    <a href="{% url 'panel:salon_settings' %}" 
-    class="{% if request.resolver_match.url_name == 'salon_settings' %}active{% endif %}">
-        ⚙️ تنظیمات سالن
-    </a>
-
-    <a class="{% if request.resolver_match.url_name == 'package_list' %}active{% endif %}" href="{% url 'panel:package_list' %}">
+    <a class="{% if 'package' in request.resolver_match.url_name %}active{% endif %}" href="{% url 'panel:package_list' %}">
         <span>👑 پکیج‌های ویژه </span>
+    </a>
+
+    <a href="{% url 'panel:staff_list' %}"
+    class="{% if 'staff' in request.resolver_match.url_name and request.resolver_match.url_name != 'staff_plan' %}active{% endif %}">
+        👩‍💼 پرسنل
     </a>
 
     <a class="{% if request.resolver_match.url_name == 'payment_list' %}active{% endif %}" href="{% url 'panel:payment_list' %}">
@@ -444,24 +421,37 @@
        💲  گزارش درآمد
     </a>
 
-    <a class="{% if request.resolver_match.url_name == 'staff_plan' %}active{% endif %}" 
-    href="{% url 'panel:staff_plan' %}">
-        📅 برنامه کاری
+    <a href="{% url 'panel:discount_codes' %}"
+    class="{% if 'discount_code' in request.resolver_match.url_name %}active{% endif %}">
+    🎁 کد تخفیف‌ها
     </a>
 
+    <a href="{% url 'panel:article_list' %}"
+    class="{% if 'article' in request.resolver_match.url_name %}active{% endif %}">
+        📝 مقالات
+    </a>
+
+    <a href="{% url 'panel:review_list' %}" class="{% if request.resolver_match.url_name == 'review_list' %}active{% endif %}">
+            💬 نظرات مشتریان
+        
+    </a>
+    
+        <a href="{% url 'panel:holiday_list' %}" class="{% if 'holiday' in request.resolver_match.url_name %}active{% endif %}" >
+            <i class="fas fa-calendar-times"></i> 🎉 تعطیلات 
+        </a>
+    
+    <a href="{% url 'panel:salon_settings' %}" 
+    class="{% if request.resolver_match.url_name == 'salon_settings' %}active{% endif %}">
+        ⚙️ تنظیمات سالن
+    </a>
 
 </div>
-
-
 
 <!-- محتوای اصلی -->
 <div class="content">
     {% block content %}
     {% endblock %}
 </div>
-
-
-<!--<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>--> 
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
@@ -475,6 +465,7 @@ document.addEventListener("DOMContentLoaded", function () {
 </script>
 
 <script>
+// باز و بسته کردن سایدبار تو نسخه موبایل
 document.addEventListener("DOMContentLoaded", function () {
     const toggleBtn = document.getElementById("toggleSidebar");
     const sidebar = document.querySelector(".sidebar");
@@ -488,22 +479,22 @@ document.addEventListener("DOMContentLoaded", function () {
 </script>
 
 <script>
-// Auto-dismiss messages after 5 seconds
+//پاک کردن خودکار الرت‌های جنگو بعد از 7 ثانیه
 document.addEventListener("DOMContentLoaded", function() {
-    // انتخاب همه alert ها
-    const alerts = document.querySelectorAll('.alert');
-    
+    const alerts = document.querySelectorAll('.alert:not(.alert-static)');  
     alerts.forEach(function(alert) {
-        // 5 ثانیه = 5000 میلی‌ثانیه
         setTimeout(function() {
-            // ایجاد یک شی Alert از بوت‌استرپ
             const bsAlert = new bootstrap.Alert(alert);
-            // بستن alert
             bsAlert.close();
-        }, 7000); // 5000 = 5 ثانیه (میتونی به 6000 یا 7000 تغییر بدی)
+        }, 7000);
     });
 });
+
 </script>
+
+<!-- بلاک مخصوص برای اسکریپت‌های دیگر -->
+    {% block extra_js %}
+    {% endblock %}
 
 </body>
 </html>

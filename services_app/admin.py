@@ -1,18 +1,5 @@
 from django.contrib import admin
 from .models import Category, Subcategory, Service, ServiceImage , PopularService
-# جلوگیری از خطا در صورت ثبت قبلی
-try:
-    admin.site.unregister(Service)
-except admin.sites.NotRegistered:
-    pass
-try:
-    admin.site.unregister(Category)
-except admin.sites.NotRegistered:
-    pass
-try:
-    admin.site.unregister(Subcategory)
-except admin.sites.NotRegistered:
-    pass
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
@@ -20,35 +7,33 @@ class CategoryAdmin(admin.ModelAdmin):
     prepopulated_fields = {'slug': ('name',)}
     search_fields = ['name']
 
-# --- اضافه کردن Admin برای Subcategory ---
 @admin.register(Subcategory)
 class SubcategoryAdmin(admin.ModelAdmin):
     list_display = ['name', 'category', 'slug']
     list_filter = ['category']
     prepopulated_fields = {'slug': ('name',)}
-    search_fields = ['name', 'category__name'] # جستجو بر اساس نام زیردسته یا دسته اصلی
+    search_fields = ['name', 'category__name'] 
 
-
-# --- اضافه کردن Inline برای ServiceImage ---
+#میتونه با این چندتا عکس رو با هم آپلود کنه
 class ServiceImageInline(admin.TabularInline):
     model = ServiceImage
     extra = 1  # تعداد فرم‌های اضافی برای اضافه کردن عکس
-    fields = ['image', 'alt_text']  # فیلدهایی که در ادمین نمایش داده می‌شوند
+    fields = ['image', 'alt_text']  
     verbose_name = "عکس مرتبط"
     verbose_name_plural = "عکس‌های مرتبط"
 
 @admin.register(Service)
 class ServiceAdmin(admin.ModelAdmin):
-    list_display = ['name', 'category', 'subcategory', 'price', 'duration_minutes', 'is_active'] # ✅ subcategory اضافه شد
-    list_filter = ['category', 'subcategory', 'is_active'] # ✅ subcategory اضافه شد
-    search_fields = ['name', 'category__name', 'subcategory__name'] # ✅ جستجو بر اساس نام زیردسته
+    list_display = ['name', 'category', 'subcategory', 'price', 'duration_minutes', 'is_active'] 
+    list_filter = ['category', 'subcategory', 'is_active'] 
+    search_fields = ['name', 'category__name', 'subcategory__name'] 
     list_editable = ['price', 'is_active']
+    #بخش آپلود چندگانه عکس
     inlines = [ServiceImageInline] 
-    # اگر می‌خواهی در لیست سرویس‌ها زیردسته را هم ویرایش کنی، این خط را اضافه کن:
-    # list_editable = ['price', 'is_active', 'subcategory']
-
+   
 @admin.register(PopularService)
 class PopularServiceAdmin(admin.ModelAdmin):
     list_display = ('title', 'category', 'is_active', 'order')
+    #ترتیب نمایش و فعال و غیرفعال بودن
     list_editable = ('is_active', 'order')
     search_fields = ('title',)

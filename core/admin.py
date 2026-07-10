@@ -1,14 +1,15 @@
 from django.contrib import admin
 from .models import SalonSettings
 from .models import Package
-# Register your models here.
+
 #ثبت مدل تنظیمات سالن
 admin.site.register(SalonSettings)
 
 @admin.register(Package)
 class PackageAdmin(admin.ModelAdmin):
-    # فیلدهای نمایش در لیست
+    # ستون‌هایی که تو صفحه اصلی لیست پکیج‌ها نشون داده میشن.
     list_display = ['title', 'discounted_price', 'is_active', 'is_limited_time']
+    #فیلترهای سایدبار
     list_filter = ['is_active', 'is_limited_time']
     # فیلدهای قابل جستجو
     search_fields = ['title']

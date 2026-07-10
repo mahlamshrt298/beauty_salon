@@ -1,9 +1,10 @@
 {% extends "panel/base_panel.html" %}
 {% block content %}
 
-<div class="card shadow-sm col-lg-8 col-12 mx-auto">
+<div class="card shadow-sm col-12 w-100">
     <div class="card-header bg-success text-white">
         <h5 class="mb-0">
+            <!-- بر اساس وجود آبجکت article تو کانتکست، تایتل رو داینامیک عوض می‌کنیم. -->
             {% if article %}✏️ ویرایش مقاله{% else %}➕ افزودن مقاله{% endif %}
         </h5>
     </div>
@@ -14,32 +15,49 @@
 
             <!-- عنوان -->
             <div class="mb-3">
-                <label class="form-label">عنوان مقاله</label>
+                <label class="form-label">عنوان مقاله<span class="text-danger">*</span></label>
                 <input name="title"
-                       class="form-control"
+                       class="form-control {% if errors.title %}is-invalid{% endif %}"
                        placeholder="عنوان مقاله"
-                       value="{{ article.title|default:'' }}"
+                       value="{% if old.title %}{{ old.title }}{% elif article %}{{ article.title }}{% endif %}"
                        autofocus>
+
+                <!-- نمایش ارور ولیدیشن مختص به این فیلد -->
+                {% if errors.title %}
+                    <div class="invalid-feedback">{{ errors.title }}</div>
+                {% endif %}
             </div>
 
             <!-- دسته بندی -->
             <div class="mb-3">
-                <label class="form-label">دسته‌بندی</label>
-                <select name="category" class="form-select">
+                <label class="form-label">دسته‌بندی<span class="text-danger">*</span></label>
+                <select name="category" class="form-select {% if errors.category %}is-invalid{% endif %}">
+                    <option value="">— انتخاب دسته‌بندی —</option>
                     {% for c in categories %}
                         <option value="{{ c.id }}"
-                            {% if article.category.id == c.id %}selected{% endif %}>
+                            {% if old.category == c.id|stringformat:"s" %}selected
+                            {% elif article.category.id == c.id %}selected{% endif %}>
                             {{ c.name }}
                         </option>
                     {% endfor %}
                 </select>
+                {% if errors.category %}
+                    <div class="invalid-feedback">{{ errors.category }}</div>
+                {% endif %}
             </div>
 
             <!-- تصویر مقاله -->
             <div class="mb-3">
                 <label class="form-label">تصویر مقاله</label>
-                <input type="file" name="image" class="form-control" accept="image/*">
-                
+                <input type="file" name="image" id="imageInput" class="form-control {% if errors.image %}is-invalid{% endif %}" accept="image/*">
+                {% if errors.image %}
+                    <div class="invalid-feedback">{{ errors.image }}</div>
+                {% endif %}
+
+                <!-- جایگاهی برای نمایش اسم فایلی که کاربر انتخاب کرده (توسط JS پایین صفحه پر میشه) -->
+                <div id="selectedFileName" class="form-text text-success mt-1"></div>
+
+                <!-- برای آپدیت عکس: نمایش عکس فعلی به کاربر و اخطار اینکه با آپلود فایل جدید، این عکس پاک میشه -->
                 {% if article and article.image %}
                 <div class="mt-2 d-flex align-items-center gap-3">
                     <img src="{{ article.image.url }}" 
@@ -61,11 +79,15 @@
 
             <!-- محتوا -->
             <div class="mb-3">
-                <label class="form-label">محتوای مقاله</label>
+                <label class="form-label">محتوای مقاله<span class="text-danger">*</span></label>
                 <textarea name="content"
                           rows="6"
-                          class="form-control"
-                          placeholder="محتوای مقاله">{{ article.content|default:'' }}</textarea>
+                          class="form-control {% if errors.content %}is-invalid{% endif %}"
+                          placeholder="محتوای مقاله">{% if old.content %}{{ old.content }}{% elif article %}{{ article.content }}{% endif %}</textarea>
+
+                {% if errors.content %}
+                    <div class="invalid-feedback">{{ errors.content }}</div>
+                {% endif %}
             </div>
 
             <!-- برچسب ها -->
@@ -74,7 +96,7 @@
                 <input name="tags"
                        class="form-control"
                        placeholder="با ، جدا شود"
-                       value="{{ article.tags|default:'' }}">
+                       value="{% if article %}{{ article.tags }}{% endif %}">
             </div>
 
             <!-- نکات کلیدی -->
@@ -83,7 +105,7 @@
                 <textarea name="Key_points"
                           class="form-control"
                           rows="3"
-                          placeholder="نکات مهم مقاله">{{ article.Key_points|default:'' }}</textarea>
+                          placeholder="نکات مهم مقاله">{% if article %}{{ article.Key_points }}{% endif %}</textarea>
             </div>
 
             <!-- خدمت مرتبط -->
@@ -138,7 +160,7 @@
             </div>
 
             <!-- نمایش در خانه -->
-            <div class="form-check mb-3">
+            <div class="form-check mb-3 mobile-active-box">
                 <input type="checkbox"
                        name="show_on_home"
                        class="form-check-input"
@@ -148,13 +170,14 @@
                 </label>
             </div>
 
-            <div class="d-flex justify-content-between mt-4">
-                <a href="{% url 'panel:article_list' %}" class="btn btn-secondary">
-                    بازگشت
-                </a>
+            <div class="d-flex justify-content-between mt-4 service-buttons-mobile">
                 <button class="btn btn-success">
                     ذخیره
                 </button>
+                <a href="{% url 'panel:article_list' %}" class="btn btn-secondary">
+                    بازگشت
+                </a>
+                
             </div>
 
         </form>
@@ -172,18 +195,21 @@ document.addEventListener("DOMContentLoaded", function () {
     categorySelect.addEventListener("change", function () {
         const categoryId = this.value;
 
+        // روی تمام آپشن‌های زیردسته لوپ می‌زنیم
         for (let option of subSelect.options) {
             if (!option.dataset.category) continue;
 
+            //اگه آیدی دسته با دیتا-اتریبیوت این آپشن یکی بود نشونش بده، وگرنه مخفیش کن
             option.style.display =
                 option.dataset.category === categoryId ? "block" : "none";
         }
 
+        // وقتی دسته اصلی عوض شد، انتخاب‌های قبلی زیردسته و خدمت باید ریست بشن
         subSelect.value = "";
         serviceSelect.value = "";
     });
 
-    // فیلتر خدمات بر اساس زیر دسته
+    // فیلتر خدمات بر اساس زیر دسته (دقیقا مشابه بالا)
     subSelect.addEventListener("change", function () {
         const subId = this.value;
 
@@ -197,6 +223,12 @@ document.addEventListener("DOMContentLoaded", function () {
         serviceSelect.value = "";
     });
 
+    //  نمایش نام فایل انتخاب‌شده
+    document.getElementById("imageInput").addEventListener("change", function () {
+        const fileName = this.files[0]?.name;
+        const display = document.getElementById("selectedFileName");
+        display.textContent = fileName ? "📎 فایل انتخاب‌شده: " + fileName : "";
+    });
 });
 </script>
 

@@ -1,4 +1,5 @@
 {% extends "panel/base_panel.html" %}
+
 {% block content %}
 <h2 class="fw-bold mb-1" style="color: #2c3e50;">📊 داشبورد</h2>
 </br>
@@ -6,10 +7,11 @@
 
     <div class="col-md-3">
         <select name="year" class="form-select">
-            <option value="2025">سال</option>
+            <option value="">سال</option>
+            <!-- دریافت لیست سال‌ها از ویو و ساخت آپشن‌ها -->
             {% for y in years %}
                 <option value="{{ y }}"
-                    {% if selected_year == y %}selected{% endif %}>
+                    {% if selected_year == y|stringformat:"s" %}selected{% endif %}>
                     {{ y }}
                 </option>
             {% endfor %}
@@ -22,14 +24,15 @@
             {% for m in months %}
                 <option value="{{ m }}"
                     {% if selected_month == m %}selected{% endif %}>
-                    {{ m }}
+                    {{ JALALI_MONTHS.m|default:m }}
+
                 </option>
             {% endfor %}
         </select>
     </div>
 
     <div class="col-md-2">
-        <button class="btn btn-primary w-100">
+        <button id="dashboard-filter-btn" class="btn btn-primary w-100">
             اعمال فیلتر
         </button>
     </div>
@@ -39,12 +42,14 @@
 <div class="container mt-4">
 
     <div class="row g-4">
+
         <div class="col-12 col-md-4">
 
             <div class="card text-center shadow">
                 <div class="card-body">
                     <h4>{{ total_appointments }}</h4>
                     <p>
+                        <!-- داینامیک کردن متن کارت بر اساس اینکه کاربر فیلتر ماه رو زده یا داره آمار کل رو میبینه  -->
                         {% if selected_month %}
                             آمار ماه {{ selected_month }} / {{ selected_year }}
                         {% else %}
@@ -91,15 +96,19 @@
 </div>
 
 <!--<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>--> 
+
 <script>
+// گرفتن کانتکست canvas برای رسم نمودار
 const ctx = document.getElementById('bookingChart');
 
 new Chart(ctx, {
-  type: 'bar',
+  type: 'bar',  // نمودار ستونی
   data: {
+    // لیبل‌های محور X
     labels: ['تأیید شده', 'در انتظار', 'لغو شده','انجام شده'],
     datasets: [{
       label: 'تعداد نوبت‌ها',
+      // اینجا دیتای بک‌اند رو مستقیم میذاریم تو آرایه جاوا اسکریپت. دقت کن که متغیرها باید حتما عدد باشن که سینتکس JS بهم نریزه
       data: [{{ confirmed }}, {{ pending }}, {{ cancelled }},{{ completed }}],
     }]
   },
@@ -108,13 +117,14 @@ new Chart(ctx, {
       legend: {
         labels: {
           font: {
-            size: 16, // افزایش فونت لجند
+            size: 16, 
             weight: 'bold'
           }
         }
       }
     },
     scales: {
+        // تنظیمات مربوط به محورهای X و Y 
       x: {
         ticks: {
           font: {

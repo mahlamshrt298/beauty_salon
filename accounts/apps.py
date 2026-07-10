@@ -6,4 +6,5 @@ class AccountsConfig(AppConfig):
     name = 'accounts'
 
     def ready(self):
+        # اورراید کردن متد ready واسه رجیستر کردن سیگنال‌های این اپلیکیشن (accounts)
         import accounts.signals

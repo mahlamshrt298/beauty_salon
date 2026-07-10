@@ -1,4 +1,3 @@
-<!-- booking/templates/contact_info.html -->
 {% extends 'base.html' %}
 {% load static %}
 
@@ -7,6 +6,7 @@
 {% block content %}
 <div class="container mt-5 small">
     <!-- متن راهنمایی -->
+    <!-- خلاصه رزرو -->
   <div class="text-center mb-4 small" style="font-size: 1.1rem; color: #6c757d;">
    شما در حال رزرو خدمت " {{service.name}} " در تاریخ : {{ weekday_fa }} | {{ appointment_date_fa }} و ساعت : {{start_time}} هستید.
    <strong>پرسنل انجام‌دهنده:</strong>{{ staff_label }}
@@ -51,8 +51,8 @@
           <label for="notes" class="form-label">یادداشت‌ یا توضیح (اختیاری)</label>
           <textarea id="notes" name="notes" class="form-control" rows="3" placeholder="مثلاً: به دلیل آلرژی از محصول فلان استفاده نشود"></textarea>
         </div>
-        <div class="d-flex flex-column flex-sm-row justify-content-between gap-2">
-
+        <div class="d-flex flex-column flex-sm-row justify-content-between gap-2 contact-buttons">
+          {# اتریبیوت data-no-exit رو گذاشتیم که اگه کاربر خواست برگرده عقب، اون اسکریپت "آیا مطمئن هستید که میخواهید صفحه را ترک کنید؟" مزاحمش نشه #}
           <a href="{% url 'select_date' service_id %}" class="btn btn-secondary booking-exit-link" data-no-exit>بازگشت</a>
           <button type="submit" class="btn btn-success" data-no-exit>ادامه به پرداخت</button>
         </div>
@@ -65,10 +65,12 @@
 
 {% block scripts %} 
 
-
+<!-- اسکریپت اصلی مدیریت جریان رزرو -->
 <script src="{% static 'js/booking-flow.js' %}"></script>
 
 <script>
+//با زدن enter بره فیلد بعدی
+
 document.addEventListener("DOMContentLoaded", function () {
     const phoneInput = document.getElementById("phone");
     const notesInput = document.getElementById("notes");
@@ -78,12 +80,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
     phoneInput.addEventListener("keydown", function (e) {
         if (e.key === "Enter") {
-            e.preventDefault();
-            notesInput.focus();
+            e.preventDefault();   // نذار فرم سابمیت بشه
+            notesInput.focus();   // فوکوس رو ببر رو تکست‌اریا (یادداشت)
         }
     });
 
     notesInput.addEventListener("keydown", function (e) {
+        // اگه اینتر رو زد و شیفت رو نگه نداشته بود (یعنی نمیخواست بره خط بعد تو یادداشت)، فرم رو بفرست بره واسه مرحله بعد
         if (e.key === "Enter" && !e.shiftKey) {
             e.preventDefault();
             form.submit();

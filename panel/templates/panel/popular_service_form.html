@@ -1,9 +1,10 @@
 {% extends "panel/base_panel.html" %}
+
 {% block content %}
 
-<div class="container mt-4" style="max-width: 700px;">
+<div class="mt-4 px-3 w-100">
 
-    <h4 class="mb-4">خدمت پرطرفدار</h4>
+    <h4 class="mb-4">خدمت پرطرفدار ⭐</h4>
 
     <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
@@ -31,16 +32,25 @@
                 class="form-control"
                 rows="3"
                 placeholder="توضیح کوتاه درباره این پکیج یا خدمت"
+            required
             >{{ service.description|default:'' }}</textarea>
             <div class="form-text">
                 توضیح مختصر برای نمایش روی کارت پیشنهاد
             </div>
         </div>
 
-        <!-- تصویر -->
+        <!-- آپلود تصویر -->
         <div class="mb-3">
             <label class="form-label">تصویر خدمت</label>
-            <input type="file" name="image" class="form-control">
+            <input type="file" name="image" class="form-control" {% if not service %}required{% endif %}>
+            
+            {% if service.image %}
+                <!-- نمایش وضعیت فعلی عکس برای ادیتور -->
+                <div class="form-text text-success mt-1">
+                    <!-- با استفاده از فیلتر cut، مسیر اضافی فولدر رو از اسم فایل خط میزنیم -->
+                    📎 تصویر فعلی: <strong>{{ service.image.name|cut:"popular_services/" }}</strong>
+                </div>
+            {% endif %}
             <div class="form-text">
                 تصویر مناسب اسلایدر (ترجیحاً افقی و با کیفیت)
             </div>
@@ -59,11 +69,11 @@
                 {% endfor %}
             </select>
             <div class="form-text">
-                برای ارتباط با دسته خدمات (اختیاری)
+                برای ارتباط با دسته خدمات 
             </div>
         </div>
 
-        <!-- ترتیب -->
+        <!-- فیلد ترتیب نمایش-->
         <div class="mb-3">
             <label class="form-label">ترتیب نمایش</label>
             <input
@@ -71,31 +81,33 @@
                 type="number"
                 class="form-control"
                 value="{{ service.order|default:0 }}"
-            >
+            required>
             <div class="form-text">
                 عدد کمتر → نمایش زودتر در اسلایدر
             </div>
         </div>
 
         <!-- فعال / غیرفعال -->
-        <div class="form-check mb-4">
-            <input
-                class="form-check-input"
-                type="checkbox"
-                name="is_active"
-                id="is_active"
-                {% if service.is_active %}checked{% endif %}
-            >
-            <label class="form-check-label" for="is_active">
-                فعال باشد
-            </label>
-            <div class="form-text">
+        <div class="mobile-active-box mb-4">
+            <div class="form-check">
+                <input
+                    class="form-check-input"
+                    type="checkbox"
+                    name="is_active"
+                    id="is_active"
+                    {% if service.is_active %}checked{% endif %}
+                >
+                <label class="form-check-label" for="is_active">
+                    فعال باشد
+                </label>
+            </div>
+            <div class="form-text mt-1">
                 فقط موارد فعال در سایت نمایش داده می‌شوند
             </div>
         </div>
 
         <!-- دکمه‌ها -->
-        <div class="d-flex flex-column flex-md-row gap-5">
+        <div class="d-flex flex-column flex-md-row justify-content-md-between align-items-md-center gap-5 mobile-form-buttons w-100">
             <button class="btn btn-success px-4">ذخیره</button>
             <a href="{% url 'panel:popular_services_list' %}" class="btn btn-outline-secondary  ms-md-3">
                 بازگشت

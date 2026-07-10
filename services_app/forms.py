@@ -3,6 +3,7 @@ from .models import Service, ServiceImage, Subcategory
 
 class ServiceForm(forms.ModelForm):
     HOUR_CHOICES = [(i, str(i)) for i in range(0, 13)]
+    
     MINUTE_CHOICES = [
         (0, "00"),
         (15, "15"),
@@ -61,8 +62,28 @@ class ServiceForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+         # فاصله بین فیلدها
+        for field_name, field in self.fields.items():
+            if hasattr(field.widget, 'attrs'):
+                field.widget.attrs['class'] = field.widget.attrs.get('class', '') + ' mb-2'
+        
+        # فیلدهای اجباری
+        self.fields['name'].required = True
+        self.fields['name'].error_messages = {'required': 'نام خدمت الزامی است.'}
+        
+        self.fields['price'].required = True
+        self.fields['price'].error_messages = {'required': 'قیمت الزامی است.'}
+        
+        self.fields['category'].required = True
+        self.fields['category'].error_messages = {'required': 'انتخاب دسته اصلی الزامی است.'}
+        
+        self.fields['subcategory'].required = True
+        self.fields['subcategory'].error_messages = {'required': 'انتخاب زیردسته الزامی است.'}
+        
+        self.fields['image'].required = True
+        self.fields['image'].error_messages = {'required': 'انتخاب عکس اصلی الزامی است.'}
 
-# اگر در حالت ویرایش هستیم مقدار رو پر کن
+        # اگر در حالت ویرایش هستیم، مقدار زمان رو پر کن
         if self.instance.pk:
             total_minutes = self.instance.duration_minutes
             self.fields['duration_hours'].initial = total_minutes // 60
@@ -71,7 +92,7 @@ class ServiceForm(forms.ModelForm):
         # اول زیر‌دسته رو خالی کن
         self.fields['subcategory'].queryset = Subcategory.objects.none()
 
-        # وقتی کاربر دسته انتخاب کرده (POST یا AJAX)
+        # وقتی کاربر دسته انتخاب کرده 
         if 'category' in self.data:
             try:
                 category_id = int(self.data.get('category'))
@@ -86,20 +107,20 @@ class ServiceForm(forms.ModelForm):
             self.fields['subcategory'].queryset = self.instance.category.subcategories.all()
         
         self.fields['price'].widget.attrs.update({
-            'class': 'form-control',
+            'class': 'form-control mb-2',
             'max': '10000000000'
         })
 
-         # ✅ تغییر لیبل قیمت
         self.fields['price'].label = "حداقل قیمت (تومان)"
 
-        # ✅ اضافه کردن راهنما زیر فیلد
+        #  اضافه کردن راهنما زیر فیلد
         self.fields['price'].help_text = "قیمت اعلامی حداقل هزینه خدمت است و ممکن است بسته به شرایط افزایش یابد."
 
 
     def save(self, commit=True):
         instance = super().save(commit=False)
 
+        #تبدیل مقادیر دراپ‌داون‌ها به عدد
         hours = int(self.cleaned_data.get('duration_hours') or 0 )
         minutes = int(self.cleaned_data.get('duration_extra_minutes') or 0 )
 
@@ -110,14 +131,12 @@ class ServiceForm(forms.ModelForm):
 
         return instance
     
-# "slug",
 
 class ServiceGalleryForm(forms.ModelForm):
     class Meta:
         model = ServiceImage
         fields = [ "alt_text"]
         labels = {
-            
             'alt_text': 'متن جایگزین (اختیاری)',
         }
     

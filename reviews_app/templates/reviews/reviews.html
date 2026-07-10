@@ -9,7 +9,7 @@
 {% block content %}
 <div class="container mt-5">
 
-    <!-- سربرگ -->
+    <!-- هدر-->
     <div class="text-center mb-5">
         <h1 class="hero-title">نظرات شما افتخار ماست.</h1>
         <p class="lead">آنچه مشتریان درباره تجربه شان در سالن نورا گفته‌اند.</p>
@@ -28,21 +28,19 @@
         </div>
     </div>
 
-    <!--برای اینکه پیام بعد از 3 ثانیه بسته شود-->
     <script>
     document.addEventListener('DOMContentLoaded', function() {
         const alerts = document.querySelectorAll('.alert');
         alerts.forEach(alert => {
             setTimeout(() => {
-                alert.classList.add('d-none'); // یا alert.remove()
-            }, 10000); // ۳ ثانیه
+                alert.classList.add('d-none'); 
+            }, 5000); 
         });
     });
     </script>
 
 
-    <!-- ✅ جایگزینی کامل فیلتر سرویس با فیلتر دسته‌بندی -->
-    <!-- ✅ نمایش تعداد نظرات در منوی فیلتر -->
+    <!-- دراپ‌داون فیلتر دسته‌بندی‌ها -->
     <div class="dropdown mb-3">
         <button class="btn btn-outline-gold dropdown-toggle" type="button" data-bs-toggle="dropdown">
             <i class="fas fa-filter me-1"></i> فیلتر بر اساس دسته‌بندی
@@ -57,6 +55,7 @@
                 </a>
             </li>
             <li><hr class="dropdown-divider"></li>
+
             {% for category in all_categories %}
                 <li>
                     <a class="dropdown-item {% if request.GET.category == category.id|stringformat:'s' %}active{% endif %}" 
@@ -74,7 +73,6 @@
         </ul>
     </div>
 
-    <!-- ✅ نمایش فیلتر فعال در بالای لیست نظرات -->
     {% if selected_category %}
     <div class="alert alert-info d-flex justify-content-between align-items-center mb-4">
         <div>
@@ -95,12 +93,12 @@
     </div>
     {% endif %}
 
-        <!-- لیست نظرات -->
+    <!-- لیست نظرات -->
     <div class="row g-4">
         {% for review in page_obj %}
         <div class="col-md-4">
             <div class="testimonial-card">
-                <!-- نمایش آواتار کاربر در بالای کارت -->
+                <!--  آواتار کاربر -->
                 <div class="d-flex justify-content-center mb-3">
                     {% if review.user.profile and review.user.profile.avatar %}
                         <img src="{{ review.user.profile.avatar.url }}" 
@@ -115,14 +113,19 @@
 
                  <!-- نمایش ستاره‌های امتیاز -->
                 <div class="stars mb-3">
-                    {% for i in "12345" %}
-                        {% if i|add:"0" <= review.rating %}
-                            <i class="fas fa-star text-gold"></i>   <!-- ستاره پر -->
-                        {% else %}
-                            <i class="far fa-star text-gold"></i>   <!-- ستاره خالی -->
-                        {% endif %}
-                    {% endfor %}
+                    {{ review.rating }}
+                    </br>
+
+                    {% with r=review.rating|add:0 %}
+                        <i class="fas fa-star" style="color: {% if r >= 1 %}#D4AF37{% else %}#ccc{% endif %};"></i>
+                        <i class="fas fa-star" style="color: {% if r >= 2 %}#D4AF37{% else %}#ccc{% endif %};"></i>
+                        <i class="fas fa-star" style="color: {% if r >= 3 %}#D4AF37{% else %}#ccc{% endif %};"></i>
+                        <i class="fas fa-star" style="color: {% if r >= 4 %}#D4AF37{% else %}#ccc{% endif %};"></i>
+                        <i class="fas fa-star" style="color: {% if r >= 5 %}#D4AF37{% else %}#ccc{% endif %};"></i>
+                    {% endwith %}
+
                 </div>
+
                 <div class="testimonial-content">
                     <p>{{ review.comment }}</p>
                     
@@ -137,7 +140,6 @@
                     <div class="client-info mt-3">
                         <strong>{{ review.user.get_full_name|default:review.user.username }}</strong>
                         <div class="text-muted mt-1">
-                        <!-- ✅ تاریخ شمسی با فرمت فارسی -->
                         {{ review.created_at|to_jalali:"%d %B %Y" }}
                         </div>
                     </div>
@@ -146,34 +148,13 @@
         </div>
         {% empty %}
 
-         <!-- پیغام زمانی که هیچ نظری وجود ندارد -->
         <div class="col-12 text-center">
             <p>هیچ نظری ثبت نشده است.</p>
         </div>
         {% endfor %}
     </div>
     
-
-
-        <!-- اسکریپت ستاره‌های تعاملی -->
-        <script>
-            function setRating(value) {
-            // تنظیم مقدار فیلد rating
-            document.getElementById('id_rating').value = value;
-            // به‌روزرسانی نمایش ستاره‌ها
-            for (let i = 1; i <= 5; i++) {
-                const star = document.getElementById(`star-${i}`);
-                if (i <= value) {
-                    star.classList.remove('far');
-                    star.classList.add('fas');
-                } else {
-                    star.classList.remove('fas');
-                    star.classList.add('far');
-                }
-                 }
-            }
-        </script>
-
+        
         <!-- فرم ثبت نظر جدید -->
     <div class="row mt-5">
         <div class="col-md-6 me-auto">
@@ -193,7 +174,7 @@
                     </p>
                 {% endif %}
                     
-                 <!-- ✅ فیلد جدید: انتخاب نوبت -->
+                 <!--  انتخاب نوبت -->
                 <div class="mb-3">
                     <label class="form-label">نوبت مربوطه <span class="text-danger">*</span></label>
                     {{ form.appointment }}
@@ -207,21 +188,29 @@
                     {% endif %}
                 </div>
 
-                <!-- فیلد امتیاز -->
                 <div class="mb-3">
                     <label class="form-label">امتیاز شما:</label>
+                    
                     <div class="d-flex gap-2">
                         {% for i in "12345" %}
-                            <span onclick="setRating({{ i }})" id="star-{{ i }}" class="far fa-star text-gold star-selectable" style="font-size: 1.5rem; cursor: pointer;"></span>
+                            <span class="star-wrapper" data-value="{{ i }}" style="cursor: pointer; font-size: 1.5rem; color: #ccc;">
+                                <i class="fas fa-star"></i>
+                            </span>
                         {% endfor %}
                     </div>
-                    <!-- فیلد rating به صورت مخفی است -->
-                    {{ form.rating }}
+
+
+
+                    <div class="d-none">
+                        {{ form.rating }}
+                    </div>
+
                     {% if form.rating.errors %}
                         <div class="text-danger">{{ form.rating.errors }}</div>
                     {% endif %}
                 </div>
-                <!-- فیلد متن نظر -->
+
+                <!--  متن نظر -->
                 <div class="mb-3">
                     {{ form.comment.label_tag }}
                     {{ form.comment }}
@@ -229,7 +218,7 @@
                         <div class="text-danger">{{ form.comment.errors }}</div>
                     {% endif %}
                 </div>
-                 <!-- دکمه ارسال نظر -->
+
                 <button type="submit" class="btn btn-gold">ارسال نظر</button>
             </form>
         </div>
@@ -237,7 +226,7 @@
 
     <!-- متن تشویقی + دکمه رزرو -->
     <div class="row mt-5">
-        <div class="col-md-6 me-auto text-end"> <!-- ← text-end برای راست‌چین کردن متن -->
+        <div class="col-md-6 me-auto text-end"> 
             <div class="d-flex justify-content-end align-items-center gap-3">
                 <p class="lead mb-0">شما هم تجربه تون رو با ما به اشتراک بگذارید 🌟</p>
                 <a href="{% url 'reserve' %}" class="btn btn-gold">
@@ -247,7 +236,7 @@
         </div>
     </div>
 
-    <!-- ناوبری صفحه‌بندی حرفه‌ای -->
+    <!-- صفحه‌بندی-->
     {% if page_obj.paginator.num_pages > 1 %}
     <nav class="mt-5">
         <ul class="pagination justify-content-center align-items-center">
@@ -317,25 +306,44 @@
 </div>
 
 <script>
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener('DOMContentLoaded', function () {
 
-    // پیدا کردن textarea ساخته‌شده توسط Django
-    const commentField = document.querySelector("textarea");
+    const wrappers = document.querySelectorAll('.star-wrapper');
+    const ratingInput = document.querySelector('[name="rating"]'); 
 
-    if (!commentField) return;
+    if (wrappers.length > 0 && ratingInput) {
+        wrappers.forEach(wrapper => {
+            wrapper.addEventListener('click', function () {
+                const value = this.getAttribute('data-value');
+                ratingInput.value = value; 
 
-    commentField.addEventListener("keydown", function (e) {
+                // به‌روزرسانی رنگ ستاره‌ها بر اساس انتخاب
+                wrappers.forEach(w => {
+                    const starValue = w.getAttribute('data-value');
+                    if (parseInt(starValue) <= parseInt(value)) {
+                        w.style.color = '#D4AF37'; // رنگ طلایی برای ستاره‌های انتخاب شده
+                    } else {
+                        w.style.color = '#ccc'; // رنگ خاکستری برای ستاره‌های باقی‌مانده
+                    }
+                });
+            });
+        });
+    }
 
-        // Enter بدون Shift → ارسال فرم
-        if (e.key === "Enter" && !e.shiftKey) {
-            e.preventDefault();   // جلوگیری از رفتن به خط جدید
-            this.form.submit();  // ارسال فرم
-        }
-
-    });
+    const commentField = document.querySelector("textarea[name='comment']");
+    if (commentField) {
+        commentField.addEventListener("keydown", function (e) {
+            if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                this.form.submit();
+            }
+        });
+    }
 });
 </script>
-<!-- ✅ استایل آواتار کاربر در نظرات -->
+
+
+<!--  استایل آواتار کاربر در نظرات -->
 <style>
 .user-avatar {
     width: 60px;
@@ -344,14 +352,15 @@ document.addEventListener("DOMContentLoaded", function () {
     object-fit: cover;
     border: 3px solid #D4AF37;
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    transition: transform 0.3s ease;
+    transition: transform 0.3s ease;    /* انیمیشن نرم برای هاور */
 }
 
 .user-avatar:hover {
     transform: scale(1.05);
 }
 
-/* بهبود ظاهر کارت نظر برای آواتار */
+
+/* تنظیم ارتفاع کارت‌ها که تو یه ردیف هم‌قد باشن و ظاهر سایت به هم نریزه */
 .testimonial-card {
     min-height: 320px; /* فضای کافی برای آواتار */
     display: flex;
@@ -359,8 +368,37 @@ document.addEventListener("DOMContentLoaded", function () {
     justify-content: space-between;
 }
 
+
 .testimonial-content {
     flex-grow: 1;
 }
+
+/* وسط‌چین کردن کل محتوا */
+.testimonial-card {
+    text-align: center;
+}
+
+/* وسط‌چین کردن ستاره‌ها */
+.testimonial-card .stars {
+    text-align: center;
+}
+
+/* وسط‌چین کردن اطلاعات کاربر */
+.testimonial-card .client-info {
+    text-align: center;
+}
+
+/* رسپانسیو کردن استایل‌ها برای گوشی‌های موبایل */
+@media (max-width: 768px) {
+    .testimonial-card {
+        min-height: auto !important;    /* تو گوشی نیازی به ارتفاع ثابت نداریم چون کارت‌ها زیر هم هستن */
+        height: auto !important;
+    }
+    .btn-gold[type="submit"] {
+        width: auto;
+        display: inline-block;
+    }
+}
+
 </style>
 {% endblock content %}

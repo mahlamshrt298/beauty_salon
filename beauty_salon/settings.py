@@ -14,30 +14,28 @@ import os
 import environ
 from pathlib import Path
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
+# پیدا کردن مسیر اصلی پروژه (Root)
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# راه‌اندازی environ برای خواندن اطلاعات حساس از فایل .env
 env = environ.Env(SECRET_KEY = str,)
 environ.Env.read_env(os.path.join(BASE_DIR , '.env'))
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
+# کلید امنیتی پروژه (باید در سرور مخفی بماند)
 SECRET_KEY = env('DJANGO_SECRET_KEY')
 
-# SECURITY WARNING: don't run with debug turned on in production!
+# حالت دیباگ (برای لوکال True و برای سرور باید False باشد)
 DEBUG = env.bool('DJANGO_DEBUG', default=False)
 
+# دامنه‌هایی که سایت اجازه دارد روی آن‌ها اجرا شود
 ALLOWED_HOSTS = env.list('DJANGO_ALLOWED_HOSTS', default=['localhost', '127.0.0.1'])
-# ✅ اضافه کردن بعد از ALLOWED_HOSTS
-# CSRF Trusted Origins
+
+# دامنه‌های امن برای جلوگیری از خطای CSRF در فرم‌ها (مخصوصا سمت سرور)
 CSRF_TRUSTED_ORIGINS = env.list('CSRF_TRUSTED_ORIGINS', default=[])
 if not CSRF_TRUSTED_ORIGINS and ALLOWED_HOSTS:
-    # ایجاد خودکار CSRF_TRUSTED_ORIGINS از ALLOWED_HOSTS
     CSRF_TRUSTED_ORIGINS = [f'https://{host}' for host in ALLOWED_HOSTS if host != '*']
-# Application definition
 
+# لیست اپلیکیشن‌ها (اپ‌های پیش‌فرض، پکیج‌های نصب شده و اپ‌های اختصاصی پروژه)
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -45,38 +43,42 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
+    # Apps
     'core',
-    'crispy_forms',
-    'crispy_bootstrap4',
-    'django.contrib.humanize',
     'blog_app',
     'reviews_app.apps.ReviewsAppConfig',
     'services_app',
     'accounts.apps.AccountsConfig',
     'panel',
+    'booking.apps.AppointmentReservationConfig',
+
+    # Packages
+    'crispy_forms',
+    'crispy_bootstrap4',
+    'django.contrib.humanize',
     'jalali_date',
     'django_jalali',
-    'booking.apps.AppointmentReservationConfig',
     'cloudinary',
     'cloudinary_storage',
 ]
 
+# لایه‌های واسط برای پردازش ریکوئست‌ها (امنیت، سشن‌ها و...)
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',   # برای مدیریت فایل‌های استاتیک در سرور
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'booking.middleware.BookingFlowMiddleware',
+    'booking.middleware.BookingFlowMiddleware',     # میدل‌ویر اختصاصی سیستم رزرو
 ]
 
 ROOT_URLCONF = 'beauty_salon.urls'
 
-#'blog_app',
-
+# تنظیمات مربوط به فایل‌های HTML و دیتای ارسالی به آن‌ها
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -88,18 +90,17 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'accounts.context_processors.unread_notifications',
+                'panel.context_processors.appointment_counts',  
             ],
         },
     },
 ]
-#'DIRS': [os.path.join(BASE_DIR, 'blog_app', 'templates')],
+
 WSGI_APPLICATION = 'beauty_salon.wsgi.application'
 
 
-# Database
-# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-
-# ✅ راه‌حل: پشتیبانی از هر دو SQLite و PostgreSQL
+# تنظیمات دیتابیس
+# با کمک dj_database_url: در لوکال از sqlite و در سرور به صورت خودکار از postgresql استفاده می‌کند
 import dj_database_url
 
 DATABASES = {
@@ -108,11 +109,8 @@ DATABASES = {
     )
 }
 
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
-# Password validation
-# https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
-
+# قوانین اعتبارسنجی و سخت‌گیری برای رمز عبور کاربران
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -134,11 +132,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
-
-# Internationalization
-# https://docs.djangoproject.com/en/5.2/topics/i18n/
-
+# تنظیمات زبان و منطقه زمانی (فارسی و ایران)
 LANGUAGE_CODE = 'fa-ir'
 
 TIME_ZONE = 'Asia/Tehran'
@@ -148,21 +142,19 @@ USE_I18N = True
 USE_TZ = True
 
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.2/howto/static-files/
-
+# مسیر فایل‌های استاتیک (css, js, عکس‌های قالب)
 STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 STATICFILES_DIRS=[os.path.join(BASE_DIR,  'static')]
 
-# Default primary key field type
-# https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
-
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# تنظیمات ظاهر فرم‌ها
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap4"
 CRISPY_TEMPLATE_PACK = "bootstrap4"
 
+# هدایت کاربران بعد از ورود و خروج
 LOGIN_REDIRECT_URL =  'accounts:profile'   # مسیر پیش‌فرض برای تمام کاربران
 
 LOGOUT_REDIRECT_URL = 'accounts:login'
@@ -170,43 +162,93 @@ LOGOUT_REDIRECT_ALLOWED_METHODS = ['GET', 'POST']
 
 LOGIN_URL= 'accounts:login'
 
-# settings.py
+# تنظیمات پایه فایل‌های مدیا (عکس‌ها و فایل‌های آپلودی کاربر)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+# تنظیمات ارسال ایمیل (از طریق سرور جیمیل)
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+
+EMAIL_TIMEOUT = 5
 
 EMAIL_HOST = "smtp.gmail.com"
 #EMAIL_PORT = 587
 #EMAIL_USE_TLS = True
 
-#جدید
 EMAIL_PORT = 465
 EMAIL_USE_SSL = True
 EMAIL_USE_TLS = False
-
 
 EMAIL_HOST_USER = env("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD" , default="")
 DEFAULT_FROM_EMAIL = 'Beauty Salon <mahlamashrooti@gmail.com>'
 
-
-# ✅ اضافه کردن برای پشتیبانی از HTTPS
+# هدرهای امنیتی برای حالت HTTPS در سرور
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 SECURE_SSL_REDIRECT = False  # فقط در تولید
 
-# ✅ امنیت کوکی‌ها در HTTPS
+# امنیت کوکی‌ها (فقط در حالت سرور و غیر دیباگ فعال می‌شود)
 if not DEBUG:
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     SECURE_BROWSER_XSS_FILTER = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
 
-STORAGES = {
-    "default": {
-        "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
+# تشخیص اینکه روی سیستم خودمان هستیم یا سرور
+DEBUG_MODE = os.environ.get("DJANGO_DEBUG", "False").lower() in ("true", "1")
+
+if DEBUG_MODE:
+    # حالت توسعه (لوکال)
+    # فایل‌ها به سادگی روی هارد ذخیره می‌شوند
+    DEFAULT_FILE_STORAGE = "django.core.files.storage.FileSystemStorage"
+    MEDIA_URL = "/media/"
+    MEDIA_ROOT = BASE_DIR / "media"
+
+    STORAGES = {
+        "default": {
+            "BACKEND": "django.core.files.storage.FileSystemStorage",
+        },
+        "staticfiles": {
+            "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
+        },
+    }
+
+     # در لوکال نیازی به امنیت کوکی‌های HTTPS نیست
+    SESSION_COOKIE_SECURE = False
+    CSRF_COOKIE_SECURE = False
+    SECURE_SSL_REDIRECT = False
+
+    if "127.0.0.1" not in ALLOWED_HOSTS:
+        ALLOWED_HOSTS += ["127.0.0.1", "localhost"]
+
+else:
+    # حالت سرور 
+    # مدیاها روی فضای ابری (Cloudinary) آپلود می‌شوند تا با ری‌استارت سرور پاک نشوند
+    STORAGES = {
+        "default": {
+            "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
+        },
+        "staticfiles": {
+            "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
+        },
+    }
+
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+
+# لاگ‌گیری (نمایش ارورهای دیتابیس در ترمینال برای خطایابی راحت‌تر)
+LOGGING = {
+    'version': 1,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
     },
-    "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
+    'loggers': {
+        'django.db.backends': {
+            'handlers': ['console'],
+            'level': 'ERROR',
+            #DEBUG
+        },
     },
 }

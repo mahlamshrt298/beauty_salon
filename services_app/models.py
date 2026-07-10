@@ -3,6 +3,7 @@ from django.utils.text import slugify
 from django.utils.translation import gettext_lazy as _
 from django.templatetags.static import static
 
+#تبدیل عدد به حروف فارسی
 def number_to_persian_words(number):
     ones = [
         "", "یک", "دو", "سه", "چهار", "پنج", "شش",
@@ -30,7 +31,9 @@ def number_to_persian_words(number):
 
     words = []
 
+    #برای هندل کردن بلوک‌های سه رقمی
     def three_digit_to_words(n):
+        n = int(n)
         result = []
         h = n // 100
         t = (n % 100) // 10
@@ -44,7 +47,7 @@ def number_to_persian_words(number):
             if o:
                 result.append(ones[o])
         elif t == 1:
-            result.append(ones[n % 100])
+            result.append(ones[n % 100])        # برای اعداد بین 11 تا 19
         elif o:
             result.append(ones[o])
 
@@ -53,6 +56,7 @@ def number_to_persian_words(number):
     parts = []
     i = 0
 
+    # این سه رقم ، سه رقم از اخرعدد به اول عدد میاد
     while number > 0:
         n = number % 1000
         if n:
@@ -63,15 +67,13 @@ def number_to_persian_words(number):
         number //= 1000
         i += 1
 
+    #لیست رو برعکس می‌کنیم و با "و" به هم می‌چسبونیم
     return " و ".join(reversed(parts))
-
-
-# Create your models here.
 
 #دسته‌بندی‌های خدمات
 class Category(models.Model):
     name = models.CharField(max_length=100, verbose_name=_("نام دسته"))
-    slug = models.SlugField(unique=True, blank=True, verbose_name=_("اسلاگ"))    # اسلاگ برای URLهای SEO-friendly
+    slug = models.SlugField(unique=True, blank=True, verbose_name=_("اسلاگ"))    
 
     class Meta:
         verbose_name = _("دسته‌بندی")
@@ -79,9 +81,11 @@ class Category(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.slug:
+            #allow_unicode برای پشتیبانی از فارسی
             base_slug = slugify(self.name, allow_unicode=True)
             slug = base_slug
             counter = 1
+            # چک می‌کنیم اسلاگ تکراری نباشه، اگه بود یه عدد تهش می‌ندازیم
             while self.__class__.objects.filter(slug=slug).exists():
                 slug = f"{base_slug}-{counter}"
                 counter += 1
@@ -91,7 +95,6 @@ class Category(models.Model):
     def __str__(self):
         return self.name
 
-# --- اضافه کردن مدل Subcategory ---
 class Subcategory(models.Model):
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='subcategories', verbose_name=_("دسته اصلی"))
     name = models.CharField(max_length=100, verbose_name=_("نام زیردسته"))
@@ -101,7 +104,6 @@ class Subcategory(models.Model):
     class Meta:
         verbose_name = _("زیردسته")
         verbose_name_plural = _("زیردسته‌ها")
-        # اینجا یک قاعده برای مرتب‌سازی اضافه می‌کنیم
         ordering = ['category', 'name']
 
     def save(self, *args, **kwargs):
@@ -123,20 +125,21 @@ class Subcategory(models.Model):
         return f"{self.category.name} - {self.name}"
 
 
-# 🧍‍♀️ مدل خدمات سالن
+#  مدل خدمات سالن
 class Service(models.Model):
     image = models.ImageField(upload_to='services/', blank=True, null=True, verbose_name="عکس اصلی")
     name = models.CharField(max_length=200, verbose_name=_("نام خدمت"))
-    # توضیحات کامل خدمت
+    # توضیحات  
     description = models.TextField(blank=True, null=True,verbose_name=_("توضیحات"))
-    # مدت زمان انجام خدمت 
+    # مدت زمان انجام  
     duration_minutes = models.IntegerField(default=30,verbose_name=_("مدت زمان (دقیقه)"))
     price = models.PositiveBigIntegerField(verbose_name=_("قیمت (تومان)"))
-    # وضعیت فعال/غیرفعال بودن خدمت
+    # وضعیت فعال/غیرفعال بودن 
     is_active = models.BooleanField(default=True,verbose_name=_("فعال است"))
+    #ارتباط با زیردسته
     subcategory = models.ForeignKey(Subcategory, on_delete=models.SET_NULL, null=True, blank=True, related_name='services', verbose_name=_("زیردسته"))
     slug = models.SlugField(unique=True, blank=True, verbose_name=_("اسلاگ"))
-    # دسته‌بندی مرتبط
+    # ارتباط با دسته اصلی
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='services', verbose_name=_("دسته اصلی"))
     
     @property
@@ -166,11 +169,11 @@ class Service(models.Model):
         return number_to_persian_words(self.price)
 
     def approved_reviews(self):
-        """برگرداندن نظرات تأیید شده مرتبط با این خدمت"""
+        #کامنت‌های تایید شده رو فیلتر میکنه
         return self.reviews.filter(service=self, status='approved').order_by('-created_at')
     
     def get_related_images(self):
-        """برگرداندن عکس‌های مرتبط با این خدمت"""
+        # گرفتن عکس‌های گالری سرویس
         return self.related_images.all()
 
     def __str__(self):
@@ -196,13 +199,12 @@ class ServiceImage(models.Model):
     # متن جایگزین برای SEO
     alt_text = models.CharField(max_length=200, blank=True, null=True)
     
-    # تاریخ آپلود
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"{self.service.name} - Image {self.id}"
 
-
+#برای خدمات پرطرفدار
 class PopularService(models.Model):
     title = models.CharField(max_length=100, verbose_name="عنوان")
     description = models.TextField(verbose_name="توضیحات")
@@ -223,6 +225,7 @@ class PopularService(models.Model):
         return static('images/popularservice.jpg')
 
     class Meta:
+        # همیشه بر اساس ترتیبی که ادمین داده (order) مرتبشون کن
         ordering = ['order']
         verbose_name = "خدمت پرطرفدار"
         verbose_name_plural = "خدمات پرطرفدار"

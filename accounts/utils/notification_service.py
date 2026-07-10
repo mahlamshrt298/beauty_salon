@@ -1,5 +1,3 @@
-# accounts/utils/notification_service.py
-
 from accounts.models import Notification
 from django.core.mail import send_mail
 from django.conf import settings
@@ -7,18 +5,7 @@ from datetime import datetime
 
 
 def notify_user(user, message, subject, notif_type, channel, send_email=False, appointment=None):
-    """
-    این تابع یک اعلان جدید ایجاد می‌کند و می‌تواند ایمیل هم ارسال کند.
-
-    Args:
-        user (User): کاربری که اعلان بهش ارسال می‌شه
-        message (str): متن اعلان
-        subject (str): موضوع ایمیل (اگر ایمیل ارسال بشه)
-        notif_type (str): نوع اعلان (reminder, status_change, promotion)
-        channel (str): کانال ارسال (email, sms, whatsapp)
-        send_email (bool): اگر True باشه، ایمیل هم ارسال می‌شه
-        appointment (Appointment): نوبت مرتبط (اختیاری)
-    """
+    #سرویس اصلی برای ارسال نوتیف به کاربر و لاگ کردنش تو دیتابیس.
     # ایجاد اعلان جدید
     notification = Notification.objects.create(
         user=user,
@@ -28,6 +15,7 @@ def notify_user(user, message, subject, notif_type, channel, send_email=False, a
         appointment=appointment,
     )
 
+    # اگه کاربر درخواست ارسال ایمیل داشت و ایمیلش هم ست شده بود
     if send_email and user.email:
         try:
             send_mail(
@@ -35,7 +23,7 @@ def notify_user(user, message, subject, notif_type, channel, send_email=False, a
                 message=message,
                 from_email=settings.DEFAULT_FROM_EMAIL,
                 recipient_list=[user.email],
-                fail_silently=False,
+                fail_silently=True,
             )
             notification.status = "sent"
             notification.sent_at = datetime.now()

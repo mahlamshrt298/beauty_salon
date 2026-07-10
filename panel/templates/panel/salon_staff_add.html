@@ -9,7 +9,7 @@
   <!-- کنترل دسترسی: فقط مالک می‌تواند پرسنل اضافه کند -->
   {% if request.user.profile.role == "receptionist" %}
     <div class="alert alert-danger">
-      <i class="bi bi-exclamation-triangle"></i>
+      <i class="fas fa-exclamation-triangle"></i>
       شما مجاز به افزودن پرسنل سالن نیستید. این عمل فقط برای مالک سالن مجاز است.
     </div>
     
@@ -23,7 +23,7 @@
     <!-- حالت عادی برای مالک -->
     <h3 class="mb-4">➕ افزودن پرسنل سالن</h3>
 
-    <form method="post" enctype="multipart/form-data" class="card p-4 shadow-sm">
+    <form method="post" enctype="multipart/form-data" class="card p-4 shadow-sm" id="staff-form">
       {% csrf_token %}
 
       <!-- نام و نام خانوادگی -->
@@ -81,17 +81,16 @@
       <!-- روزهای کاری -->
       <div class="mb-3">
         <label class="form-label">روزهای کاری</label>
-        <div class="d-flex flex-wrap gap-3">
+        <div class="work-days-chips">
           {% for day in week_days %}
-            <div class="form-check">
+            <label class="day-chip">
               <input
-                class="form-check-input"
                 type="checkbox"
                 name="work_days"
                 value="{{ day }}"
               >
-              <label class="form-check-label">{{ day }}</label>
-            </div>
+              <span class="chip-box">{{ day }}</span>
+            </label>
           {% endfor %}
         </div>
         <small class="text-muted">
@@ -124,7 +123,6 @@
         </div>
       </div>
 
-      <!-- خدمات قابل ارائه -->
       <!-- خدمات قابل ارائه - سیستم سه سطحی -->
       <div class="mb-4">
         <label class="form-label fw-bold">خدمات قابل ارائه</label>
@@ -141,6 +139,7 @@
         </div>
         
         <!-- مرحله ۲: انتخاب زیردسته -->
+        <!-- (دیفالت غیرفعاله تا دسته انتخاب شه) -->
         <div class="mb-3">
           <label class="form-label">انتخاب زیردسته:</label>
           <select id="subcategory-select" class="form-select" disabled>
@@ -159,7 +158,7 @@
         <!-- دکمه افزودن خدمت به لیست -->
         <div class="mb-3">
           <button type="button" id="add-service-btn" class="btn btn-primary" disabled>
-            <i class="bi bi-plus-circle"></i> افزودن خدمت
+            <i class="fas fa-plus-circle"></i> افزودن خدمت
           </button>
         </div>
         
@@ -179,6 +178,7 @@
       </div>
 
       <style>
+        /* استایل‌های مربوط به Badge خدمات انتخاب شده */
       .service-badge {
         display: inline-block;
         background: #e3f2fd;
@@ -240,6 +240,7 @@
         
         if (categoryId) {
           const category = categoriesData[categoryId];
+          // چک میکنیم اصلاً این دسته زیردسته‌ای داره یا نه
           if (category && Object.keys(category.subcategories).length > 0) {
             for (const [subId, subData] of Object.entries(category.subcategories)) {
               const option = document.createElement('option');
@@ -286,13 +287,13 @@
         }
       });
 
-      // تغییر خدمت
+      // فعال کردن دکمه "افزودن" وقتی یک خدمت انتخاب میشه
       document.getElementById('service-select').addEventListener('change', function() {
         const addServiceBtn = document.getElementById('add-service-btn');
         addServiceBtn.disabled = !this.value;
       });
 
-      // افزودن خدمت به لیست
+      // هندل کردن دکمه "افزودن خدمت" به لیست
       document.getElementById('add-service-btn').addEventListener('click', function() {
         const categoryId = document.getElementById('category-select').value;
         const subcategoryId = document.getElementById('subcategory-select').value;
@@ -305,7 +306,7 @@
         const serviceName = categoriesData[categoryId].subcategories[subcategoryId].services
           .find(s => s.id === serviceId).name;
         
-        // بررسی تکراری نبودن
+        // جلوگیری از انتخاب تکراری
         if (selectedServices.includes(serviceId)) {
           alert('این خدمت قبلاً اضافه شده است!');
           return;
@@ -332,10 +333,10 @@
         
         servicesContainer.appendChild(badge);
         
-        // آپدیت فیلد مخفی
+        //آپدیت فیلد مخفی تا موقع سابمیت بره سمت سرور
         document.getElementById('services-input').value = selectedServices.join(',');
         
-        // ریست انتخاب‌ها
+        // ریست کردن سلکت باکس خدمت بعد از اضافه شدن
         document.getElementById('service-select').value = '';
         document.getElementById('add-service-btn').disabled = true;
       });
@@ -354,7 +355,7 @@
           // آپدیت فیلد مخفی
           document.getElementById('services-input').value = selectedServices.join(',');
           
-          // نمایش پیام "هیچ خدمتی انتخاب نشده"
+          // اگه آرایه خالی شد، دوباره پیام دیفالت رو نشون میدیم
           if (selectedServices.length === 0) {
             const servicesContainer = document.getElementById('services-container');
             const noMsg = document.createElement('p');
@@ -368,34 +369,80 @@
       </script>
 
       <!-- نمایش در صفحه درباره ما -->
-      <div class="form-check mb-4">
-        <input
-          class="form-check-input"
-          type="checkbox"
-          name="show_in_about_page"
-          id="show_in_about_page"
-        >
-        <label class="form-check-label" for="show_in_about_page">
-          نمایش در صفحه درباره ما
-        </label>
+      <div class="mobile-active-box mb-4">
+        <div class="form-check mb-0">
+          <input
+            class="form-check-input"
+            type="checkbox"
+            name="show_in_about_page"
+            id="show_in_about_page"
+          >
+          <label class="form-check-label" for="show_in_about_page">
+            نمایش در صفحه درباره ما
+          </label>
+        </div>
         <small class="text-muted d-block mt-1">
           اگر انتخاب شود، این پرسنل در صفحه "درباره ما" نمایش داده می‌شود
         </small>
       </div>
 
       <!-- دکمه‌ها -->
-      <div class="d-flex flex-column flex-md-row gap-2 mt-4">
-        <button type="submit" class="btn btn-success">
+      <div class="d-flex flex-column flex-md-row justify-content-md-between gap-2 mt-4 mobile-form-buttons w-100">
+        <button type="submit" id="submit-btn" class="btn btn-success px-4">
           💾 ذخیره
         </button>
-
-        <a href="{% url 'panel:staff_list' %}" class="btn btn-secondary">
+        <a href="{% url 'panel:staff_list' %}" class="btn btn-secondary px-4">
           ↩ بازگشت
         </a>
       </div>
 
+      <script>
+        // ولیدیشن نهایی قبل از ارسال فرم و جلوگیری از دبل‌سابمیت (Double Submit)
+      document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('staff-form');
+        const submitBtn = document.getElementById('submit-btn');
+
+        form.addEventListener('submit', function(e) {
+          // چک میکنیم حتما حداقل یه روز کاری تیک خورده باشه
+          const checkedDays = document.querySelectorAll('input[name="work_days"]:checked');
+          if (checkedDays.length === 0) {
+            e.preventDefault();   // متوقف کردن ارسال فرم
+            e.stopImmediatePropagation();
+            alert('⚠️ لطفاً حداقل یک روز کاری انتخاب کنید');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '💾 ذخیره';
+            return false;
+          }
+
+          // چک میکنیم حتما حداقل یه خدمت انتخاب کرده باشه
+          const servicesVal = document.getElementById('services-input').value.trim();
+          if (!servicesVal) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            alert('⚠️ لطفاً حداقل یک خدمت انتخاب کنید');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '💾 ذخیره';
+            return false;
+          }
+
+          // اگه ولیدیشن‌ها پاس شد، دکمه رو غیرفعال میکنیم و اسپینر نشون میدیم
+          submitBtn.disabled = true;
+          submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> در حال ثبت...';
+          document.getElementById('loading-overlay').style.display = 'flex';
+        });
+      });
+      </script>
+
+
     </form>
   {% endif %}
-
 </div>
+
+<!-- یه لایه تیره که وقتی فرم در حال ارساله کل صفحه رو میگیره که کاربر نتونه کاری کنه تا جواب سرور بیاد -->
+<div id="loading-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; justify-content:center; align-items:center;">
+  <div class="spinner-border text-light" role="status">
+    <span class="visually-hidden">در حال پردازش...</span>
+  </div>
+</div>
+
 {% endblock %}

@@ -1,11 +1,11 @@
 from django.db import models
-from services_app.models import Service  # ← ایمپورت مدل Service
+from services_app.models import Service  
 from django.contrib.auth.models import User
 from booking.models import Appointment
 
-# Create your models here.
 #نظرات و امتیازات
 class Review(models.Model):
+
     STATUS_CHOICES = (
         ('pending', 'در انتظار'),
         ('approved', 'تأیید شده'),
@@ -13,18 +13,23 @@ class Review(models.Model):
     )
 
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+
     #امتیاز
     rating = models.IntegerField(choices=[(i, i) for i in range(1, 6)], default=5)
+
     #متن نظر
     comment = models.TextField()
+
     created_at = models.DateTimeField(auto_now_add=True)
-    #وضعیت تأیید/عدم تأیید
+
+    #وضعیت نظر
     status = models.CharField(
         max_length=10,
         choices=STATUS_CHOICES,
         default='pending',
         verbose_name='وضعیت'
     )
+    
     # سرویس مرتبط با نظر
     service = models.ForeignKey(
         Service,

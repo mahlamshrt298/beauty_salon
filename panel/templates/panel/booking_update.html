@@ -1,16 +1,30 @@
 {% extends "panel/base_panel.html" %}
 {% load static %}
+
+<!-- فیکس کردن استایل تگ‌های select.  -->
+<style>
+    select option {
+        background-color: white !important;
+        color: black !important;
+    }
+
+    select {
+        background-color: white !important;
+        color: black !important;
+    }
+</style>
 {% block content %}
+
 
 <div class="container mt-4">
     <h2 class="mb-4">ویرایش نوبت</h2>
 
-    <!-- ✅ اضافه کردن id به فرم -->
     <form method="post" class="card p-4 shadow" id="bookingUpdateForm">
         {% csrf_token %}
 
         <div class="mb-3">
             <label class="form-label">کاربر</label>
+            <!-- readonly هست چون منطقی نیست که مشتری رو عوض کنیم -->
             <input type="text" class="form-control" 
                    value="{{ appointment.user.username }} | {{ appointment.user.first_name }} {{ appointment.user.last_name }}" 
                    readonly>
@@ -25,11 +39,10 @@
                     class="form-control"
                     value="{{ jalali_date_str }}"
                     placeholder="1404/12/16"
-                    pattern="\d{4}/\d{2}/\d{2}"
+                    
                     title="لطفاً تاریخ را به فرمت 1404/12/16 وارد کنید 
                      ---  تاریخی از گذشته انتخاب نکنید"
                     required>
-                <!-- ✅ اضافه کردن id به آیکون -->
                 <span class="input-group-text" id="datePickerIcon">
                     <i class="fas fa-calendar-alt"></i>
                 </span>
@@ -41,16 +54,18 @@
 
         <div class="mb-3">
             <label class="form-label">ساعت نوبت</label>
+            <!--  با فرمت ساعت:دقیقه -->
             <input type="time"
                 name="start_time"
                 class="form-control"
                 value="{{ appointment.start_time|time:'H:i' }}"
                 required>
+            
         </div>
 
         <div class="mb-3">
             <label class="form-label">خدمت</label>
-            <select name="service" class="form-select" required>
+            <select name="service" id="serviceSelect" class="form-select" required>
                 {% for service in services %}
                     <option value="{{ service.id }}"
                         {% if service.id == appointment.service.id %}selected{% endif %}>
@@ -61,6 +76,22 @@
         </div>
         
         <div class="mb-3">
+    <label class="form-label">پرسنل</label>
+    <select name="staff" id="staffSelect" class="form-select" required>
+        {% for s in staff %}
+            <option value="{{ s.id }}"
+                {% if appointment.staff and s.id == appointment.staff.id %}selected{% endif %}>
+                {{ s.full_name }}
+            </option>
+        {% empty %}
+            <option value="" disabled>پرسنلی یافت نشد</option>
+        {% endfor %}
+    </select>
+</div>
+
+
+
+        <div class="mb-3">
             <label class="form-label">وضعیت نوبت</label>
             <select name="status" class="form-select">
                 <option value="pending" {% if appointment.status == "pending" %}selected{% endif %}>در انتظار</option>
@@ -70,10 +101,17 @@
             </select>
         </div>
 
-        <textarea name="notes" class="form-control" readonly>{{ appointment.notes }}</textarea>
+        <div class="mb-3">
+            <label class="form-label">یادداشت</label>
+            <!-- یادداشت اینجا readonly هست تا فقط جنبه نمایشی داشته باشه -->
+            <textarea name="notes" class="form-control" readonly>{{ appointment.notes }}</textarea>
+        </div>
 
-        <!-- ✅ حذف onclick از دکمه چون در جاوااسکریپت مدیریت می‌شود -->
-        <button type="submit" class="btn btn-success w-100">ذخیره تغییرات</button>
+        <div class="d-flex gap-2 mt-4" id="actionButtons">
+            <button type="submit" class="btn btn-success w-100">ذخیره</button>
+            <button type="button" class="btn btn-secondary w-100" onclick="window.history.back();">بازگشت</button>
+        </div>
+
     </form>
 </div>
 
@@ -81,23 +119,55 @@
 {{ block.super }}
 
 <script>
+document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll('select option').forEach(function(opt) {
+        opt.style.backgroundColor = '#ffffff';
+        opt.style.color = '#212529';
+    });
+
+    // برای select هایی که بعداً لود می‌شن (مثل AJAX)
+    document.querySelectorAll('select').forEach(function(sel) {
+        sel.style.backgroundColor = '#ffffff';
+        sel.style.color = '#212529';
+        sel.style.colorScheme = 'light';
+    });
+});
+</script>
+
+<script>
 $(document).ready(function() {
-    // تقویم با onSelect برای گرفتن انتخاب کاربر
+    var originalDate = $("#appointment_date").val();
+
+    //این تابع ساده، اعداد فارسی رو به انگلیسی تبدیل میکنه
+    function toEnglishDigits(str) {
+        if (!str) return str;
+        const persianNumbers = ['۰', '۱', '۲', '۳', '۴', '۵', '۶', '۷', '۸', '۹'];
+        for (let i = 0; i < 10; i++) {
+            str = str.replace(new RegExp(persianNumbers[i], 'g'), i);
+        }
+        return str;
+    }
+
+    
     $('#appointment_date').persianDatepicker({
         format: 'YYYY/MM/DD',
         autoClose: true,
         initialValue: "{{ jalali_date_str }}",
         initialValueType: 'persian',
         observer: true,
+        persianDigit: false,    // عددها رو الکی فارسی نکنه که بک‌اند قاطی کنه
         
-        // 🎯 **اضافه کردن onSelect**
         onSelect: function(unixDate) {
-            // وقتی کاربر تاریخ را از تقویم انتخاب کرد
+            
+            const $input = $('#appointment_date');
             const dateValue = $(this).val();
             validateDate(dateValue, $(this));
         }
     });
     
+    // بازگردوندن مقدار اولیه (یه باگ کوچیک تو بعضی نسخه‌های دیت‌پیکر هست که مقدار اینپوت رو می‌پره، با این فیکس میشه)
+    $("#appointment_date").val(originalDate);
+
     // کلیک روی آیکون
     $('#datePickerIcon').on('click', function(e) {
         e.preventDefault();
@@ -105,44 +175,44 @@ $(document).ready(function() {
         $('#appointment_date').persianDatepicker('show');
     });
     
-    // 🎯 **تابع مشترک برای اعتبارسنجی**
+    // تابع اصلی ولیدیت کردن تاریخ (هم چک فرمت هم چک گذشته نبودن تاریخ)
     function validateDate(dateValue, $inputElement) {
         if (!dateValue) return true;
-        
+
+        // پاک کردن ارورهای قبلی که رو صفحه مونده
+        $('#date-error').remove();
+        // تبدیل اعداد به انگلیسی در صورتی که کاربر دستی تایپ کرده باشد
+        dateValue = toEnglishDigits(dateValue);
+        $inputElement.val(dateValue);
+
+        // چک کردن فرمت استاندارد yyyy/mm/dd
         const dateRegex = /^\d{4}\/\d{2}\/\d{2}$/;
         
         // بررسی فرمت
         if (!dateRegex.test(dateValue)) {
-            alert('❌ فرمت تاریخ اشتباه است!\n\nلطفاً تاریخ را به این فرمت وارد کنید:\nسال/ماه/روز\n\nمثال: 1404/12/16');
-            if ($inputElement) {
-                $inputElement.val('');
-                $inputElement.focus();
-            }
+            $inputElement.after('<div id="date-error" class="text-danger small mt-1">❌ فرمت تاریخ اشتباه است. مثال: 1404/12/16</div>');
+            //$inputElement.val('');
+            $inputElement.focus();
             return false;
         }
         
+        // حذف اسلش‌ها برای مقایسه عددی تاریخ‌ها (مثلا 14040210 با 14040209)
         const selectedDate = dateValue.replace(/\//g, '');
         const yesterday = "{{ jalali_yesterday_str }}";
         const todayFormatted = "{{ jalali_today_formatted }}";
         
         // بررسی تاریخ گذشته
-        if (parseInt(selectedDate) <= parseInt(yesterday)) {
-            alert(`⚠️ **تاریخ گذشته انتخاب کردید!**\n\n` +
-                `📅 تاریخ انتخابی: ${dateValue}\n` +
-                `📅 امروز: ${todayFormatted}\n\n` +
-                `لطفاً تاریخ امروز یا آینده را انتخاب کنید.`);
-            
-            if ($inputElement) {
-                $inputElement.val('');
-                $inputElement.focus();
-            }
+        if (parseInt(selectedDate) < parseInt(yesterday)) {
+            $inputElement.after(`<div id="date-error" class="text-danger small mt-1">⚠️ تاریخ گذشته انتخاب کردید. امروز: ${todayFormatted}</div>`);
+            //$inputElement.val('');
+            $inputElement.focus();
             return false;
         }
         
         return true;
     }
     
-    // 🎯 اعتبارسنجی لحظه‌ای برای تایپ دستی
+    //  اعتبارسنجی لحظه‌ای برای تایپ دستی
     $('#appointment_date').on('input', function() {
         const dateValue = $(this).val();
         // فقط وقتی کامل تایپ شد بررسی کن (10 کاراکتر: 1404/12/16)
@@ -153,16 +223,25 @@ $(document).ready(function() {
     
     // اعتبارسنجی فرم
     $('#bookingUpdateForm').on('submit', function(e) {
-        // 1. تایید
-        if (!confirm('آیا از ویرایش نوبت مطمئن هستید؟')) {
+        // چک ساعت
+        const timeValue = $('input[name="start_time"]').val();
+        $('#time-error').remove();
+        
+        // چک خالی نبودن ساعت
+        if (!timeValue) {
+            $('input[name="start_time"]').after('<div id="time-error" class="text-danger small mt-1">❌ ساعت نوبت را وارد کنید.</div>');
             e.preventDefault();
             return false;
         }
-        
-        // 2. بررسی فرمت و تاریخ گذشته
+        //  بررسی فرمت و تاریخ گذشته
         const dateValue = $('#appointment_date').val();
         
         if (!validateDate(dateValue, $('#appointment_date'))) {
+            e.preventDefault();
+            return false;
+        }
+        // تایید
+        if (!confirm('آیا از ویرایش نوبت مطمئن هستید؟')) {
             e.preventDefault();
             return false;
         }
@@ -173,7 +252,7 @@ $(document).ready(function() {
 </script>
 
 <style>
-/* آیکون تقویم */
+/* استایل ساده برای اینکه دکمه آیکون تقویم حس کلیک شدن به کاربر بده */
 #datePickerIcon {
     cursor: pointer;
     background-color: #f8f9fa;
@@ -183,7 +262,45 @@ $(document).ready(function() {
 #datePickerIcon:hover {
     background-color: #e9ecef;
 }
+
 </style>
+
+
+<script>
+    //آپدیت داینامیک لیست پرسنل
+$(document).ready(function() {
+    $('#serviceSelect').on('change', function() {
+        var serviceId = $(this).val();
+        var $staffSelect = $('#staffSelect');
+        
+        // تا دیتای جدید برسه یه متن موقت نشون میدیم که کاربر بدونه سیستم هنگ نکرده
+        $staffSelect.empty();
+        $staffSelect.append('<option value="" disabled selected>در حال بارگذاری...</option>');
+
+        $.ajax({
+            url: "{% url 'panel:get_staff_by_service' %}",
+            data: {
+                'service_id': serviceId
+            },
+            success: function(response) {
+                $staffSelect.empty();
+                if (response.staff.length > 0) {
+                    $.each(response.staff, function(index, staff) {
+                        $staffSelect.append('<option value="' + staff.id + '">' + staff.name + '</option>');
+                    });
+                } else {
+                    $staffSelect.append('<option value="" disabled selected>پرسنلی برای این خدمت یافت نشد</option>');
+                }
+            },
+            error: function() {
+                // هندل کردن خطای احتمالی شبکه یا بک‌اند
+                $staffSelect.empty();
+                $staffSelect.append('<option value="" disabled selected>خطا در دریافت پرسنل</option>');
+            }
+        });
+    });
+});
+</script>
 
 {% endblock scripts %}
 

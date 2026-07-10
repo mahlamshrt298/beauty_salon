@@ -8,10 +8,8 @@
 
 {% block content %}
 <div class="container mt-5">
-  
 
-
-    <!-- بخش شعار  -->
+    <!-- هدر صفحه درباره ما -->
     <div class="hero-about text-center mb-5">
       <h1 class="hero-title">هر لحظه در سالن نورا، سرمایه‌گذاری بر زیبایی شماست.</h1>
       <div class="gold-divider"></div>
@@ -32,14 +30,16 @@
         همین باور، ما را به انتخاب دقیق تجهیزات، مواد اولیه و افراد تیم‌مان سوق داده است.
       </p>
 
-      <!-- بخش معرفی تیم - کاروسل خودکار -->
+      <!-- بخش معرفی تیم -->
+      <!-- قسمت مربوط به اسلایدر پرسنل -->
       <div class="container mt-5 mb-5">
         <h2 class="text-center mb-4" style="color: #D4AF37;">تیم متخصصان ما</h2>
         
+        <!-- چک میکنیم که اصلا پرسنلی تو دیتابیس هست یا نه -->
         {% if staff_members %}
-          <!-- Swiper Container -->
           <div class="swiper staffSwiper">
             <div class="swiper-wrapper">
+              <!-- حلقه برای نمایش تک تک اعضا -->
               {% for staff in staff_members %}
                 <div class="swiper-slide">
                   <div class="team-card">
@@ -61,6 +61,7 @@
                     {% endif %}
                     </div>
 
+                    <!-- اطلاعات متنی پرسنل -->
                     <div class="team-info">
                       <h5>{{ staff.full_name }}</h5>
                       <p class="team-specialty">{{ staff.role }}</p>
@@ -70,7 +71,7 @@
                         <p class="team-desc">{{ staff.bio }}</p>
                       {% elif staff.work_days %}
                         <p class="team-desc small">
-                          <i class="bi bi-calendar-check me-1"></i>
+                          <i class="fas fa-calendar-check me-1"></i>
                           {% for day in staff.work_days %}
                             {{ day }}{% if not forloop.last %}، {% endif %}
                           {% endfor %}
@@ -83,7 +84,7 @@
               {% endfor %}
             </div>
             
-            <!-- دکمه‌های ناوبری -->
+            <!-- دکمه های عقب و جلو اسلایدر -->
             <div class="swiper-button-next"></div>
             <div class="swiper-button-prev"></div>
             
@@ -115,7 +116,7 @@
 
       <!-- اسلایدر -->
       <div id="salonGallery" class="carousel slide" data-bs-ride="carousel">
-        <!-- نوار نشانگرها -->
+        <!-- خط های پایین عکس که نشون میده کدوم اسلایده -->
         <div class="carousel-indicators">
           <button type="button" data-bs-target="#salonGallery" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
           <button type="button" data-bs-target="#salonGallery" data-bs-slide-to="1" aria-label="Slide 2"></button>
@@ -210,21 +211,22 @@
 
     <!-- دکمه رزرو -->
     <div class="text-center">
-      <p class="about-text">برای تجربه متفاوت زیبایی،همین خالا نوبت خود را رزرو کنید  <a href="{% url 'reserve' %}" class="btn btn-gold ">رزرو نوبت</a></p>
+      <p class="about-text">برای تجربه متفاوت زیبایی،همین حالا نوبت خود را رزرو کنید  <a href="{% url 'reserve' %}" class="btn btn-gold ">رزرو نوبت</a></p>
       
     </div>
 
     <!-- مقالات بلاگ -->
-    <!-- مقالات بلاگ -->
   <div class="container mt-5 mb-5">
     <h2 class="text-center mb-4" style="color: #D4AF37;">نکات طلایی زیبایی</h2>
     <div class="row justify-content-center">
+      <!-- حلقه رو مقالاتی که از ویو پاس داده شده -->
       {% for a in latest_articles %}
         <div class="col-md-6 mb-4">
           <div class="blog-card h-100" ondblclick="window.location.href='{% url 'blog_detail' a.id %}'">
             <img src="{{ a.image.url }}" class="blog-img">
             <div class="blog-content">
               <h4>{{ a.title }}</h4>
+              <!-- خلاصه متن، فقط ۲۰ کلمه اول رو نشون میده -->
               <p>{{ a.content|truncatewords:20 }}</p>
               <a href="{% url 'blog_detail' a.id %}" class="btn-read">
                 ادامه مطلب →
@@ -235,7 +237,7 @@
       {% endfor %}
     </div>
 
-  <!-- دکمه مشاهده همه -->
+      <!-- لینک به صفحه اصلی بلاگ -->
       <div class="text-center mt-4">
         <a href="{% url 'blog' %}" class="btn btn-gold header-btn">مشاهده همه مقالات</a>
       </div>
@@ -244,6 +246,7 @@
 
 </div>
 
+<!-- کدهای جاوااسکریپت برای راه اندازی اسلایدر swiper -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   const staffSwiperElement = document.querySelector('.staffSwiper');
@@ -268,6 +271,7 @@ document.addEventListener('DOMContentLoaded', function() {
         nextEl: '.swiper-button-next',
         prevEl: '.swiper-button-prev',
       },
+      // تنظیمات ریسپانسیو برای موبایل و تبلت
       breakpoints: {
         576: {
           slidesPerView: 1,
@@ -281,12 +285,12 @@ document.addEventListener('DOMContentLoaded', function() {
       },
     });
     
-    // متوقف کردن خودکار هنگام هاور
+    // وقتی کاربر موس رو میبره روی کارت، حرکت خودکار متوقف میشه که بتونه بخونه
     staffSwiperElement.addEventListener('mouseenter', function() {
       staffSwiper.autoplay.stop();
     });
     
-    // ادامه خودکار هنگام خارج شدن موس
+    // وقتی موس رفت کنار دوباره حرکت میکنه
     staffSwiperElement.addEventListener('mouseleave', function() {
       staffSwiper.autoplay.start();
     });
@@ -294,8 +298,9 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
+<!-- استایل های اختصاصی این صفحه -->
 <style>
-/* کاروسل تیم */
+/* استایل کلی کانتینر اسلایدر پرسنل */
 .staffSwiper {
   width: 100%;
   position: relative;
@@ -325,12 +330,13 @@ document.addEventListener('DOMContentLoaded', function() {
   align-items: center;
 }
 
+/* افکت هاور کارت ها */
 .team-card:hover {
   transform: translateY(-5px);
   box-shadow: 0 12px 28px rgba(0,0,0,0.12);
 }
 
-/* عکس دایره‌ای */
+/* کادر گرد عکس پروفایل پرسنل */
 .team-img-container {
   width: 120px;
   height: 120px;
@@ -350,7 +356,7 @@ document.addEventListener('DOMContentLoaded', function() {
   border-radius: 50%;
 }
 
-/* متن‌ها */
+/* استایل متن داخل کارت ها */
 .team-info {
   text-align: center;
   padding: 0 10px;
@@ -375,13 +381,14 @@ document.addEventListener('DOMContentLoaded', function() {
   line-height: 1.3;
   color: #4a5568;
   min-height: 35px;
+  /* این چند خط برای محدود کردن متن به ۲ خطه */
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
-/* دکمه‌های ناوبری */
+/* رنگ و استایل دکمه های عقب جلو اسلایدر */
 .swiper-button-next,
 .swiper-button-prev {
   color: #D4AF37 !important;
@@ -430,7 +437,7 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 
 
-/* ریسپانسیو */
+/* استایل های ریسپانسیو برای سایز های مختلف صفحه */
 @media (max-width: 991px) {
   .staffSwiper .swiper-wrapper {
     padding: 0 30px;
@@ -456,6 +463,20 @@ document.addEventListener('DOMContentLoaded', function() {
     padding: 0 20px;
   }
 }
+
+/* سایز آیکون های دکمه های اسلایدر */
+.swiper-button-next::after,
+.swiper-button-prev::after {
+  font-size: 16px !important;
+}
+
+/* سایز دکمه های کاروسل گالری */
+#salonGallery .carousel-control-prev-icon,
+#salonGallery .carousel-control-next-icon {
+  width: 20px;
+  height: 20px;
+}
+
 </style>
 
 

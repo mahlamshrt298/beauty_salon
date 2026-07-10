@@ -1,7 +1,5 @@
 from django.contrib import admin
 
-# Register your models here.
-# blog/admin.py
 from .models import Category, Article
 
 @admin.register(Category)
@@ -10,9 +8,14 @@ class CategoryAdmin(admin.ModelAdmin):
 
 @admin.register(Article)
 class ArticleAdmin(admin.ModelAdmin):
+    # ستون‌هایی که در جدول لیست مقالات در پنل ادمین نمایش داده می‌شوند
     list_display = ['title', 'category', 'author', 'created_at']
+    
+    #اضافه کردن پنل فیلتر
     list_filter = ['category', 'created_at']
+    
+    #اضافه کردن باکس جستجو در بالای لیست
     search_fields = ['title', 'content','key_points']
+    
+    # اضافه کردن نوار ناوبری تاریخ
     date_hierarchy = 'created_at'
-   # fields = ['title', 'content', 'image', 'category', 'author', 'key_points', 'tags', 'for_reserve']
-   # fields = ['title', 'content', 'image', 'category', 'author', 'key_points', 'for_reserve']  # ← اضافه شده

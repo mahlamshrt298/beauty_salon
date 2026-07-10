@@ -6,11 +6,10 @@ import re
 from reviews_app.models import Review
 from django.core.exceptions import ValidationError
 from django.contrib.auth import password_validation
-from django.utils.translation import gettext as _
-from django.utils.translation import gettext_lazy as _
 
 class CustomRegisterForm(UserCreationForm):
     # فرم سفارشی ثبت‌نام با فارسی‌سازی کامل
+    # فیلدهای اضافه که تو فرم پیش‌فرض یوزر جنگو نیستن رو دستی تعریف می‌کنیم
     email = forms.EmailField(
         label="ایمیل",
         help_text="آدرس ایمیل معتبر خود را وارد کنید (مثال: user@example.com)"
@@ -35,6 +34,7 @@ class CustomRegisterForm(UserCreationForm):
     )
 
     def clean_password2(self):
+        # چک کردن یکی بودن پسوردها و اعمال ولیدیتورهای دیفالت جنگو (مثل طول پسورد و سخت بودنش)
         password1 = self.cleaned_data.get("password1")
         password2 = self.cleaned_data.get("password2")
 
@@ -56,7 +56,7 @@ class CustomRegisterForm(UserCreationForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         
-        # ✅ فارسی‌سازی کامل فیلدهای ارث‌بری‌شده از UserCreationForm
+        #  فارسی‌سازی کامل فیلدهای ارث‌بری‌شده از UserCreationForm
         self.fields['username'].label = "نام کاربری"
         self.fields['username'].help_text = "نام کاربری باید ۳ تا ۱۵۰ کاراکتر باشد و فقط شامل حروف انگلیسی، اعداد و علائم @ . + - _ باشد"
         
